@@ -1,0 +1,52 @@
+/* ===========================
+   DASHBOARD LAYOUT
+=========================== */
+
+.dashboard-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #f5f7fb;
+}
+
+/* Sidebar is fixed */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 260px;
+  height: 100vh;
+  z-index: 1000;
+}
+
+/* Main Content */
+.main-content {
+  flex: 1;
+  margin-left: 260px;
+  width: calc(100% - 260px);
+  min-height: 100vh;
+  padding: 30px;
+  overflow-x: hidden;
+  background: #f5f7fb;
+  box-sizing: border-box;
+}
+
+/* Mobile */
+@media (max-width:768px) {
+
+  .sidebar {
+    position: relative;
+    width: 100%;
+    height: auto;
+  }
+
+  .main-content {
+    margin-left: 0;
+    width: 100%;
+    padding: 20px;
+  }
+
+  .dashboard-layout {
+    flex-direction: column;
+  }
+
+}

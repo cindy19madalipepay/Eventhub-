@@ -1,0 +1,377 @@
+/* ===== SIDEBAR ===== */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 260px;
+  height: 100vh;
+  background: #1a0f2e;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  overflow-y: auto;
+}
+
+/* Logo */
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.sidebar-logo-img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.sidebar-logo span {
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+}
+
+/* User Info */
+.sidebar-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  background: #a3d900;
+  color: #1a0f2e;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  text-transform: uppercase;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  margin: 0;
+}
+
+.user-role {
+  font-size: 12px;
+  color: rgba(255,255,255,0.5);
+  margin: 0;
+}
+
+/* Navigation */
+.sidebar-nav {
+  flex: 1;
+  padding: 12px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  color: rgba(255,255,255,0.6);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  margin: 0 8px;
+  border-radius: 8px;
+}
+
+.nav-item:hover {
+  background: rgba(255,255,255,0.05);
+  color: #fff;
+}
+
+.nav-item.active {
+  background: rgba(255,255,255,0.1);
+  color: #a3d900;
+}
+
+.nav-badge {
+  background: #ef4444;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  min-width: 20px;
+  text-align: center;
+}
+
+/* Logout */
+.sidebar-logout {
+  display: flex;
+  align-items: center;
+  padding: 14px 20px;
+  margin: 8px;
+  background: rgba(255,255,255,0.05);
+  border: none;
+  border-radius: 8px;
+  color: rgba(255,255,255,0.6);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sidebar-logout:hover {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+}
+
+/* Scrollbar */
+.sidebar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.1);
+  border-radius: 4px;
+}
+/* ===========================
+   SIDEBAR PROFILE POPOVER
+=========================== */
+.sidebar-user-wrapper {
+  position: relative;
+}
+
+/* turn the existing .sidebar-user div into a clickable button look-alike */
+button.sidebar-user {
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  border-radius: 10px;
+  transition: background 0.15s ease;
+}
+
+button.sidebar-user:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.user-caret {
+  margin-left: auto;
+  font-size: 11px;
+  opacity: 0.6;
+  transition: transform 0.15s ease;
+}
+
+.user-caret.open {
+  transform: rotate(180deg);
+}
+
+.profile-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 8px;
+  right: 8px;
+  background: #ffffff;
+  color: #0f172a;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.35);
+  padding: 16px;
+  z-index: 1100;
+}
+
+.profile-popover-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.user-avatar-lg {
+  width: 40px;
+  height: 40px;
+  font-size: 14px;
+}
+
+.profile-popover-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  margin: 0;
+  color: #0f172a;
+}
+
+.profile-popover-role {
+  font-size: 11.5px;
+  color: #6b7280;
+  margin: 0;
+  text-transform: capitalize;
+}
+
+.profile-popover-email {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0 0 12px;
+  word-break: break-all;
+}
+
+.profile-popover-btn {
+  width: 100%;
+  background: #0f3460;
+  color: #fff;
+  border: none;
+  padding: 9px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.profile-popover-btn:hover {
+  background: #0a2647;
+}
+
+/* ── edit form ── */
+.profile-popover-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-popover-form label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.profile-popover-form label:not(:first-child) {
+  margin-top: 10px;
+}
+
+.profile-popover-form input {
+  border: 1px solid #e6e9f2;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.profile-popover-form input:focus {
+  outline: none;
+  border-color: #0f3460;
+}
+
+.profile-popover-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.profile-popover-cancel,
+.profile-popover-save {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+}
+
+.profile-popover-cancel {
+  background: #f1f2f6;
+  color: #4b5563;
+}
+
+.profile-popover-cancel:hover {
+  background: #e6e9f2;
+}
+
+.profile-popover-save {
+  background: #0f3460;
+  color: #fff;
+}
+
+.profile-popover-save:hover:not(:disabled) {
+  background: #0a2647;
+}
+
+.profile-popover-save:disabled {
+  background: #a9b6c9;
+  cursor: not-allowed;
+}
+/* ===========================
+   AVATAR IMAGE SUPPORT
+=========================== */
+.user-avatar {
+  overflow: hidden;
+  padding: 0;
+}
+
+.user-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ===========================
+   PHOTO PICKER (edit mode)
+=========================== */
+.avatar-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.avatar-edit-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.avatar-edit-btn {
+  background: #f1f2f6;
+  color: #0f3460;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  width: fit-content;
+}
+
+.avatar-edit-btn:hover {
+  background: #e6e9f2;
+}
+
+.avatar-edit-hint {
+  font-size: 10.5px;
+  color: #9ca3af;
+}

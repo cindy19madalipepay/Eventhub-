@@ -1,0 +1,169 @@
+.filter-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+}
+
+.filter-row select {
+  padding: 10px 14px;
+  border: 2px solid #E8E8E8;
+  border-radius: 10px;
+  font-size: 14px;
+  min-width: 200px;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  padding: 0;
+}
+
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.users-table th {
+  text-align: left;
+  padding: 14px 20px;
+  background: #F8F8F8;
+  color: #1B0833;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.users-table td {
+  padding: 14px 20px;
+  border-top: 1px solid #eee;
+  font-size: 14px;
+  color: #333;
+}
+
+.role-badge {
+  background: rgba(114, 201, 45, 0.15);
+  color: #2f5a0f;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.status-dot {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.status-dot.active {
+  background: rgba(114, 201, 45, 0.15);
+  color: #2f5a0f;
+}
+
+.status-dot.inactive {
+  background: #ffe0e0;
+  color: #a11d1d;
+}
+
+.actions-cell {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-edit, .btn-toggle, .btn-delete {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-edit {
+  background: #E8F0FE;
+  color: #1a4fb4;
+}
+
+.btn-toggle {
+  background: #FFF4D6;
+  color: #8a6800;
+}
+
+.btn-delete {
+  background: #ffe0e0;
+  color: #a11d1d;
+}
+
+.btn-edit:disabled, .btn-toggle:disabled, .btn-delete:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(27, 8, 51, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 28px;
+  width: 100%;
+  max-width: 440px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-card h3 {
+  color: #1B0833;
+  margin-bottom: 20px;
+}
+
+.edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.edit-form .form-group input,
+.edit-form .form-group select {
+  padding: 10px 14px;
+  border: 2px solid #E8E8E8;
+  border-radius: 10px;
+  font-size: 14px;
+  width: 100%;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.btn-cancel, .btn-save {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-cancel {
+  background: #F0F0F0;
+  color: #333;
+}
+
+.btn-save {
+  background: linear-gradient(135deg, #72C92D, #A8E63E);
+  color: #1B0833;
+}

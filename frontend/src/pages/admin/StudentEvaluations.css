@@ -1,0 +1,289 @@
+/* ===========================
+   WRAPPER / HEADER
+=========================== */
+.student-eval-wrapper {
+  padding: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.eval-header {
+  margin-bottom: 28px;
+}
+
+.eval-header h1 {
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: #0a2647;
+  margin: 0 0 6px;
+}
+
+.eval-header p {
+  color: #6b7280;
+  font-size: 14.5px;
+  margin: 0;
+}
+
+.eval-loading {
+  text-align: center;
+  padding: 60px 20px;
+  color: #6b7280;
+  font-size: 15px;
+}
+
+/* ===========================
+   EMPTY STATE
+=========================== */
+.no-events {
+  text-align: center;
+  background: #fff;
+  border: 1px solid #e6e9f2;
+  border-radius: 14px;
+  padding: 60px 20px;
+}
+
+.no-events-icon {
+  font-size: 40px;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.no-events p {
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0 0 6px;
+}
+
+.no-events-hint {
+  color: #6b7280;
+  font-size: 13.5px;
+}
+
+/* ===========================
+   3-COLUMN CARD GRID
+=========================== */
+.events-eval-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 992px) {
+  .events-eval-list { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .events-eval-list { grid-template-columns: 1fr; }
+}
+
+/* ===========================
+   EVENT CARD
+=========================== */
+.event-eval-card {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1px solid #e6e9f2;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.event-eval-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px -8px rgba(15, 52, 96, 0.18);
+}
+
+.event-eval-info {
+  margin-bottom: 16px;
+}
+
+.event-eval-info h3 {
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-size: 16.5px;
+  font-weight: 700;
+  color: #0f3460;
+  margin: 0 0 8px;
+  line-height: 1.3;
+}
+
+.event-meta {
+  font-size: 12.5px;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* pushes action area to the bottom of the card, regardless of info length */
+.event-eval-card > *:last-child {
+  margin-top: auto;
+}
+
+/* ===========================
+   RATE BUTTON
+=========================== */
+.btn-evaluate {
+  width: 100%;
+  background: #0f3460;
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.btn-evaluate:hover {
+  background: #0a2647;
+}
+
+/* ===========================
+   EVALUATED STATE
+=========================== */
+.evaluated-badge {
+  border-top: 1px dashed #e6e9f2;
+  padding-top: 14px;
+}
+
+.submitted-stars {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 6px;
+}
+
+.submitted-stars .star {
+  font-size: 16px;
+  color: #e2e5ee;
+}
+
+.submitted-stars .star.filled {
+  color: #e8a33d;
+}
+
+.submitted-label {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #15803d;
+  background: #e6f6ec;
+  padding: 3px 10px;
+  border-radius: 999px;
+  margin-bottom: 8px;
+}
+
+.submitted-feedback {
+  font-size: 13px;
+  color: #4b5563;
+  font-style: italic;
+  margin: 6px 0 0;
+  line-height: 1.5;
+}
+
+/* ===========================
+   EVALUATION FORM
+=========================== */
+.eval-form {
+  border-top: 1px dashed #e6e9f2;
+  padding-top: 14px;
+  display: flex;
+  flex-direction: column;
+}
+
+.eval-form label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6b7280;
+  margin-bottom: 6px;
+}
+
+.eval-form label:not(:first-child) {
+  margin-top: 12px;
+}
+
+.star-input {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.star-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  line-height: 1;
+  color: #e2e5ee;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.1s ease, transform 0.1s ease;
+}
+
+.star-btn:hover {
+  transform: scale(1.1);
+}
+
+.star-btn.filled {
+  color: #e8a33d;
+}
+
+.eval-form textarea {
+  width: 100%;
+  border: 1px solid #e6e9f2;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 13.5px;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.eval-form textarea:focus {
+  outline: none;
+  border-color: #0f3460;
+}
+
+.form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.btn-cancel,
+.btn-submit {
+  flex: 1;
+  padding: 9px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: background 0.15s ease;
+}
+
+.btn-cancel {
+  background: #f1f2f6;
+  color: #4b5563;
+}
+
+.btn-cancel:hover {
+  background: #e6e9f2;
+}
+
+.btn-submit {
+  background: #0f3460;
+  color: #fff;
+}
+
+.btn-submit:hover:not(:disabled) {
+  background: #0a2647;
+}
+
+.btn-submit:disabled {
+  background: #a9b6c9;
+  cursor: not-allowed;
+}
