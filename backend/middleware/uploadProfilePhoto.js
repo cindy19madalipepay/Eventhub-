@@ -1,8 +1,12 @@
 const multer = require('multer');
 const path   = require('path');
 const fs     = require('fs');
+require('dotenv').config();
 
-const uploadDir = path.join(__dirname, '..', 'uploads', 'profiles');
+// Use UPLOAD_PATH from environment (e.g. /tmp/uploads on Vercel) so this
+// works both locally (./uploads) and on Vercel's read-only filesystem.
+const UPLOAD_PATH = process.env.UPLOAD_PATH || './uploads';
+const uploadDir = path.join(UPLOAD_PATH, 'profiles');
 
 // Make sure the folder exists so multer doesn't fail on first upload
 if (!fs.existsSync(uploadDir)) {
