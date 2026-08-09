@@ -1,28 +1,22 @@
 const multer = require('multer');
-const path   = require('path');
-const fs     = require('fs');
-require('dotenv').config();
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('../config/cloudinary');
 
-// Use UPLOAD_PATH from environment (e.g. /tmp/uploads on Vercel) so this
-// works both locally (./uploads) and on Vercel's read-only filesystem.
-const UPLOAD_PATH = process.env.UPLOAD_PATH || './uploads';
-const uploadDir = path.join(UPLOAD_PATH, 'profiles');
-
-// Make sure the folder exists so multer doesn't fail on first upload
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    // e.g. 14-1721550000000.png  (user_id - timestamp . ext)
-    const ext = path.extname(file.originalname);
-    const userId = req.user?.user_id || 'unknown';
-    cb(null, `${userId}-${Date.now()}${ext}`);
-  },
+// Uploads go straight to Cloudinary instead of local/tmp disk — this is
+// required on Vercel, since serverless functions can't persist files
+// written to disk between requests (only /tmp exists, and it's wiped
+// after each request finishes). Cloudinary gives back a permanent URL
+// we can store in the database instead of a local filename.
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: (req, file) => ({
+    folder: 'eventhub/profiles',
+    // e.g. 14-1721550000000  (user_id - timestamp, no extension needed —
+    // Cloudinary infers format automatically)
+    public_id: `${req.user?.user_id || 'unknown'}-${Date.now()}`,
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+    transformation: [{ width: 400, height: 400, crop: 'fill', gravity: 'face' }],
+  }),
 });
 
 const fileFilter = (req, file, cb) => {

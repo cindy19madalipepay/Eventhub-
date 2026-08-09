@@ -41,20 +41,15 @@ const menuItems = {
   ],
 };
 
-// Uploaded profile photos are served from the backend's /uploads route.
-// We derive this from the same API base URL your app already uses
-// (api.defaults.baseURL), so it automatically points at the right
-// backend whether you're on localhost or the deployed Vercel URL —
-// no more hardcoded localhost that breaks in production.
-const API_ROOT = (api.defaults.baseURL || '').replace(/\/api\/?$/, '');
-const UPLOADS_BASE_URL = `${API_ROOT}/uploads/profiles`;
-
-// Renders the user's photo if they have one, otherwise falls back to initials
+// Renders the user's photo if they have one, otherwise falls back to initials.
+// profile_picture is now a full Cloudinary URL (stored that way since the
+// switch away from local disk uploads), so we use it directly — no more
+// building the URL from a base path + filename.
 const Avatar = ({ user, size = 'md', src }) => {
   const initials = `${user?.first_name?.[0] || ''}${user?.last_name?.[0] || ''}`;
   const className = `user-avatar ${size === 'lg' ? 'user-avatar-lg' : ''}`;
 
-  const photoUrl = src || (user?.profile_picture ? `${UPLOADS_BASE_URL}/${user.profile_picture}` : null);
+  const photoUrl = src || user?.profile_picture || null;
 
   if (photoUrl) {
     return <div className={className}><img src={photoUrl} alt="" className="user-avatar-img" /></div>;

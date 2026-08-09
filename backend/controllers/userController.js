@@ -124,6 +124,11 @@ const updateUser = async (req, res) => {
 // Distinct from updateUser: this is self-service (name + optional photo),
 // scoped to req.user.user_id from the auth token — never an :id param, so a
 // user can only ever edit their own account this way.
+//
+// req.file.path here is the full Cloudinary URL (not a local filename) —
+// multer-storage-cloudinary uploads the file directly to Cloudinary and
+// gives us back its permanent hosted URL, so that's what we store in the
+// profile_picture column now instead of a filename.
 const updateOwnProfile = async (req, res) => {
   try {
     const userId = req.user.user_id;
@@ -138,7 +143,7 @@ const updateOwnProfile = async (req, res) => {
     if (req.file) {
       await pool.query(
         'UPDATE users SET first_name = ?, last_name = ?, profile_picture = ? WHERE user_id = ?',
-        [first_name, last_name, req.file.filename, userId]
+        [first_name, last_name, req.file.path, userId]
       );
     } else {
       await pool.query(
