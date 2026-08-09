@@ -20,7 +20,7 @@
   padding: 40px;
   width: 100%;
   max-width: 440px;
-  box-shadow: 0 20px 60px rgba(27, 8, 51, 0.35);
+  box-shadow: linear-gradient(180deg, #ffffff 0%, #ffffff 12%, #6a8f78 45%, #2f4a3d 80%, #1f3329 100%);
 }
 
 /* Logo */
