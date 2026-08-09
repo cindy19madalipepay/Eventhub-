@@ -163,8 +163,6 @@ const Sidebar = () => {
     e.preventDefault();
     setSaving(true);
     try {
-      // TODO: point this at your actual profile-update endpoint.
-      // Using FormData so it works whether or not a new photo was picked.
       const payload = new FormData();
       payload.append('first_name', form.first_name);
       payload.append('last_name', form.last_name);
@@ -174,8 +172,6 @@ const Sidebar = () => {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      // Adjust this if your backend returns the updated user under a
-      // different key (e.g. res.data.user vs res.data directly)
       const updatedUser = res.data?.user || res.data || {};
 
       setLocalUser((prev) => ({ ...prev, ...form, ...updatedUser }));

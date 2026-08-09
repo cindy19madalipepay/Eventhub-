@@ -11,8 +11,6 @@ const storage = new CloudinaryStorage({
   cloudinary,
   params: (req, file) => ({
     folder: 'eventhub/profiles',
-    // e.g. 14-1721550000000  (user_id - timestamp, no extension needed —
-    // Cloudinary infers format automatically)
     public_id: `${req.user?.user_id || 'unknown'}-${Date.now()}`,
     allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
     transformation: [{ width: 400, height: 400, crop: 'fill', gravity: 'face' }],
