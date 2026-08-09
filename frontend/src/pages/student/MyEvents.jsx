@@ -386,7 +386,14 @@ const MyEvents = () => {
             return (
               <div key={event.event_id} className={`event-card theme-${cfg.theme}`}>
                 {bannerSrc && (
-                  <div className="event-banner">
+                  <div
+                    className="event-banner"
+                    onClick={() => setLightbox({ type: 'image', src: bannerSrc })}
+                    role="button"
+                    tabIndex={0}
+                    title="Click to view full size"
+                    style={{ cursor: 'pointer' }}
+                  >
                     <img
                       src={bannerSrc}
                       alt=""
