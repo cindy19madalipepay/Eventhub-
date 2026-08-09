@@ -6,7 +6,7 @@
 
 .login-wrapper {
   min-height: 100vh;
-  background: linear-gradient(135deg, #1B0833 0%, #250A45 50%, #320C5B 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #ffffff 12%, #6a8f78 45%, #2f4a3d 80%, #1f3329 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -260,6 +260,6 @@
   justify-content: center;
   min-height: 100vh;
   font-size: 18px;
-  color: #72C92D;
-  background: linear-gradient(135deg, #1B0833 0%, #250A45 50%, #320C5B 100%);
+  color: #1a2e22;
+  background: linear-gradient(180deg, #ffffff 0%, #ffffff 12%, #6a8f78 45%, #2f4a3d 80%, #1f3329 100%);
 }
