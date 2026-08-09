@@ -6,7 +6,7 @@
 
 .login-wrapper {
   min-height: 100vh;
-  background: linear-gradient(180deg, #a8c9b5 0%, #6a8f78 45%, #2f4a3d 80%, #1f3329 100%); 
+  background: linear-gradient(180deg, #a8c9b5 0%, #6a8f78 45%, #2f4a3d 80%, #1f3329 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -80,7 +80,7 @@
 
 .form-group input:focus {
   border-color: #6a8f78;
-  box-shadow: 0 0 0 3px rgba(114, 201, 45, 0.18);
+  box-shadow: 0 0 0 3px rgba(106, 143, 120, 0.18);
 }
 
 /* ===== CATEGORY SELECTOR (NEW) ===== */
@@ -105,13 +105,13 @@
 
 .category-btn:hover {
   border-color: #6a8f78;
-  background: rgba(114, 201, 45, 0.08);
+  background: rgba(106, 143, 120, 0.08);
 }
 
 .category-btn.active {
   border-color: #6a8f78;
-  background: linear-gradient(135deg, rgba(114, 201, 45, 0.12), rgba(168, 230, 62, 0.12));
-  box-shadow: 0 0 0 3px rgba(114, 201, 45, 0.15);
+  background: linear-gradient(135deg, rgba(106, 143, 120, 0.12), rgba(168, 201, 181, 0.12));
+  box-shadow: 0 0 0 3px rgba(106, 143, 120, 0.15);
 }
 
 .cat-icon {
@@ -155,12 +155,12 @@
 .role-btn:hover {
   border-color: #6a8f78;
   color: #1B0833;
-  background: rgba(168, 230, 62, 0.15);
+  background: rgba(168, 201, 181, 0.15);
 }
 
 .role-btn.active {
   border-color: #6a8f78;
-  background: linear-gradient(135deg, #6a8f78, #a8c9b5); 
+  background: linear-gradient(135deg, #6a8f78, #a8c9b5);
   color: #1B0833;
 }
 
@@ -190,7 +190,7 @@
 }
 
 .toggle-pw:hover {
-  color: #258a1a;
+  color: #2f4a3d;
 }
 
 /* Forgot Password */
@@ -206,7 +206,7 @@
 }
 
 .forgot-row a:hover {
-  color: #44630e;
+  color: #2f4a3d;
   text-decoration: underline;
 }
 
@@ -226,7 +226,7 @@
 
 .btn-login:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 22px rgba(114, 201, 45, 0.35);
+  box-shadow: 0 10px 22px rgba(106, 143, 120, 0.35);
 }
 
 .btn-login:disabled {
@@ -249,7 +249,7 @@
 }
 
 .register-link a:hover {
-  color: #44630e;
+  color: #2f4a3d;
   text-decoration: underline;
 }
 

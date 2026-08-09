@@ -6,7 +6,7 @@
 
 .register-wrapper {
   min-height: 100vh;
-  background: linear-gradient(135deg, #1B0833 0%, #250A45 50%, #320C5B 100%);
+  background: linear-gradient(180deg, #a8c9b5 0%, #6a8f78 45%, #2f4a3d 80%, #1f3329 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -89,8 +89,8 @@
 
 .form-group input:focus,
 .form-group select:focus {
-  border-color: #72C92D;
-  box-shadow: 0 0 0 3px rgba(114, 201, 45, 0.18);
+  border-color: #6a8f78;
+  box-shadow: 0 0 0 3px rgba(106, 143, 120, 0.18);
 }
 
 /* ===== CATEGORY SELECTOR (NEW) ===== */
@@ -114,14 +114,14 @@
 }
 
 .category-btn:hover {
-  border-color: #72C92D;
-  background: rgba(114, 201, 45, 0.08);
+  border-color: #6a8f78;
+  background: rgba(106, 143, 120, 0.08);
 }
 
 .category-btn.active {
-  border-color: #72C92D;
-  background: linear-gradient(135deg, rgba(114, 201, 45, 0.12), rgba(168, 230, 62, 0.12));
-  box-shadow: 0 0 0 3px rgba(114, 201, 45, 0.15);
+  border-color: #6a8f78;
+  background: linear-gradient(135deg, rgba(106, 143, 120, 0.12), rgba(168, 201, 181, 0.12));
+  box-shadow: 0 0 0 3px rgba(106, 143, 120, 0.15);
 }
 
 .cat-icon {
@@ -163,21 +163,21 @@
 }
 
 .role-btn:hover {
-  border-color: #72C92D;
+  border-color: #6a8f78;
   color: #1B0833;
-  background: rgba(168, 230, 62, 0.15);
+  background: rgba(168, 201, 181, 0.15);
 }
 
 .role-btn.active {
-  border-color: #72C92D;
-  background: linear-gradient(135deg, #72C92D, #A8E63E);
+  border-color: #6a8f78;
+  background: linear-gradient(135deg, #6a8f78, #a8c9b5);
   color: #1B0833;
 }
 
 .btn-register {
   padding: 13px;
   margin-top: 6px;
-  background: linear-gradient(135deg, #72C92D, #A8E63E);
+  background: linear-gradient(135deg, #6a8f78, #a8c9b5);
   color: #1B0833;
   border: none;
   border-radius: 10px;
@@ -189,7 +189,7 @@
 
 .btn-register:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(114, 201, 45, 0.35);
+  box-shadow: 0 8px 20px rgba(106, 143, 120, 0.35);
 }
 
 .btn-register:disabled {
@@ -231,22 +231,22 @@
   transition: all 0.2s;
 }
 .btn-view-terms:hover {
-  background: rgba(114, 201, 45, 0.08);
-  border-color: #72C92D;
+  background: rgba(106, 143, 120, 0.08);
+  border-color: #6a8f78;
 }
 
 .terms-accepted-badge {
   padding: 12px;
-  background: rgba(114, 201, 45, 0.12);
-  border: 2px solid #72C92D;
+  background: rgba(106, 143, 120, 0.12);
+  border: 2px solid #6a8f78;
   border-radius: 10px;
-  color: #44630e;
+  color: #2f4a3d;
   font-size: 14px;
   font-weight: 600;
   text-align: center;
 }
 
-/* Terms Modal — recolored to match the register card's purple/green theme */
+/* Terms Modal — recolored to match the register card's green theme */
 .terms-overlay {
   position: fixed;
   inset: 0;
@@ -325,8 +325,8 @@
 .terms-footer-note {
   margin-top: 20px;
   padding: 14px 16px;
-  background: rgba(114, 201, 45, 0.08);
-  border-left: 3px solid #72C92D;
+  background: rgba(106, 143, 120, 0.08);
+  border-left: 3px solid #6a8f78;
   border-radius: 8px;
   font-size: 13px;
   color: #555;
@@ -364,7 +364,7 @@
 .btn-terms-accept {
   flex: 2;
   padding: 12px;
-  background: linear-gradient(135deg, #72C92D, #A8E63E);
+  background: linear-gradient(135deg, #6a8f78, #a8c9b5);
   border: none;
   border-radius: 10px;
   font-size: 14px;
@@ -373,5 +373,5 @@
   cursor: pointer;
   transition: opacity 0.2s, transform 0.2s;
 }
-.btn-terms-accept:hover    { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(114, 201, 45, 0.35); }
+.btn-terms-accept:hover    { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(106, 143, 120, 0.35); }
 .btn-terms-accept:disabled { opacity: 0.4; cursor: not-allowed; background: #ccc; box-shadow: none; transform: none; }
