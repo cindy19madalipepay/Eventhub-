@@ -1,7 +1,7 @@
 const { pool } = require('../config/db');
 const { ALL_CRITERIA_KEYS } = require('../config/evaluationCriteria');
 
-// ─── SUBMIT EVALUATION (student) ─────────────────────────────────────────────
+// ─── SUBMIT EVALUATION (student) ────────────────────────────────────────────
 const submitEvaluation = async (req, res) => {
   try {
     const { event_id, criteria_ratings, most_helpful, least_helpful, suggestions } = req.body;
@@ -20,6 +20,20 @@ const submitEvaluation = async (req, res) => {
       if (!score || score < 1 || score > 5) {
         return res.status(400).json({ success: false, message: `Please rate every item (missing: ${key}).` });
       }
+    }
+
+    // Evaluation only opens once the event has actually ended (date_end +
+    // time_end, or end of day if time_end wasn't set).
+    const [eventRows] = await pool.query(
+      `SELECT (NOW() >= TIMESTAMP(date_end, COALESCE(time_end, '23:59:59'))) AS has_ended
+       FROM events WHERE event_id = ?`,
+      [event_id]
+    );
+    if (eventRows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Event not found.' });
+    }
+    if (!eventRows[0].has_ended) {
+      return res.status(403).json({ success: false, message: 'Evaluation opens once the event has ended.' });
     }
 
     // Check student actually attended this event
@@ -82,7 +96,7 @@ const submitEvaluation = async (req, res) => {
   }
 };
 
-// ─── GET EVALUATIONS BY EVENT (admin / dept head) ────────────────────────────
+// ─── GET EVALUATIONS BY EVENT (admin / dept head) ───────────────────────────
 const getEvaluationsByEvent = async (req, res) => {
   try {
     const { id } = req.params;
@@ -99,7 +113,6 @@ const getEvaluationsByEvent = async (req, res) => {
     `;
     const params = [id];
 
-    // Dept head: only see their department's evaluations
     if (req.user.role === 'department_head') {
       query += ' AND u.department_id = ?';
       params.push(req.user.department_id);
@@ -109,8 +122,6 @@ const getEvaluationsByEvent = async (req, res) => {
 
     const [evaluations] = await pool.query(query, params);
 
-    // Per-criterion averages across all respondents (the "Summary Evaluation
-    // Sheet" weighted-mean columns) — handy for an admin report screen later.
     const evalIds = evaluations.map((e) => e.evaluation_id);
     let criteriaAverages = [];
     if (evalIds.length > 0) {
@@ -145,7 +156,7 @@ const getEvaluationsByEvent = async (req, res) => {
   }
 };
 
-// ─── GET MY EVALUATIONS (student) ────────────────────────────────────────────
+// ─── GET MY EVALUATIONS (student) ───────────────────────────────────────────
 const getMyEvaluations = async (req, res) => {
   try {
     const [evaluations] = await pool.query(

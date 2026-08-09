@@ -9,7 +9,6 @@ const scanAttendance = async (req, res) => {
       return res.status(400).json({ success: false, message: 'QR code data is required.' });
     }
 
-    // 1. Find the ticket by QR code
     const [tickets] = await pool.query(
       `SELECT t.*, e.event_name, e.date_start, e.status AS event_status,
               u.first_name, u.last_name, u.department_id, u.year_level, u.block
@@ -26,7 +25,6 @@ const scanAttendance = async (req, res) => {
 
     const ticket = tickets[0];
 
-    // 2. Validate ticket status
     if (ticket.status === 'blocked') {
       return res.status(403).json({ success: false, message: 'This ticket has been blocked.' });
     }
@@ -37,7 +35,6 @@ const scanAttendance = async (req, res) => {
       return res.status(402).json({ success: false, message: 'Payment not yet validated for this ticket.' });
     }
 
-    // 3. Check if already scanned for this event
     const [existing] = await pool.query(
       'SELECT attendance_id FROM attendance WHERE ticket_id = ? AND event_id = ?',
       [ticket.ticket_id, ticket.event_id]
@@ -47,14 +44,12 @@ const scanAttendance = async (req, res) => {
       return res.status(409).json({ success: false, message: 'Attendance already recorded for this ticket.' });
     }
 
-    // 4. Log attendance
     await pool.query(
       `INSERT INTO attendance (ticket_id, user_id, event_id, scanned_at, scanned_by, method)
        VALUES (?, ?, ?, NOW(), ?, ?)`,
       [ticket.ticket_id, ticket.user_id, ticket.event_id, req.user.user_id, method]
     );
 
-    // 5. Mark ticket as used
     await pool.query("UPDATE tickets SET status = 'used' WHERE ticket_id = ?", [ticket.ticket_id]);
 
     return res.status(200).json({
@@ -75,7 +70,11 @@ const scanAttendance = async (req, res) => {
   }
 };
 
-// ─── SELF-SERVICE ATTENDANCE REGISTRATION (student, photo-based) ────────────
+// ─── SELF-SERVICE ATTENDANCE REGISTRATION (student, photo-based) ───────────
+// Check-in window rule: attendance can only be registered starting exactly
+// at the event's date_start + time_start, and closes 30 minutes later. The
+// window is computed in SQL (TIMESTAMPDIFF) rather than in JS so we never
+// have to worry about server/browser timezone mismatches.
 const registerAttendance = async (req, res) => {
   try {
     const { ticket_id } = req.body;
@@ -87,9 +86,9 @@ const registerAttendance = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Photo evidence is required.' });
     }
 
-    // 1. Find the ticket and confirm it belongs to this student
     const [tickets] = await pool.query(
-      `SELECT t.*, e.event_name, e.date_start, e.status AS event_status
+      `SELECT t.*, e.event_name, e.date_start, e.time_start, e.status AS event_status,
+              TIMESTAMPDIFF(MINUTE, TIMESTAMP(e.date_start, e.time_start), NOW()) AS minutes_since_start
        FROM tickets t
        JOIN events e ON t.event_id = e.event_id
        WHERE t.ticket_id = ? AND t.user_id = ?`,
@@ -102,7 +101,6 @@ const registerAttendance = async (req, res) => {
 
     const ticket = tickets[0];
 
-    // 2. Validate ticket status
     if (ticket.status === 'blocked') {
       return res.status(403).json({ success: false, message: 'This ticket has been blocked.' });
     }
@@ -116,7 +114,19 @@ const registerAttendance = async (req, res) => {
       return res.status(402).json({ success: false, message: 'Your payment was rejected. Please upload a new receipt first.' });
     }
 
-    // 3. Check if already recorded (safety net alongside ticket.status check)
+    if (ticket.minutes_since_start < 0) {
+      return res.status(403).json({
+        success: false,
+        message: `This event hasn't started yet. Check-in opens at ${ticket.time_start}.`,
+      });
+    }
+    if (ticket.minutes_since_start > 30) {
+      return res.status(410).json({
+        success: false,
+        message: 'The 30-minute check-in window has closed. This event has been marked as missed.',
+      });
+    }
+
     const [existing] = await pool.query(
       'SELECT attendance_id FROM attendance WHERE ticket_id = ? AND event_id = ?',
       [ticket.ticket_id, ticket.event_id]
@@ -126,14 +136,12 @@ const registerAttendance = async (req, res) => {
       return res.status(409).json({ success: false, message: 'Attendance already recorded for this ticket.' });
     }
 
-    // 4. Log attendance with photo, self-reported (scanned_by is null)
     await pool.query(
       `INSERT INTO attendance (ticket_id, user_id, event_id, scanned_at, scanned_by, method, photo)
        VALUES (?, ?, ?, NOW(), NULL, 'self_upload', ?)`,
       [ticket.ticket_id, req.user.user_id, ticket.event_id, req.file.filename]
     );
 
-    // 5. Mark ticket as used
     await pool.query("UPDATE tickets SET status = 'used' WHERE ticket_id = ?", [ticket.ticket_id]);
 
     return res.status(201).json({
@@ -147,7 +155,52 @@ const registerAttendance = async (req, res) => {
   }
 };
 
-// ─── GET ATTENDANCE BY EVENT (admin/dept head) ───────────────────────────────
+// ─── SELF-SERVICE CHECKOUT (student, photo-based proof of leaving) ─────────
+// Requires an existing check-in attendance row for this event that hasn't
+// been checked out yet. Stamps checkout_at + stores the checkout photo.
+const registerCheckout = async (req, res) => {
+  try {
+    const { event_id } = req.body;
+
+    if (!event_id) {
+      return res.status(400).json({ success: false, message: 'Event ID is required.' });
+    }
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'Checkout photo is required.' });
+    }
+
+    const [rows] = await pool.query(
+      `SELECT attendance_id, checkout_at
+       FROM attendance
+       WHERE user_id = ? AND event_id = ?`,
+      [req.user.user_id, event_id]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No check-in record found for this event. You must check in before checking out.',
+      });
+    }
+
+    if (rows[0].checkout_at) {
+      return res.status(409).json({ success: false, message: 'You have already checked out of this event.' });
+    }
+
+    await pool.query(
+      `UPDATE attendance SET checkout_at = NOW(), checkout_photo = ? WHERE attendance_id = ?`,
+      [req.file.filename, rows[0].attendance_id]
+    );
+
+    return res.status(200).json({ success: true, message: 'Checked out successfully! ✅' });
+
+  } catch (error) {
+    console.error('RegisterCheckout error:', error);
+    return res.status(500).json({ success: false, message: 'Server error.' });
+  }
+};
+
+// ─── GET ATTENDANCE BY EVENT (admin/dept head) ──────────────────────────────
 const getAttendanceByEvent = async (req, res) => {
   try {
     const { id } = req.params;
@@ -164,7 +217,6 @@ const getAttendanceByEvent = async (req, res) => {
     `;
     const params = [id];
 
-    // Department head can only see their own department
     if (req.user.role === 'department_head') {
       query += ' AND u.department_id = ?';
       params.push(req.user.department_id);
@@ -187,11 +239,16 @@ const getAttendanceByEvent = async (req, res) => {
   }
 };
 
-// ─── GET MY ATTENDANCE (student) ─────────────────────────────────────────────
+// ─── GET MY ATTENDANCE (student) ────────────────────────────────────────────
+// "Missed" is computed purely from time, not from the admin manually marking
+// the event completed: any ticket where the 30-minute check-in window has
+// already elapsed and the ticket was never used counts as missed.
 const getMyAttendance = async (req, res) => {
   try {
     const [attended] = await pool.query(
-      `SELECT a.attendance_id, a.scanned_at, a.photo, e.event_name, e.date_start, e.venue
+      `SELECT a.attendance_id, a.scanned_at, a.photo,
+              a.checkout_at, a.checkout_photo,
+              e.event_id, e.event_name, e.date_start, e.venue
        FROM attendance a
        JOIN events e ON a.event_id = e.event_id
        WHERE a.user_id = ?
@@ -199,20 +256,19 @@ const getMyAttendance = async (req, res) => {
       [req.user.user_id]
     );
 
-    // Build a full URL for the photo, same pattern as payment_proof
     const attendedWithPhotoUrl = attended.map((a) => ({
       ...a,
       photo_url: a.photo ? `/uploads/attendance/${a.photo}` : null,
+      checkout_photo_url: a.checkout_photo ? `/uploads/attendance/${a.checkout_photo}` : null,
     }));
 
-    // Events the student registered for but didn't attend
     const [missed] = await pool.query(
       `SELECT e.event_name, e.date_start, e.venue
        FROM tickets t
        JOIN events e ON t.event_id = e.event_id
        WHERE t.user_id = ?
          AND t.status != 'used'
-         AND e.status = 'completed'`,
+         AND TIMESTAMPDIFF(MINUTE, TIMESTAMP(e.date_start, e.time_start), NOW()) > 30`,
       [req.user.user_id]
     );
 
@@ -223,13 +279,14 @@ const getMyAttendance = async (req, res) => {
   }
 };
 
-// ─── FULL REPORT (admin) ─────────────────────────────────────────────────────
+// ─── FULL REPORT (admin) ────────────────────────────────────────────────────
 const getAttendanceReport = async (req, res) => {
   try {
     const { event_id, department_id, year_level, block } = req.query;
 
     let query = `
       SELECT a.attendance_id, a.scanned_at, a.method, a.photo,
+             a.checkout_at, a.checkout_photo,
              u.first_name, u.last_name, u.year_level, u.block,
              u.role, u.position,
              d.department_name, e.event_name, e.date_start
@@ -257,7 +314,7 @@ const getAttendanceReport = async (req, res) => {
   }
 };
 
-// ─── DEPARTMENTS OVERVIEW (admin) ────────────────────────────────────────────
+// ─── DEPARTMENTS OVERVIEW (admin) ───────────────────────────────────────────
 const getDepartmentsOverview = async (req, res) => {
   try {
     let query = `
@@ -276,8 +333,6 @@ const getDepartmentsOverview = async (req, res) => {
     `;
     const params = [];
 
-    // Department heads only see their own department (used by AdminDashboard
-    // when reused at /dept/dashboard, and by AttendanceReport's picker step).
     if (req.user.role === 'department_head') {
       query += ' WHERE d.department_id = ?';
       params.push(req.user.department_id);
@@ -297,7 +352,7 @@ const getDepartmentsOverview = async (req, res) => {
   }
 };
 
-// ─── DEPARTMENT EVENT SUMMARY (admin) ────────────────────────────────────────
+// ─── DEPARTMENT EVENT SUMMARY (admin) ───────────────────────────────────────
 const getDepartmentSummary = async (req, res) => {
   try {
     const { deptId } = req.params;
@@ -331,7 +386,7 @@ const getDepartmentSummary = async (req, res) => {
   }
 };
 
-// ─── YEAR + BLOCK ATTENDANCE STATS (admin) ───────────────────────────────────
+// ─── YEAR + BLOCK ATTENDANCE STATS (admin) ──────────────────────────────────
 const getYearBlockStats = async (req, res) => {
   try {
     const { deptId } = req.params;
@@ -369,11 +424,7 @@ const getYearBlockStats = async (req, res) => {
   }
 };
 
-// ─── BLOCK-LEVEL EVENT REPORT (admin) ────────────────────────────────────────
-// Powers the "BSIT 3rd Year Block 1" screen: one card per event, each with
-// its own attended/total count, progress bar, and list of attendees
-// (with photo proof where available).
-// GET /attendance/block-report?department_id=&year_level=&block=
+// ─── BLOCK-LEVEL EVENT REPORT (admin) ───────────────────────────────────────
 const getBlockReport = async (req, res) => {
   try {
     const { department_id, year_level, block } = req.query;
@@ -385,7 +436,6 @@ const getBlockReport = async (req, res) => {
       });
     }
 
-    // Every event this exact year/block was invited to, with total ticket count
     const [events] = await pool.query(
       `SELECT e.event_id, e.event_name, e.date_start, e.time_start, e.venue,
               COUNT(DISTINCT t.ticket_id) AS total_students
@@ -398,11 +448,6 @@ const getBlockReport = async (req, res) => {
       [department_id, year_level, block]
     );
 
-    // Actual attendees for this exact year/block, across those events.
-    // Added u.role and u.position so the frontend can show a
-    // "Student Leader" badge (with their position/designation) next to
-    // attendees who hold that role, instead of everyone looking like a
-    // plain student.
     const [attendance] = await pool.query(
       `SELECT a.attendance_id, a.event_id, a.scanned_at, a.photo, a.method,
               u.first_name, u.last_name, u.year_level, u.block,
@@ -421,11 +466,7 @@ const getBlockReport = async (req, res) => {
   }
 };
 
-// ─── STUDENT LEADER ORG BREAKDOWN WITHIN A DEPARTMENT (admin/dept head) ──────
-// Powers a small "Student Leaders by Organization" card on the year-blocks
-// screen — counts student_leader accounts in this department grouped by
-// their organization (SSC / CSC / a specific org name).
-// GET /attendance/org-breakdown/:deptId
+// ─── STUDENT LEADER ORG BREAKDOWN WITHIN A DEPARTMENT (admin/dept head) ─────
 const getOrgBreakdown = async (req, res) => {
   try {
     const { deptId } = req.params;
@@ -439,7 +480,6 @@ const getOrgBreakdown = async (req, res) => {
     }
     const departmentId = deptRows[0].department_id;
 
-    // Department heads can only pull their own department's breakdown
     if (req.user.role === 'department_head' && req.user.department_id !== departmentId) {
       return res.status(403).json({ success: false, message: 'Not authorized for this department.' });
     }
@@ -464,6 +504,7 @@ const getOrgBreakdown = async (req, res) => {
 module.exports = {
   scanAttendance,
   registerAttendance,
+  registerCheckout,
   getAttendanceByEvent,
   getMyAttendance,
   getAttendanceReport,

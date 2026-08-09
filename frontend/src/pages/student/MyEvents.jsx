@@ -8,9 +8,6 @@ import './MyEvents.css';
 // to get the root the /uploads static folder is served from.
 const UPLOADS_BASE = api.defaults.baseURL.replace(/\/api\/?$/, '');
 
-// A banner is either an uploaded image (banner_image, served from
-// /uploads/banners/) or a pasted external link (banner_url) — whichever
-// the event actually has set.
 const getBannerSrc = (event) => {
   if (event.banner_image) return `${UPLOADS_BASE}/uploads/banners/${event.banner_image}`;
   if (event.banner_url) return event.banner_url;
@@ -18,15 +15,17 @@ const getBannerSrc = (event) => {
 };
 
 // How long after an event's start time a student can still register/confirm
-// attendance. After this, if they haven't completed registration, the event
-// is marked as missed and the action is locked out entirely.
-const REGISTRATION_GRACE_MINUTES = 60;
+// attendance. After this, if they haven't completed check-in, the event is
+// marked as missed and the action is locked out entirely. Matches the
+// backend's 30-minute check-in window (see attendanceController.js).
+const REGISTRATION_GRACE_MINUTES = 30;
 
 const STATUS_CONFIG = {
   not_started:         { label: 'NOT YET OPEN',        theme: 'blue',   button: null },
   not_registered:      { label: 'NOT REGISTERED',      theme: 'blue',   button: 'Register Attendance' },
   upload_receipt:      { label: 'UPLOAD RECEIPT',      theme: 'orange', button: 'Pay Now' },
   register_attendance: { label: 'REGISTER ATTENDANCE', theme: 'blue',   button: 'Upload Attendance Proof' },
+  checkout:            { label: 'CHECKOUT REQUIRED',   theme: 'orange', button: 'Checkout (Upload Proof)' },
   missed:               { label: 'MISSED',              theme: 'orange', button: null },
   pending_evaluation:  { label: 'PENDING EVALUATION',  theme: 'orange', button: 'Evaluate Event' },
   completed:           { label: 'COMPLETED',           theme: 'green',  button: null },
@@ -35,22 +34,28 @@ const STATUS_CONFIG = {
 const MyEvents = () => {
   const [allEvents, setAllEvents] = useState([]);
   const [tickets, setTickets] = useState([]);
+  const [attendanceRecords, setAttendanceRecords] = useState([]);
   const [evaluations, setEvaluations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all'); // 'all' | 'upcoming' | 'completed'
   const [busyEventId, setBusyEventId] = useState(null);
 
-  // File upload plumbing — one hidden input reused for both receipt + attendance photo
+  // File upload plumbing — one hidden input reused for payment receipts
   const fileInputRef = useRef(null);
-  const [pendingUpload, setPendingUpload] = useState(null); // { type: 'payment' | 'attendance', ticketId }
+  const [pendingUpload, setPendingUpload] = useState(null); // { type: 'payment', ticketId }
 
-  // Evaluation modal (shared rubric component — matches the RSU evaluation sheet)
+  // Evaluation modal
   const [evalEvent, setEvalEvent] = useState(null);
 
-  // Attendance proof modal
+  // Attendance check-in proof modal
   const [attendanceModal, setAttendanceModal] = useState(null); // { event, ticket }
   const [attendancePhoto, setAttendancePhoto] = useState(null);
   const [submittingAttendance, setSubmittingAttendance] = useState(false);
+
+  // Checkout (logout) proof modal
+  const [checkoutModal, setCheckoutModal] = useState(null); // { event }
+  const [checkoutPhoto, setCheckoutPhoto] = useState(null);
+  const [submittingCheckout, setSubmittingCheckout] = useState(false);
 
   useEffect(() => {
     fetchAll();
@@ -58,13 +63,15 @@ const MyEvents = () => {
 
   const fetchAll = async () => {
     try {
-      const [eventsRes, ticketsRes, evalRes] = await Promise.all([
+      const [eventsRes, ticketsRes, attendanceRes, evalRes] = await Promise.all([
         api.get('/events'),
         api.get('/tickets/my'),
+        api.get('/attendance/my'),
         api.get('/evaluations/my'),
       ]);
       setAllEvents(eventsRes.data.events || []);
       setTickets(ticketsRes.data.tickets || []);
+      setAttendanceRecords(attendanceRes.data.attended || []);
       setEvaluations(evalRes.data.evaluations || []);
     } catch (e) {
       console.error(e);
@@ -75,6 +82,7 @@ const MyEvents = () => {
   };
 
   const getTicketForEvent = (event_id) => tickets.find((t) => t.event_id === event_id);
+  const getAttendanceForEvent = (event_id) => attendanceRecords.find((a) => a.event_id === event_id);
 
   const isEvaluated = (event) =>
     evaluations.some((e) => e.event_name === event.event_name && e.date_start === event.date_start);
@@ -83,9 +91,9 @@ const MyEvents = () => {
 
   const hasEventStarted = (event) => new Date() >= getEventStart(event);
 
-  // True once the 1-hour registration grace period from the event's start
-  // time has fully elapsed — after this, registering/confirming attendance
-  // is locked out for good.
+  // True once the 30-minute check-in window from the event's start time has
+  // fully elapsed — after this, registering/confirming attendance is locked
+  // out for good and the event counts as missed.
   const isPastRegistrationWindow = (event) => {
     const deadline = new Date(getEventStart(event).getTime() + REGISTRATION_GRACE_MINUTES * 60000);
     return new Date() > deadline;
@@ -100,6 +108,7 @@ const MyEvents = () => {
 
   const getStatus = (event) => {
     const ticket = getTicketForEvent(event.event_id);
+    const attendance = getAttendanceForEvent(event.event_id);
 
     if (!ticket) {
       if (!hasEventStarted(event)) return 'not_started';
@@ -116,6 +125,13 @@ const MyEvents = () => {
       // window closed — counts as missed, same as never registering at all.
       if (isPastRegistrationWindow(event)) return 'missed';
       return 'register_attendance';
+    }
+
+    // Checked in. Offer checkout while the event is still ongoing and they
+    // haven't checked out yet. Once the event ends, checkout is no longer
+    // required to move on to evaluation.
+    if (attendance && !attendance.checkout_at && !hasEventEnded(event)) {
+      return 'checkout';
     }
 
     return isEvaluated(event) ? 'completed' : 'pending_evaluation';
@@ -197,7 +213,7 @@ const MyEvents = () => {
     }
   };
 
-  // ─── Attendance proof modal ─────────────────────────────────────────────
+  // ─── Attendance check-in proof modal ────────────────────────────────────
   // ticket === null means this is a brand-new registration (no ticket yet);
   // the ticket gets created at submit time, right before the photo upload.
   const openAttendanceModal = (event, ticket = null) => {
@@ -215,21 +231,17 @@ const MyEvents = () => {
     try {
       let ticketId = attendanceModal.ticket?.ticket_id;
 
-      // New registration flow: create the ticket first, then upload the photo
       if (!ticketId) {
         try {
           const ticketRes = await api.post('/tickets', { event_id: attendanceModal.event.event_id });
           ticketId = ticketRes.data.ticket_id;
         } catch (ticketErr) {
-          // 409 = a ticket already exists for this event (e.g. from earlier testing,
-          // or the events/tickets lists were briefly out of sync). Look it up instead
-          // of failing the whole flow.
           if (ticketErr.response?.status === 409) {
             const existing = await api.get('/tickets/my');
             const match = (existing.data.tickets || []).find(
               (t) => t.event_id === attendanceModal.event.event_id
             );
-            if (!match) throw ticketErr; // genuinely couldn't find it — surface the original error
+            if (!match) throw ticketErr;
             ticketId = match.ticket_id;
           } else {
             throw ticketErr;
@@ -253,9 +265,37 @@ const MyEvents = () => {
     }
   };
 
+  // ─── Checkout (logout) proof modal ──────────────────────────────────────
+  const openCheckoutModal = (event) => {
+    setCheckoutModal({ event });
+    setCheckoutPhoto(null);
+  };
+
+  const submitCheckout = async () => {
+    if (!checkoutModal) return;
+    if (!checkoutPhoto) {
+      toast.error('Please choose a photo first.');
+      return;
+    }
+    setSubmittingCheckout(true);
+    try {
+      const formData = new FormData();
+      formData.append('event_id', checkoutModal.event.event_id);
+      formData.append('photo', checkoutPhoto);
+      await api.post('/attendance/checkout', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      toast.success('Checked out successfully!');
+      setCheckoutModal(null);
+      fetchAll();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to submit checkout.');
+    } finally {
+      setSubmittingCheckout(false);
+    }
+  };
+
   // ─── Evaluation modal ───────────────────────────────────────────────────
-  // Opens the in-app rubric form directly — no external Google Form link.
-  // Stays available from the event's end time onward, same as before.
   const openEvalModal = (event) => {
     if (!hasEventEnded(event)) {
       toast('You can evaluate this event after it ends.', { icon: '⏳' });
@@ -271,6 +311,7 @@ const MyEvents = () => {
     }
     if (status === 'upload_receipt') return openFilePicker('payment', ticket);
     if (status === 'register_attendance') return openAttendanceModal(event, ticket);
+    if (status === 'checkout') return openCheckoutModal(event);
     if (status === 'pending_evaluation') return openEvalModal(event);
   };
 
@@ -392,7 +433,7 @@ const MyEvents = () => {
         <div className="attendance-modal-overlay" onClick={() => setAttendanceModal(null)}>
           <div className="attendance-modal" onClick={(e) => e.stopPropagation()}>
             <div className="attendance-modal-header">
-              <h3>Event Attendance - {attendanceModal.event.event_name}</h3>
+              <h3>Event Check-In - {attendanceModal.event.event_name}</h3>
               <button className="attendance-modal-close" onClick={() => setAttendanceModal(null)}>✕</button>
             </div>
 
@@ -423,6 +464,47 @@ const MyEvents = () => {
               <button className="attendance-cancel-btn" onClick={() => setAttendanceModal(null)}>Cancel</button>
               <button className="attendance-submit-btn" onClick={submitAttendance} disabled={submittingAttendance}>
                 {submittingAttendance ? 'Submitting...' : 'Submit Attendance'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {checkoutModal && (
+        <div className="attendance-modal-overlay" onClick={() => setCheckoutModal(null)}>
+          <div className="attendance-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="attendance-modal-header">
+              <h3>Event Checkout - {checkoutModal.event.event_name}</h3>
+              <button className="attendance-modal-close" onClick={() => setCheckoutModal(null)}>✕</button>
+            </div>
+
+            <div className="attendance-modal-info">
+              <div className="attendance-info-row">
+                <strong>Date:</strong>
+                <span>{formatDate(checkoutModal.event.date_start)} at {formatTime(checkoutModal.event.time_start)}</span>
+              </div>
+              <div className="attendance-info-row">
+                <strong>Venue:</strong>
+                <span>{checkoutModal.event.venue || '—'}</span>
+              </div>
+            </div>
+
+            <div className="attendance-modal-body">
+              <label className="attendance-upload-label">Upload Checkout Photo</label>
+              <div className="attendance-file-input-wrap">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setCheckoutPhoto(e.target.files[0] || null)}
+                />
+              </div>
+              <p className="attendance-upload-hint">Upload a photo as proof you are leaving the event</p>
+            </div>
+
+            <div className="attendance-modal-actions">
+              <button className="attendance-cancel-btn" onClick={() => setCheckoutModal(null)}>Cancel</button>
+              <button className="attendance-submit-btn" onClick={submitCheckout} disabled={submittingCheckout}>
+                {submittingCheckout ? 'Submitting...' : 'Submit Checkout'}
               </button>
             </div>
           </div>

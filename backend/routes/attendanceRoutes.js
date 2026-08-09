@@ -7,11 +7,12 @@ const { uploadAttendance }  = require('../middleware/uploadMiddleware');
 
 router.post('/scan',     authMiddleware, roleMiddleware('admin'), attendanceController.scanAttendance);
 router.post('/register', authMiddleware, uploadAttendance.single('photo'), attendanceController.registerAttendance);
+router.post('/checkout', authMiddleware, uploadAttendance.single('photo'), attendanceController.registerCheckout);
 router.get('/my',        authMiddleware, attendanceController.getMyAttendance);
 router.get('/event/:id', authMiddleware, roleMiddleware('admin', 'department_head'), attendanceController.getAttendanceByEvent);
 router.get('/report',    authMiddleware, roleMiddleware('admin', 'department_head'), attendanceController.getAttendanceReport);
 
-// ── Attendance dashboard (admin + department_head) ──────────────
+// ── Attendance dashboard (admin + department_head) ────────────────
 // department_head is scoped to their own department inside each controller
 // function — the route itself just needs to admit the role.
 router.get('/departments-overview',        authMiddleware, roleMiddleware('admin', 'department_head'), attendanceController.getDepartmentsOverview);
