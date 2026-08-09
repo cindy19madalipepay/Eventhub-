@@ -527,4 +527,4 @@ module.exports = {
   getYearBlockStats,
   getBlockReport,
   getOrgBreakdown,
-};g
+};
