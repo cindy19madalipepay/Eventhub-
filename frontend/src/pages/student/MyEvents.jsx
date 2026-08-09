@@ -3,6 +3,7 @@ import api from '../../utils/api';
 import toast from 'react-hot-toast';
 import EvaluationModal from '../../components/EvaluationModal';
 import './MyEvents.css';
+import './Notifications.css'; // reuse lightbox + media-thumb styles for banner/rules viewer
 
 // api.defaults.baseURL is 'http://localhost:5000/api' — strip the /api
 // to get the root the /uploads static folder is served from.
@@ -12,6 +13,29 @@ const getBannerSrc = (event) => {
   if (event.banner_image) return `${UPLOADS_BASE}/uploads/banners/${event.banner_image}`;
   if (event.banner_url) return event.banner_url;
   return null;
+};
+
+// rules_file is stored as a relative path like "rules/rules-12345.pdf"
+// (see eventRoutes.js's /:id/rules-file handler), served straight from /uploads/.
+const getRulesSrc = (event) => {
+  if (!event?.rules_file) return null;
+  return `${UPLOADS_BASE}/uploads/${event.rules_file}`;
+};
+
+const isPdfFile = (path) => !!path && path.toLowerCase().endsWith('.pdf');
+
+// program_flow is stored as a JSON string (or may already come back parsed
+// as an array, depending on the API layer) — a list of steps like:
+// [{ time: "9:00 AM", title: "Opening Program", description: "..." }, ...]
+const getProgramFlow = (event) => {
+  if (!event?.program_flow) return [];
+  if (Array.isArray(event.program_flow)) return event.program_flow;
+  try {
+    const parsed = JSON.parse(event.program_flow);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
 };
 
 // How long after an event's start time a student can still register/confirm
@@ -56,6 +80,9 @@ const MyEvents = () => {
   const [checkoutModal, setCheckoutModal] = useState(null); // { event }
   const [checkoutPhoto, setCheckoutPhoto] = useState(null);
   const [submittingCheckout, setSubmittingCheckout] = useState(false);
+
+  // Full-size viewer — shared by the banner and program-rules thumbnails.
+  const [lightbox, setLightbox] = useState(null); // { type: 'image' | 'pdf', src }
 
   useEffect(() => {
     fetchAll();
@@ -352,6 +379,9 @@ const MyEvents = () => {
             const isBusy = busyEventId === event.event_id || busyEventId === ticket?.ticket_id;
             const evalReady = status === 'pending_evaluation' && hasEventEnded(event);
             const bannerSrc = getBannerSrc(event);
+            const rulesSrc = getRulesSrc(event);
+            const rulesIsPdf = isPdfFile(event.rules_file);
+            const programFlow = getProgramFlow(event);
 
             return (
               <div key={event.event_id} className={`event-card theme-${cfg.theme}`}>
@@ -395,6 +425,58 @@ const MyEvents = () => {
                 {event.requires_payment && event.payment_amount > 0 && (
                   <div className="payment-info">
                     <span className="payment-amount">₱{event.payment_amount}</span>
+                  </div>
+                )}
+
+                {rulesSrc && (
+                  <div className="notif-media-stack">
+                    <div className="notif-media-row">
+                      <span className="notif-info-label">PROGRAM RULES</span>
+                      {rulesIsPdf ? (
+                        <div
+                          className="notif-thumb notif-thumb-pdf"
+                          onClick={() => setLightbox({ type: 'pdf', src: rulesSrc })}
+                          role="button"
+                          tabIndex={0}
+                          title="Click to view"
+                        >
+                          <span className="notif-thumb-pdf-icon">📄</span>
+                        </div>
+                      ) : (
+                        <div
+                          className="notif-thumb"
+                          onClick={() => setLightbox({ type: 'image', src: rulesSrc })}
+                          role="button"
+                          tabIndex={0}
+                          title="Click to view full size"
+                        >
+                          <img src={rulesSrc} alt="Program rules" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {programFlow.length > 0 && (
+                  <div className="program-flow">
+                    <span className="notif-info-label">PROGRAM FLOW</span>
+                    <div className="program-flow-timeline">
+                      {programFlow.map((step, idx) => (
+                        <div className="program-flow-step" key={idx}>
+                          <div className="program-flow-marker">
+                            <span className="program-flow-dot" />
+                            {idx < programFlow.length - 1 && <span className="program-flow-line" />}
+                          </div>
+                          <div className="program-flow-content">
+                            {step.time && <span className="program-flow-time">{step.time}</span>}
+                            <span className="program-flow-title">{step.title}</span>
+                            {step.description && (
+                              <p className="program-flow-desc">{step.description}</p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
 
@@ -516,6 +598,34 @@ const MyEvents = () => {
         onClose={() => setEvalEvent(null)}
         onSubmitted={fetchAll}
       />
+
+      {lightbox && (
+        <div className="lightbox-overlay" onClick={() => setLightbox(null)}>
+          <button
+            type="button"
+            className="lightbox-close"
+            onClick={() => setLightbox(null)}
+            aria-label="Close preview"
+          >
+            ✕
+          </button>
+          {lightbox.type === 'pdf' ? (
+            <iframe
+              src={lightbox.src}
+              title="Program rules"
+              className="lightbox-pdf"
+              onClick={(e) => e.stopPropagation()}
+            />
+          ) : (
+            <img
+              src={lightbox.src}
+              alt="Full size preview"
+              className="lightbox-img"
+              onClick={(e) => e.stopPropagation()}
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 };

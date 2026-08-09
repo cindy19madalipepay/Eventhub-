@@ -28,6 +28,20 @@ const getRulesSrc = (event) => {
 
 const isPdfFile = (path) => !!path && path.toLowerCase().endsWith('.pdf');
 
+// program_flow is stored as a JSON string (or may already come back parsed
+// as an array, depending on the API layer) — a list of steps like:
+// [{ time: "9:00 AM", title: "Opening Program", description: "..." }, ...]
+const getProgramFlow = (event) => {
+  if (!event?.program_flow) return [];
+  if (Array.isArray(event.program_flow)) return event.program_flow;
+  try {
+    const parsed = JSON.parse(event.program_flow);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
 const STATUS_CONFIG = {
   not_registered:      { label: 'NOT REGISTERED',     theme: 'blue',   button: 'Register Attendance' },
   upload_receipt:      { label: 'UPLOAD RECEIPT',     theme: 'orange', button: 'Upload Receipt' },
@@ -317,6 +331,7 @@ const Notifications = () => {
             const bannerSrc = getBannerSrc(n.event);
             const rulesSrc = getRulesSrc(n.event);
             const rulesIsPdf = isPdfFile(n.event?.rules_file);
+            const programFlow = getProgramFlow(n.event);
 
             return (
               <div
@@ -414,6 +429,28 @@ const Notifications = () => {
                   </div>
                 )}
 
+                {programFlow.length > 0 && (
+                  <div className="program-flow">
+                    <span className="notif-info-label">PROGRAM FLOW</span>
+                    <div className="program-flow-timeline">
+                      {programFlow.map((step, idx) => (
+                        <div className="program-flow-step" key={idx}>
+                          <div className="program-flow-marker">
+                            <span className="program-flow-dot" />
+                            {idx < programFlow.length - 1 && <span className="program-flow-line" />}
+                          </div>
+                          <div className="program-flow-content">
+                            {step.time && <span className="program-flow-time">{step.time}</span>}
+                            <span className="program-flow-title">{step.title}</span>
+                            {step.description && (
+                              <p className="program-flow-desc">{step.description}</p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {cfg?.button ? (
                   <button

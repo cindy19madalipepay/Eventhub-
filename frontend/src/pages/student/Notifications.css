@@ -248,3 +248,75 @@
   background: #fff;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
 }
+
+.program-flow {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #eee;
+}
+
+.program-flow-timeline {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+.program-flow-step {
+  display: flex;
+  gap: 12px;
+}
+
+.program-flow-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 12px;
+  flex-shrink: 0;
+}
+
+.program-flow-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #3949ab;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.program-flow-line {
+  flex: 1;
+  width: 2px;
+  background: #d8dcf0;
+  margin-top: 2px;
+}
+
+.program-flow-content {
+  padding-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.program-flow-time {
+  font-size: 12px;
+  font-weight: 600;
+  color: #3949ab;
+  letter-spacing: 0.02em;
+}
+
+.program-flow-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #222;
+  margin-top: 2px;
+}
+
+.program-flow-desc {
+  font-size: 13px;
+  color: #666;
+  margin: 4px 0 0;
+  line-height: 1.4;
+}
+
+.program-flow-step:last-child .program-flow-content {
+  padding-bottom: 0;
+}
