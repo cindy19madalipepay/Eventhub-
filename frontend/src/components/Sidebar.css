@@ -5,7 +5,7 @@
   left: 0;
   width: 260px;
   height: 100vh;
-  background: #1a0f2e;
+  background: linear-gradient(135deg, #4a6b5a 0%, #2f4a3d 100%);
   color: #fff;
   display: flex;
   flex-direction: column;
@@ -47,8 +47,8 @@
 .user-avatar {
   width: 40px;
   height: 40px;
-  background: #a3d900;
-  color: #1a0f2e;
+  background: #8fbc9c;
+  color: #1a2e22;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -107,7 +107,7 @@
 
 .nav-item.active {
   background: rgba(255,255,255,0.1);
-  color: #a3d900;
+  color: #8fbc9c;
 }
 
 .nav-badge {
