@@ -91,7 +91,7 @@ const TermsModal = ({ onAccept, onClose }) => {
         <div className="terms-modal-actions">
           <button className="btn-terms-decline" onClick={onClose}>Decline</button>
           <button className="btn-terms-accept" onClick={onAccept} disabled={!canAccept}>
-            ✅ I Accept
+             I Accept
           </button>
         </div>
       </div>
@@ -117,10 +117,10 @@ const Register = () => {
   useEffect(() => {
     api.get('/auth/departments').catch(() => {
       setDepartments([
-        { department_id: 1, department_name: 'BS Information Technology',  department_code: 'BSIT' },
-        { department_id: 2, department_name: 'BS Business Administration', department_code: 'BSBA' },
-        { department_id: 3, department_name: 'BS Elementary Education',    department_code: 'BEED' },
-        { department_id: 4, department_name: 'BS Secondary Education',     department_code: 'BSED' },
+        { department_id: 1, department_name: 'Bachelor of Science in Information Technology',  department_code: 'BSIT' },
+        { department_id: 2, department_name: 'Bachelor of Science in Business Administration', department_code: 'BSBA' },
+        { department_id: 3, department_name: 'Bachelor of Elementary Education',    department_code: 'BEED' },
+        { department_id: 4, department_name: 'Bachelor of Secondary Education',     department_code: 'BSED' },
       ]);
     }).then(res => {
       if (res?.data?.departments) setDepartments(res.data.departments);
