@@ -5,7 +5,7 @@
   left: 0;
   width: 260px;
   height: 100vh;
-  background: linear-gradient(135deg, #4a6b5a 0%, #2f4a3d 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #ffffff 12%, #6a8f78 45%, #2f4a3d 80%, #1f3329 100%);
   color: #fff;
   display: flex;
   flex-direction: column;
@@ -19,7 +19,7 @@
   align-items: center;
   gap: 12px;
   padding: 24px 20px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  border-bottom: 1px solid rgba(0,0,0,0.08);
 }
 
 .sidebar-logo-img {
@@ -32,7 +32,7 @@
 .sidebar-logo span {
   font-size: 20px;
   font-weight: 700;
-  color: #fff;
+  color: #1a2e22;
 }
 
 /* User Info */
@@ -41,7 +41,7 @@
   align-items: center;
   gap: 12px;
   padding: 20px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  border-bottom: 1px solid rgba(0,0,0,0.08);
 }
 
 .user-avatar {
@@ -67,13 +67,13 @@
 .user-name {
   font-size: 14px;
   font-weight: 600;
-  color: #fff;
+  color: #1a2e22;
   margin: 0;
 }
 
 .user-role {
   font-size: 12px;
-  color: rgba(255,255,255,0.5);
+  color: rgba(26,46,34,0.6);
   margin: 0;
 }
 
