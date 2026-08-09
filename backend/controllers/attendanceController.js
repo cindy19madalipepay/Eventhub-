@@ -1,5 +1,18 @@
 const { pool } = require('../config/db');
 
+// Your event date_start/time_start values are entered and displayed as
+// Philippine local time (UTC+8), but the DB server's own clock (used by
+// MySQL's NOW()) may be running in UTC. Comparing NOW() directly against
+// those columns silently shifts the check-in window by 8 hours. This
+// expression converts the DB server's UTC clock to PH local time so every
+// comparison below lines up with what the student actually sees on screen.
+//
+// NOTE: this assumes the DB server's clock is UTC. If you find out it's
+// already set to Asia/Manila, just use NOW() instead of PH_NOW everywhere
+// below (or better, fix the DB session timezone once at connection setup
+// and remove this workaround).
+const PH_NOW = "DATE_ADD(UTC_TIMESTAMP(), INTERVAL 8 HOUR)";
+
 // ─── SCAN QR CODE → LOG ATTENDANCE (admin) ──────────────────────────────────
 const scanAttendance = async (req, res) => {
   try {
@@ -46,7 +59,7 @@ const scanAttendance = async (req, res) => {
 
     await pool.query(
       `INSERT INTO attendance (ticket_id, user_id, event_id, scanned_at, scanned_by, method)
-       VALUES (?, ?, ?, NOW(), ?, ?)`,
+       VALUES (?, ?, ?, ${PH_NOW}, ?, ?)`,
       [ticket.ticket_id, ticket.user_id, ticket.event_id, req.user.user_id, method]
     );
 
@@ -73,8 +86,8 @@ const scanAttendance = async (req, res) => {
 // ─── SELF-SERVICE ATTENDANCE REGISTRATION (student, photo-based) ───────────
 // Check-in window rule: attendance can only be registered starting exactly
 // at the event's date_start + time_start, and closes 30 minutes later. The
-// window is computed in SQL (TIMESTAMPDIFF) rather than in JS so we never
-// have to worry about server/browser timezone mismatches.
+// window is computed in SQL (TIMESTAMPDIFF) using PH_NOW (see above) so it
+// matches the Philippine local time the student actually sees.
 const registerAttendance = async (req, res) => {
   try {
     const { ticket_id } = req.body;
@@ -88,7 +101,7 @@ const registerAttendance = async (req, res) => {
 
     const [tickets] = await pool.query(
       `SELECT t.*, e.event_name, e.date_start, e.time_start, e.status AS event_status,
-              TIMESTAMPDIFF(MINUTE, TIMESTAMP(e.date_start, e.time_start), NOW()) AS minutes_since_start
+              TIMESTAMPDIFF(MINUTE, TIMESTAMP(e.date_start, e.time_start), ${PH_NOW}) AS minutes_since_start
        FROM tickets t
        JOIN events e ON t.event_id = e.event_id
        WHERE t.ticket_id = ? AND t.user_id = ?`,
@@ -138,7 +151,7 @@ const registerAttendance = async (req, res) => {
 
     await pool.query(
       `INSERT INTO attendance (ticket_id, user_id, event_id, scanned_at, scanned_by, method, photo)
-       VALUES (?, ?, ?, NOW(), NULL, 'self_upload', ?)`,
+       VALUES (?, ?, ?, ${PH_NOW}, NULL, 'self_upload', ?)`,
       [ticket.ticket_id, req.user.user_id, ticket.event_id, req.file.filename]
     );
 
@@ -188,7 +201,7 @@ const registerCheckout = async (req, res) => {
     }
 
     await pool.query(
-      `UPDATE attendance SET checkout_at = NOW(), checkout_photo = ? WHERE attendance_id = ?`,
+      `UPDATE attendance SET checkout_at = ${PH_NOW}, checkout_photo = ? WHERE attendance_id = ?`,
       [req.file.filename, rows[0].attendance_id]
     );
 
@@ -242,7 +255,8 @@ const getAttendanceByEvent = async (req, res) => {
 // ─── GET MY ATTENDANCE (student) ────────────────────────────────────────────
 // "Missed" is computed purely from time, not from the admin manually marking
 // the event completed: any ticket where the 30-minute check-in window has
-// already elapsed and the ticket was never used counts as missed.
+// already elapsed (in PH local time) and the ticket was never used counts
+// as missed.
 const getMyAttendance = async (req, res) => {
   try {
     const [attended] = await pool.query(
@@ -268,7 +282,7 @@ const getMyAttendance = async (req, res) => {
        JOIN events e ON t.event_id = e.event_id
        WHERE t.user_id = ?
          AND t.status != 'used'
-         AND TIMESTAMPDIFF(MINUTE, TIMESTAMP(e.date_start, e.time_start), NOW()) > 30`,
+         AND TIMESTAMPDIFF(MINUTE, TIMESTAMP(e.date_start, e.time_start), ${PH_NOW}) > 30`,
       [req.user.user_id]
     );
 
