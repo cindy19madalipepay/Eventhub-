@@ -6,7 +6,7 @@
 
 .login-wrapper {
   min-height: 100vh;
-  background: linear-gradient(135deg, #1B0833 0%, #250A45 50%, #320C5B 100%);
+  background: linear-gradient(180deg, #a8c9b5 0%, #6a8f78 45%, #2f4a3d 80%, #1f3329 100%); 
   display: flex;
   align-items: center;
   justify-content: center;
@@ -160,7 +160,7 @@
 
 .role-btn.active {
   border-color: #6a8f78;
-  background: linear-gradient(135deg, #6a8f78, #a8c9b5);
+  background: linear-gradient(135deg, #6a8f78, #a8c9b5); 
   color: #1B0833;
 }
 
@@ -213,7 +213,7 @@
 /* Login Button */
 .btn-login {
   padding: 14px;
-  background: linear-gradient(135deg, #6a8f78, #a8c9b5);
+  background: linear-gradient(135deg, #6a8f78, #2f4a3d);
   color: #1B0833;
   border: none;
   border-radius: 10px;
@@ -261,5 +261,5 @@
   min-height: 100vh;
   font-size: 18px;
   color: #6a8f78;
-  background: linear-gradient(135deg, #1B0833 0%, #250A45 50%, #320C5B 100%);
+  background: linear-gradient(180deg, #a8c9b5 0%, #6a8f78 45%, #2f4a3d 80%, #1f3329 100%);
 }
