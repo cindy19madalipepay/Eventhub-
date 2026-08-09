@@ -107,7 +107,7 @@
 
 .nav-item.active {
   background: rgba(255,255,255,0.1);
-  color: #8fbc9c;
+  color: #000;
 }
 
 .nav-badge {
@@ -182,11 +182,12 @@ button.sidebar-user:hover {
 .user-caret {
   margin-left: auto;
   font-size: 11px;
-  opacity: 0.6;
+  color: rgba(26,46,34,0.6);
   transition: transform 0.15s ease;
 }
 
 .user-caret.open {
+  color: #1a2e22;
   transform: rotate(180deg);
 }
 

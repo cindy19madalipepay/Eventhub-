@@ -41,8 +41,13 @@ const menuItems = {
   ],
 };
 
-// TODO: point this at wherever your backend actually serves uploaded profile photos
-const UPLOADS_BASE_URL = 'http://localhost:5000/uploads/profiles';
+// Uploaded profile photos are served from the backend's /uploads route.
+// We derive this from the same API base URL your app already uses
+// (api.defaults.baseURL), so it automatically points at the right
+// backend whether you're on localhost or the deployed Vercel URL —
+// no more hardcoded localhost that breaks in production.
+const API_ROOT = (api.defaults.baseURL || '').replace(/\/api\/?$/, '');
+const UPLOADS_BASE_URL = `${API_ROOT}/uploads/profiles`;
 
 // Renders the user's photo if they have one, otherwise falls back to initials
 const Avatar = ({ user, size = 'md', src }) => {
