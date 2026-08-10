@@ -1,244 +1,130 @@
-import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import api from '../utils/api';
-import toast from 'react-hot-toast';
+const express = require('express');
 
-const CheckIn = () => {
-  const { eventId } = useParams();
+const router = express.Router();
 
-  const navigate = useNavigate();
+const attendanceController = require('../controllers/attendanceController');
 
-  const {
-    user,
-    token,
-    loading,
-  } = useAuth();
+const authMiddleware = require('../middleware/authMiddleware');
+const roleMiddleware = require('../middleware/roleMiddleware');
 
-  const [checking, setChecking] = useState(true);
-  const [event, setEvent] = useState(null);
+const { uploadAttendance } = require('../middleware/uploadMiddleware');
 
-  useEffect(() => {
-    if (loading) return;
+// ============================================================
+// ADMIN - SCAN QR CODE
+// ============================================================
+router.post(
+  '/scan',
+  authMiddleware,
+  roleMiddleware('admin'),
+  attendanceController.scanAttendance
+);
 
-    // ========================================================
-    // NOT LOGGED IN
-    // ========================================================
+// ============================================================
+// STUDENT - SELF CHECK-IN
+// Upload attendance photo
+// ============================================================
+router.post(
+  '/register',
+  authMiddleware,
+  uploadAttendance.single('photo'),
+  attendanceController.registerAttendance
+);
 
-    if (!user || !token) {
-      navigate(
-        `/login?redirect=/checkin/${eventId}`,
-        { replace: true }
-      );
+// ============================================================
+// STUDENT - CHECKOUT
+// Upload checkout photo
+// ============================================================
+router.post(
+  '/checkout',
+  authMiddleware,
+  uploadAttendance.single('photo'),
+  attendanceController.registerCheckout
+);
 
-      return;
-    }
+// ============================================================
+// STUDENT - GET MY ATTENDANCE
+// ============================================================
+router.get(
+  '/my',
+  authMiddleware,
+  attendanceController.getMyAttendance
+);
 
-    // ========================================================
-    // GET EVENT
-    // ========================================================
+// ============================================================
+// ADMIN / DEPARTMENT HEAD
+// GET ATTENDANCE BY EVENT
+// ============================================================
+router.get(
+  '/event/:id',
+  authMiddleware,
+  roleMiddleware('admin', 'department_head'),
+  attendanceController.getAttendanceByEvent
+);
 
-    const loadEvent = async () => {
-      try {
-        setChecking(true);
+// ============================================================
+// ADMIN / DEPARTMENT HEAD
+// ATTENDANCE REPORT
+// ============================================================
+router.get(
+  '/report',
+  authMiddleware,
+  roleMiddleware('admin', 'department_head'),
+  attendanceController.getAttendanceReport
+);
 
-        const response = await api.get(
-          `/events/${eventId}`
-        );
+// ============================================================
+// ADMIN / DEPARTMENT HEAD
+// DEPARTMENTS OVERVIEW
+// ============================================================
+router.get(
+  '/departments-overview',
+  authMiddleware,
+  roleMiddleware('admin', 'department_head'),
+  attendanceController.getDepartmentsOverview
+);
 
-        const eventData =
-          response.data?.event ||
-          response.data?.data ||
-          response.data;
+// ============================================================
+// ADMIN / DEPARTMENT HEAD
+// DEPARTMENT SUMMARY
+// ============================================================
+router.get(
+  '/department-summary/:deptId',
+  authMiddleware,
+  roleMiddleware('admin', 'department_head'),
+  attendanceController.getDepartmentSummary
+);
 
-        setEvent(eventData);
+// ============================================================
+// ADMIN / DEPARTMENT HEAD
+// YEAR + BLOCK STATS
+// ============================================================
+router.get(
+  '/year-block-stats/:deptId',
+  authMiddleware,
+  roleMiddleware('admin', 'department_head'),
+  attendanceController.getYearBlockStats
+);
 
-      } catch (error) {
-        console.error(
-          'Load CheckIn Event error:',
-          error
-        );
+// ============================================================
+// ADMIN / DEPARTMENT HEAD
+// ORGANIZATION BREAKDOWN
+// ============================================================
+router.get(
+  '/org-breakdown/:deptId',
+  authMiddleware,
+  roleMiddleware('admin', 'department_head'),
+  attendanceController.getOrgBreakdown
+);
 
-        toast.error(
-          error.response?.data?.message ||
-          'Unable to find this event.'
-        );
+// ============================================================
+// ADMIN / DEPARTMENT HEAD
+// BLOCK REPORT
+// ============================================================
+router.get(
+  '/block-report',
+  authMiddleware,
+  roleMiddleware('admin', 'department_head'),
+  attendanceController.getBlockReport
+);
 
-        navigate(
-          '/student/my-events',
-          { replace: true }
-        );
-
-      } finally {
-        setChecking(false);
-      }
-    };
-
-    loadEvent();
-
-  }, [
-    loading,
-    user,
-    token,
-    eventId,
-    navigate,
-  ]);
-
-
-  // ==========================================================
-  // LOADING
-  // ==========================================================
-
-  if (
-    loading ||
-    checking
-  ) {
-    return (
-      <div
-        style={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexDirection: 'column',
-          gap: '12px',
-        }}
-      >
-        <h2>Checking event...</h2>
-
-        <p>
-          Please wait.
-        </p>
-      </div>
-    );
-  }
-
-
-  // ==========================================================
-  // EVENT NOT FOUND
-  // ==========================================================
-
-  if (!event) {
-    return (
-      <div
-        style={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexDirection: 'column',
-          gap: '12px',
-        }}
-      >
-        <h2>
-          Event not found
-        </h2>
-
-        <button
-          onClick={() =>
-            navigate('/student/my-events')
-          }
-        >
-          Go to My Events
-        </button>
-      </div>
-    );
-  }
-
-
-  // ==========================================================
-  // EVENT FOUND
-  // ==========================================================
-
-  return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: '24px',
-        background: '#f5f7fb',
-      }}
-    >
-      <div
-        style={{
-          width: '100%',
-          maxWidth: '500px',
-          background: '#ffffff',
-          borderRadius: '16px',
-          padding: '32px',
-          boxShadow:
-            '0 10px 30px rgba(0,0,0,0.08)',
-          textAlign: 'center',
-        }}
-      >
-
-        <h1
-          style={{
-            marginBottom: '10px',
-          }}
-        >
-          {event.event_name}
-        </h1>
-
-        <p
-          style={{
-            color: '#6b7280',
-            marginBottom: '24px',
-          }}
-        >
-          You scanned the QR code for this event.
-        </p>
-
-
-        {/* EVENT DATE */}
-
-        {event.date_start && (
-          <p>
-            <strong>Date:</strong>{' '}
-            {new Date(
-              event.date_start
-            ).toLocaleDateString()}
-          </p>
-        )}
-
-
-        {/* EVENT VENUE */}
-
-        {event.venue && (
-          <p>
-            <strong>Venue:</strong>{' '}
-            {event.venue}
-          </p>
-        )}
-
-
-        {/* CONTINUE */}
-
-        <button
-          onClick={() =>
-            navigate('/student/my-events')
-          }
-          style={{
-            marginTop: '20px',
-            width: '100%',
-            padding: '13px 18px',
-            border: 'none',
-            borderRadius: '10px',
-            cursor: 'pointer',
-            fontSize: '16px',
-            fontWeight: '600',
-            background: '#2563eb',
-            color: '#ffffff',
-          }}
-        >
-          Continue to My Events
-        </button>
-
-      </div>
-    </div>
-  );
-};
-
-export default CheckIn;
+module.exports = router;

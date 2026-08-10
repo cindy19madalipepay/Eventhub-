@@ -2,24 +2,16 @@ const express = require('express');
 
 const router = express.Router();
 
-const attendanceController =
-  require('../controllers/attendanceController');
+const attendanceController = require('../controllers/attendanceController');
 
-const authMiddleware =
-  require('../middleware/authMiddleware');
+const authMiddleware = require('../middleware/authMiddleware');
+const roleMiddleware = require('../middleware/roleMiddleware');
 
-const roleMiddleware =
-  require('../middleware/roleMiddleware');
-
-const {
-  uploadAttendance,
-} = require('../middleware/uploadMiddleware');
-
+const { uploadAttendance } = require('../middleware/uploadMiddleware');
 
 // ============================================================
-// ADMIN SCANS STUDENT TICKET QR
+// ADMIN - SCAN QR CODE
 // ============================================================
-
 router.post(
   '/scan',
   authMiddleware,
@@ -27,11 +19,10 @@ router.post(
   attendanceController.scanAttendance
 );
 
-
 // ============================================================
-// STUDENT SELF-SERVICE CHECK-IN
+// STUDENT - SELF CHECK-IN
+// Upload attendance photo
 // ============================================================
-
 router.post(
   '/register',
   authMiddleware,
@@ -39,11 +30,10 @@ router.post(
   attendanceController.registerAttendance
 );
 
-
 // ============================================================
-// STUDENT CHECK-OUT
+// STUDENT - CHECKOUT
+// Upload checkout photo
 // ============================================================
-
 router.post(
   '/checkout',
   authMiddleware,
@@ -51,22 +41,19 @@ router.post(
   attendanceController.registerCheckout
 );
 
-
 // ============================================================
-// STUDENT: MY ATTENDANCE
+// STUDENT - GET MY ATTENDANCE
 // ============================================================
-
 router.get(
   '/my',
   authMiddleware,
   attendanceController.getMyAttendance
 );
 
-
 // ============================================================
-// ADMIN / DEPARTMENT HEAD: EVENT ATTENDANCE
+// ADMIN / DEPARTMENT HEAD
+// GET ATTENDANCE BY EVENT
 // ============================================================
-
 router.get(
   '/event/:id',
   authMiddleware,
@@ -74,11 +61,10 @@ router.get(
   attendanceController.getAttendanceByEvent
 );
 
-
 // ============================================================
-// ADMIN / DEPARTMENT HEAD: FULL REPORT
+// ADMIN / DEPARTMENT HEAD
+// ATTENDANCE REPORT
 // ============================================================
-
 router.get(
   '/report',
   authMiddleware,
@@ -86,11 +72,10 @@ router.get(
   attendanceController.getAttendanceReport
 );
 
-
 // ============================================================
-// ADMIN / DEPARTMENT HEAD: DEPARTMENTS OVERVIEW
+// ADMIN / DEPARTMENT HEAD
+// DEPARTMENTS OVERVIEW
 // ============================================================
-
 router.get(
   '/departments-overview',
   authMiddleware,
@@ -98,11 +83,10 @@ router.get(
   attendanceController.getDepartmentsOverview
 );
 
-
 // ============================================================
-// ADMIN / DEPARTMENT HEAD: DEPARTMENT SUMMARY
+// ADMIN / DEPARTMENT HEAD
+// DEPARTMENT SUMMARY
 // ============================================================
-
 router.get(
   '/department-summary/:deptId',
   authMiddleware,
@@ -110,11 +94,10 @@ router.get(
   attendanceController.getDepartmentSummary
 );
 
-
 // ============================================================
-// ADMIN / DEPARTMENT HEAD: YEAR + BLOCK STATS
+// ADMIN / DEPARTMENT HEAD
+// YEAR + BLOCK STATS
 // ============================================================
-
 router.get(
   '/year-block-stats/:deptId',
   authMiddleware,
@@ -122,11 +105,10 @@ router.get(
   attendanceController.getYearBlockStats
 );
 
-
 // ============================================================
-// ADMIN / DEPARTMENT HEAD: ORGANIZATION BREAKDOWN
+// ADMIN / DEPARTMENT HEAD
+// ORGANIZATION BREAKDOWN
 // ============================================================
-
 router.get(
   '/org-breakdown/:deptId',
   authMiddleware,
@@ -134,17 +116,15 @@ router.get(
   attendanceController.getOrgBreakdown
 );
 
-
 // ============================================================
-// ADMIN / DEPARTMENT HEAD: BLOCK REPORT
+// ADMIN / DEPARTMENT HEAD
+// BLOCK REPORT
 // ============================================================
-
 router.get(
   '/block-report',
   authMiddleware,
   roleMiddleware('admin', 'department_head'),
   attendanceController.getBlockReport
 );
-
 
 module.exports = router;
