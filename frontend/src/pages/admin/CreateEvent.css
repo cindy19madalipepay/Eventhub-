@@ -3,7 +3,7 @@
 }
 
 .section-title {
-  color: #0f3460;
+  color: #1f3329;
   font-size: 17px;
   font-weight: 700;
   margin-bottom: 18px;
@@ -19,7 +19,7 @@
 .link-btn {
   background: none;
   border: none;
-  color: #0f3460;
+  color: #1f3329;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -55,7 +55,7 @@
 }
 .form-group input:focus,
 .form-group select:focus,
-.form-group textarea:focus { border-color: #0f3460; }
+.form-group textarea:focus { border-color: #1f3329; }
 
 .form-group textarea { resize: vertical; }
 
@@ -85,13 +85,13 @@
   color: #555;
   transition: all 0.2s;
 }
-.dept-checkbox:hover { border-color: #0f3460; }
+.dept-checkbox:hover { border-color: #1f3329; }
 .dept-checkbox.checked {
-  background: #0f3460;
-  border-color: #0f3460;
+  background: #1f3329;
+  border-color: #1f3329;
   color: #fff;
 }
-.dept-checkbox input { accent-color: #e94560; }
+.dept-checkbox input { accent-color: #6a8f78; }
 
 /* Toggle */
 .toggle-row {
@@ -106,7 +106,7 @@
 .toggle-row input {
   width: 18px;
   height: 18px;
-  accent-color: #e94560;
+  accent-color: #6a8f78;
   cursor: pointer;
 }
 
@@ -114,8 +114,8 @@
 .btn-create-event {
   width: 100%;
   padding: 16px;
-  background: linear-gradient(135deg, #6fa315, #72C92D, #6fa315);
-  color: #090909;
+  background: linear-gradient(135deg, #2f4a3d, #6a8f78, #2f4a3d);
+  color: #ffffff;
   border: none;
   border-radius: 12px;
   font-size: 16px;
@@ -141,18 +141,18 @@
   justify-content: center;
   gap: 8px;
   padding: 36px 20px;
-  border: 2px dashed #d0d5e8;
+  border: 2px dashed #cfd8d3;
   border-radius: 14px;
   cursor: pointer;
   transition: all 0.2s;
   background: #f8f9fb;
 }
 .rules-upload-area:hover {
-  border-color: #0f3460;
-  background: #f0f4ff;
+  border-color: #1f3329;
+  background: #f0f5f1;
 }
 .rules-upload-icon { font-size: 32px; }
-.rules-upload-text { font-size: 14px; font-weight: 600; color: #0f3460; }
+.rules-upload-text { font-size: 14px; font-weight: 600; color: #1f3329; }
 .rules-upload-hint { font-size: 12px; color: #aaa; }
 
 /* ── Small clickable thumbnail preview (banner + rules image) ────────────── */
@@ -197,7 +197,7 @@
   transition: background 0.15s;
 }
 .thumb-remove-btn:hover {
-  background: #e94560;
+  background: #c0392b;
 }
 
 /* PDF variant — same footprint as the image thumbnail, icon + filename instead */

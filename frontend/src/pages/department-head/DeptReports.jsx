@@ -84,7 +84,7 @@ const DeptReports = () => {
       </div>
 
       <div className="card">
-        <h3 style={{ marginBottom: 16, color: '#1B0833' }}>Per-Event Breakdown</h3>
+        <h3 style={{ marginBottom: 16, color: '#1f3329' }}>Per-Event Breakdown</h3>
         {loading ? (
           <p>Building report...</p>
         ) : rows.length === 0 ? (

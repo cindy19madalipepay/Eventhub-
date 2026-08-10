@@ -30,7 +30,7 @@
 .breadcrumb-link {
   background: none;
   border: none;
-  color: #1a237e;
+  color: #2f4a3d;
   cursor: pointer;
   font-size: 14px;
   padding: 0;
@@ -57,7 +57,7 @@
 
 .page-header h2 {
   font-size: 24px;
-  color: #1a1a2e;
+  color: #1f3329;
   margin: 0 0 4px 0;
   font-weight: 600;
 }
@@ -90,7 +90,7 @@
 .dept-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-  border-color: #c5cae9;
+  border-color: #a8c9b5;
 }
 
 .dept-icon {
@@ -102,7 +102,7 @@
 .dept-name {
   font-size: 18px;
   font-weight: 600;
-  color: #1a1a2e;
+  color: #1f3329;
   margin: 0 0 6px 0;
 }
 
@@ -124,7 +124,7 @@
 .export-btn {
   background: none;
   border: none;
-  color: #1a237e;
+  color: #2f4a3d;
   font-size: 14px;
   cursor: pointer;
   display: flex;
@@ -135,7 +135,7 @@
 }
 
 .export-btn:hover {
-  color: #283593;
+  color: #1f3329;
 }
 
 .summary-card {
@@ -149,7 +149,7 @@
 .summary-title {
   font-size: 18px;
   font-weight: 600;
-  color: #1a237e;
+  color: #2f4a3d;
   margin: 0 0 20px 0;
 }
 
@@ -188,7 +188,7 @@
 }
 
 .summary-bar.complete {
-  background: #1a237e;
+  background: #2f4a3d;
 }
 
 .summary-value {
@@ -230,7 +230,7 @@
 .year-title {
   font-size: 18px;
   font-weight: 600;
-  color: #1a237e;
+  color: #2f4a3d;
   margin: 0 0 16px 0;
 }
 
@@ -251,12 +251,12 @@
 }
 
 .block-card:hover {
-  border-color: #1a237e;
-  box-shadow: 0 4px 12px rgba(26, 35, 126, 0.08);
+  border-color: #2f4a3d;
+  box-shadow: 0 4px 12px rgba(47, 74, 61, 0.08);
 }
 
 .block-card.active {
-  border-color: #1a237e;
+  border-color: #2f4a3d;
   background: #fff;
 }
 
@@ -289,7 +289,7 @@
 }
 
 .block-bar.active {
-  background: #1a237e;
+  background: #2f4a3d;
 }
 
 .block-percentage {
@@ -299,7 +299,7 @@
 }
 
 .block-percentage.active {
-  color: #1a237e;
+  color: #2f4a3d;
 }
 
 /* ─── Report View ────────────────────────────────────────── */
@@ -370,8 +370,8 @@
   border-radius: 20px;
   font-size: 12px;
   font-weight: 500;
-  background: #e3f2fd;
-  color: #1565c0;
+  background: #e6f0ea;
+  color: #2f5a0f;
   text-transform: uppercase;
   letter-spacing: 0.3px;
 }

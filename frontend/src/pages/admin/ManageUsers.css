@@ -26,7 +26,7 @@
   text-align: left;
   padding: 14px 20px;
   background: #F8F8F8;
-  color: #1B0833;
+  color: #1f3329;
   font-size: 13px;
   font-weight: 700;
   text-transform: uppercase;
@@ -41,7 +41,7 @@
 }
 
 .role-badge {
-  background: rgba(114, 201, 45, 0.15);
+  background: rgba(106, 143, 120, 0.15);
   color: #2f5a0f;
   padding: 4px 10px;
   border-radius: 12px;
@@ -58,7 +58,7 @@
 }
 
 .status-dot.active {
-  background: rgba(114, 201, 45, 0.15);
+  background: rgba(106, 143, 120, 0.15);
   color: #2f5a0f;
 }
 
@@ -105,7 +105,7 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(27, 8, 51, 0.5);
+  background: rgba(31, 51, 41, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -124,7 +124,7 @@
 }
 
 .modal-card h3 {
-  color: #1B0833;
+  color: #1f3329;
   margin-bottom: 20px;
 }
 
@@ -164,6 +164,6 @@
 }
 
 .btn-save {
-  background: linear-gradient(135deg, #72C92D, #A8E63E);
-  color: #1B0833;
+  background: linear-gradient(135deg, #6a8f78, #a8c9b5);
+  color: #1f3329;
 }

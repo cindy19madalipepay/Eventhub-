@@ -12,7 +12,7 @@
 .history-title {
   font-size: 22px;
   font-weight: 700;
-  color: #1e3a5f;
+  color: #1f3329;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -34,7 +34,7 @@
 .stat-card {
   background: #fff;
   border-radius: 14px;
-  border-top: 4px solid #1e3a5f;
+  border-top: 4px solid #2f4a3d;
   padding: 28px 16px;
   text-align: center;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
@@ -43,7 +43,7 @@
 .stat-number {
   font-size: 34px;
   font-weight: 800;
-  color: #1e3a5f;
+  color: #1f3329;
   line-height: 1;
   margin-bottom: 10px;
 }
@@ -63,7 +63,7 @@
 
 .stat-card.clickable:hover {
   transform: translateY(-3px);
-  box-shadow: 0 6px 16px rgba(30, 58, 95, 0.15);
+  box-shadow: 0 6px 16px rgba(47, 74, 61, 0.15);
 }
 
 .stat-card.clickable:active {
@@ -71,7 +71,7 @@
 }
 
 .stat-card.clickable:focus-visible {
-  outline: 2px solid #1e3a5f;
+  outline: 2px solid #2f4a3d;
   outline-offset: 2px;
 }
 
@@ -79,7 +79,7 @@
 .section-title {
   font-size: 17px;
   font-weight: 700;
-  color: #1e3a5f;
+  color: #1f3329;
   margin: 0 0 14px 0;
   padding-bottom: 10px;
   border-bottom: 1px solid #e2e8f0;
@@ -215,8 +215,8 @@
 
 .view-btn {
   flex-shrink: 0;
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: #e6f0ea;
+  color: #2f4a3d;
   border: none;
   padding: 9px 18px;
   border-radius: 8px;
@@ -227,7 +227,7 @@
 }
 
 .view-btn:hover {
-  background: #bfdbfe;
+  background: #d3e5d9;
 }
 
 .empty-state {
@@ -265,8 +265,8 @@
 .show-toggle-btn {
   align-self: center;
   background: #fff;
-  color: #1e3a5f;
-  border: 1px solid #dbeafe;
+  color: #2f4a3d;
+  border: 1px solid #d3e5d9;
   padding: 9px 22px;
   border-radius: 20px;
   font-size: 13px;
@@ -277,8 +277,8 @@
 }
 
 .show-toggle-btn:hover {
-  background: #eff6ff;
-  border-color: #93c5fd;
+  background: #f0f5f1;
+  border-color: #a8c9b5;
 }
 
 /* ── PREVIEW MODAL ───────────────────────────────────────── */
@@ -317,7 +317,7 @@
   height: 30px;
   border-radius: 50%;
   border: none;
-  background: #1e3a5f;
+  background: #2f4a3d;
   color: #fff;
   font-size: 14px;
   cursor: pointer;

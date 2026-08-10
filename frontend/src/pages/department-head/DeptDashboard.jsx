@@ -71,7 +71,7 @@ const DeptDashboard = () => {
       </div>
 
       {/* Year Level Overview */}
-      <h3 style={{ color: '#1B0833', margin: '28px 0 16px', fontSize: 18, fontWeight: 800 }}>
+      <h3 style={{ color: '#1f3329', margin: '28px 0 16px', fontSize: 18, fontWeight: 800 }}>
         Year Level Overview
       </h3>
 
@@ -85,12 +85,12 @@ const DeptDashboard = () => {
 
             return (
               <div key={yr} className="card" style={{ margin: 0 }}>
-                <h4 style={{ color: '#1B0833', fontSize: 16, fontWeight: 800, marginBottom: 10, paddingBottom: 10, borderBottom: '1px solid #eee' }}>
+                <h4 style={{ color: '#1f3329', fontSize: 16, fontWeight: 800, marginBottom: 10, paddingBottom: 10, borderBottom: '1px solid #eee' }}>
                   {yearLabels[yr]}
                 </h4>
 
                 <div style={{ textAlign: 'center', background: '#f8f9fb', borderRadius: 10, padding: '14px 0', marginBottom: 12 }}>
-                  <div style={{ fontSize: 28, fontWeight: 800, color: '#320C5B' }}>{yearData.total}</div>
+                  <div style={{ fontSize: 28, fontWeight: 800, color: '#2f4a3d' }}>{yearData.total}</div>
                   <div style={{ fontSize: 11, fontWeight: 700, color: '#888', letterSpacing: 0.5, textTransform: 'uppercase' }}>
                     Total Students
                   </div>
@@ -103,7 +103,7 @@ const DeptDashboard = () => {
                     blockEntries.map(([block, count]) => (
                       <div key={block} style={{ flex: 1, minWidth: 70, textAlign: 'center', background: '#f8f9fb', borderRadius: 8, padding: '8px 0' }}>
                         <div style={{ fontSize: 12, color: '#888', fontWeight: 600 }}>Block {block}</div>
-                        <div style={{ fontSize: 18, fontWeight: 800, color: '#1B0833' }}>{count}</div>
+                        <div style={{ fontSize: 18, fontWeight: 800, color: '#1f3329' }}>{count}</div>
                       </div>
                     ))
                   )}
@@ -116,8 +116,8 @@ const DeptDashboard = () => {
                     textAlign: 'center',
                     padding: '10px',
                     borderRadius: 10,
-                    background: 'linear-gradient(135deg, #72C92D, #A8E63E)',
-                    color: '#1B0833',
+                    background: 'linear-gradient(135deg, #6a8f78, #a8c9b5)',
+                    color: '#1f3329',
                     fontWeight: 700,
                     fontSize: 13,
                     textDecoration: 'none',
@@ -133,7 +133,7 @@ const DeptDashboard = () => {
 
       {/* My Events */}
       <div className="card">
-        <h3 style={{ marginBottom: 16, color: '#1B0833' }}>My Events</h3>
+        <h3 style={{ marginBottom: 16, color: '#1f3329' }}>My Events</h3>
         {loading ? (
           <p>Loading...</p>
         ) : (

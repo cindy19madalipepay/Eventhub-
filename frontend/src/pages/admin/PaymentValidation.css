@@ -33,7 +33,7 @@
 .receipts-title h1 {
   font-size: 22px;
   font-weight: 700;
-  color: #1a237e;
+  color: #1f3329;
   margin: 0;
   line-height: 1.2;
 }
@@ -68,9 +68,9 @@
 
 .tab-btn.active {
   background: #fff;
-  border-color: #1a237e;
-  color: #1a237e;
-  box-shadow: 0 2px 8px rgba(26, 35, 126, 0.08);
+  border-color: #2f4a3d;
+  color: #2f4a3d;
+  box-shadow: 0 2px 8px rgba(47, 74, 61, 0.08);
 }
 
 .tab-icon {
@@ -147,7 +147,7 @@
 }
 
 .receipt-item-card:hover {
-  border-color: #c5cae9;
+  border-color: #a8c9b5;
   box-shadow: 0 4px 12px rgba(0,0,0,0.06);
 }
 
@@ -191,7 +191,7 @@
 .receipt-item-event {
   font-size: 15px;
   font-weight: 600;
-  color: #1a1a2e;
+  color: #1f3329;
   margin: 0;
 }
 
@@ -237,7 +237,7 @@
 .receipt-item-amount {
   font-size: 18px;
   font-weight: 700;
-  color: #1a237e;
+  color: #1f3329;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -311,9 +311,9 @@
   margin-top: 14px;
   padding: 12px;
   background: #fff;
-  border: 1px dashed #c5cae9;
+  border: 1px dashed #a8c9b5;
   border-radius: 10px;
-  color: #1a237e;
+  color: #2f4a3d;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -321,8 +321,8 @@
 }
 
 .show-more-btn:hover {
-  background: #f5f6fb;
-  border-color: #1a237e;
+  background: #f5f9f6;
+  border-color: #2f4a3d;
 }
 
 .show-more-caret {
