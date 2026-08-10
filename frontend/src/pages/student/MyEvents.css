@@ -5,7 +5,7 @@
 .myevents-loading {
   padding: 48px;
   text-align: center;
-  color: #6b7280;
+  color: #888;
 }
 
 .myevents-header {
@@ -30,7 +30,7 @@
 }
 
 .myevents-count {
-  color: #6b7280;
+  color: #666;
   font-size: 14px;
 }
 
@@ -42,12 +42,12 @@
 
 .filter-tab {
   padding: 8px 16px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #E8E8E8;
   border-radius: 8px;
   background: #fff;
   cursor: pointer;
   font-size: 14px;
-  color: #4b5563;
+  color: #666;
 }
 
 .filter-tab.active {
@@ -66,7 +66,7 @@
   grid-column: 1 / -1;
   text-align: center;
   padding: 48px;
-  color: #9ca3af;
+  color: #888;
 }
 
 .no-events-sub {
@@ -79,45 +79,53 @@
 .event-card {
   background: #fff;
   border-radius: 16px;
-  border: 2px solid #e5e7eb;
+  border: 2px solid #E8E8E8;
   overflow: hidden;
   display: flex;
   flex-direction: column;
 }
 
-.event-card.theme-blue   { border-color: #2f4a3d; }
-.event-card.theme-orange { border-color: #f59e0b; }
-.event-card.theme-green  { border-color: #10b981; }
+.event-card.theme-blue {
+  border-color: #2f4a3d;
+}
+
+.event-card.theme-orange {
+  border-color: #6a8f78;
+}
+
+.event-card.theme-green {
+  border-color: #6a8f78;
+}
 
 .event-card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 14px 20px;
-  background: #f8f9fc;
-  border-bottom: 1px solid #eef0f5;
+  background: #F8F8F8;
+  border-bottom: 1px solid #E8E8E8;
 }
+
 .event-banner {
   width: 100%;
   aspect-ratio: 16 / 7;
   border-radius: 10px;
   overflow: hidden;
   margin-bottom: 12px;
-  background: #f3f4f6;
+  background: #F8F8F8;
 }
- 
+
 .event-banner img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
 }
- 
 
 .event-sender {
   font-size: 13px;
   font-weight: 600;
-  color: #6b7280;
+  color: #666;
 }
 
 .status-badge {
@@ -128,9 +136,20 @@
   border-radius: 999px;
 }
 
-.status-badge.badge-blue   { background: #e6f0ea; color: #2f4a3d; }
-.status-badge.badge-orange { background: #fef3c7; color: #b45309; }
-.status-badge.badge-green  { background: #d1fae5; color: #047857; }
+.status-badge.badge-blue {
+  background: #e6f0ea;
+  color: #2f4a3d;
+}
+
+.status-badge.badge-orange {
+  background: #e6f0ea;
+  color: #2f4a3d;
+}
+
+.status-badge.badge-green {
+  background: #e6f0ea;
+  color: #6a8f78;
+}
 
 .event-name {
   margin: 18px 20px 4px;
@@ -142,7 +161,7 @@
 .event-description {
   margin: 0 20px 14px;
   font-size: 13px;
-  color: #6b7280;
+  color: #666;
 }
 
 .event-info-grid {
@@ -153,7 +172,7 @@
 }
 
 .event-info-item {
-  background: #f4f5f8;
+  background: #F8F8F8;
   border-radius: 10px;
   padding: 10px 14px;
   display: flex;
@@ -164,14 +183,14 @@
 .event-info-label {
   font-size: 10px;
   font-weight: 700;
-  color: #9ca3af;
+  color: #888;
   letter-spacing: 0.4px;
 }
 
 .event-info-value {
   font-size: 14px;
   font-weight: 600;
-  color: #1f2937;
+  color: #1B0833;
 }
 
 .payment-info {
@@ -181,13 +200,13 @@
 .payment-amount {
   font-size: 15px;
   font-weight: 700;
-  color: #b45309;
+  color: #2f4a3d;
 }
 
 .event-actions {
   margin: auto 20px 20px;
   padding-top: 12px;
-  border-top: 1px solid #eef0f5;
+  border-top: 1px solid #E8E8E8;
 }
 
 .action-btn {
@@ -201,19 +220,25 @@
   color: #fff;
 }
 
-.action-btn.btn-blue   { background: #2f4a3d; }
-.action-btn.btn-orange { background: #f59e0b; }
+.action-btn.btn-blue {
+  background: #2f4a3d;
+}
+
+.action-btn.btn-orange {
+  background: #6a8f78;
+}
+
 .action-btn:disabled,
 .action-btn.disabled {
   background: #d1d5db;
-  color: #6b7280;
+  color: #666;
   cursor: not-allowed;
 }
 
 .completed-msg {
   text-align: center;
   font-weight: 700;
-  color: #059669;
+  color: #6a8f78;
   padding: 10px;
 }
 
@@ -222,7 +247,7 @@
 .eval-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.5);
+  background: rgba(31, 51, 41, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -246,7 +271,7 @@
   display: block;
   font-size: 13px;
   font-weight: 600;
-  color: #4b5563;
+  color: #666;
   margin: 12px 0 6px;
 }
 
@@ -265,12 +290,12 @@
 }
 
 .eval-star.filled {
-  color: #f59e0b;
+  color: #6a8f78;
 }
 
 .eval-textarea {
   width: 100%;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #E8E8E8;
   border-radius: 8px;
   padding: 10px;
   font-size: 14px;
@@ -287,12 +312,12 @@
 
 .eval-cancel-btn {
   padding: 10px 16px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #E8E8E8;
   border-radius: 8px;
   background: #fff;
   cursor: pointer;
   font-weight: 600;
-  color: #4b5563;
+  color: #666;
 }
 
 .eval-submit-btn {
@@ -315,7 +340,7 @@
 .attendance-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.5);
+  background: rgba(31, 51, 41, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -349,13 +374,13 @@
   background: none;
   border: none;
   font-size: 18px;
-  color: #9ca3af;
+  color: #888;
   cursor: pointer;
   line-height: 1;
 }
 
 .attendance-modal-info {
-  background: #eef4f0;
+  background: #e6f0ea;
   padding: 16px 24px;
   display: flex;
   flex-direction: column;
@@ -366,7 +391,7 @@
   display: flex;
   gap: 8px;
   font-size: 14px;
-  color: #1f2937;
+  color: #1B0833;
 }
 
 .attendance-modal-body {
@@ -377,12 +402,12 @@
   display: block;
   font-size: 14px;
   font-weight: 700;
-  color: #1f2937;
+  color: #1B0833;
   margin-bottom: 10px;
 }
 
 .attendance-file-input-wrap {
-  border: 1px solid #e5e7eb;
+  border: 1px solid #E8E8E8;
   border-radius: 8px;
   padding: 10px 14px;
 }
@@ -394,7 +419,7 @@
 
 .attendance-upload-hint {
   font-size: 12px;
-  color: #9ca3af;
+  color: #888;
   margin: 10px 0 0;
 }
 
@@ -403,24 +428,24 @@
   justify-content: flex-end;
   gap: 10px;
   padding: 16px 24px;
-  border-top: 1px solid #eef0f5;
+  border-top: 1px solid #E8E8E8;
 }
 
 .attendance-cancel-btn {
   padding: 12px 20px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #E8E8E8;
   border-radius: 8px;
-  background: #f9fafb;
+  background: #F8F8F8;
   cursor: pointer;
   font-weight: 700;
-  color: #4b5563;
+  color: #666;
 }
 
 .attendance-submit-btn {
   padding: 12px 20px;
   border: none;
   border-radius: 8px;
-  background: #059669;
+  background: #2f4a3d;
   color: #fff;
   cursor: pointer;
   font-weight: 700;

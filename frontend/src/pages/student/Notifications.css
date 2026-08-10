@@ -3,17 +3,19 @@
   gap: 8px;
   margin-bottom: 20px;
 }
+
 .notif-tab {
   padding: 8px 18px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid #E8E8E8;
   border-radius: 8px;
   background: #fff;
-  color: #555;
+  color: #666;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
 }
+
 .notif-tab.active {
   background: #2f4a3d;
   color: #fff;
@@ -29,19 +31,34 @@
 .notif-card {
   background: #fff;
   border-radius: 16px;
-  border: 2px solid #e5e7eb;
+  border: 2px solid #E8E8E8;
   padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 4px;
   position: relative;
 }
-.notif-card.unread { box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
 
-.notif-card.theme-blue   { border-color: #2f4a3d; }
-.notif-card.theme-orange { border-color: #f0b429; }
-.notif-card.theme-green  { border-color: #27ae60; }
-.notif-card.theme-gray   { border-color: #e5e7eb; }
+.notif-card.unread {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+/* Notification card themes */
+.notif-card.theme-blue {
+  border-color: #2f4a3d;
+}
+
+.notif-card.theme-orange {
+  border-color: #6a8f78;
+}
+
+.notif-card.theme-green {
+  border-color: #6a8f78;
+}
+
+.notif-card.theme-gray {
+  border-color: #E8E8E8;
+}
 
 .notif-card-top {
   display: flex;
@@ -49,13 +66,13 @@
   align-items: center;
   padding-bottom: 14px;
   margin-bottom: 12px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid #E8E8E8;
 }
 
 .notif-sender {
   font-size: 12.5px;
   font-weight: 700;
-  color: #555;
+  color: #666;
 }
 
 .notif-badge {
@@ -65,10 +82,27 @@
   border-radius: 20px;
   white-space: nowrap;
 }
-.badge-blue   { background: #e6f0ea; color: #2f4a3d; }
-.badge-orange { background: #fdf3e1; color: #d98c1f; }
-.badge-green  { background: #e8f8ee; color: #27ae60; }
-.badge-gray   { background: #f2f3f7; color: #555; }
+
+/* Notification badges */
+.badge-blue {
+  background: #e6f0ea;
+  color: #2f4a3d;
+}
+
+.badge-orange {
+  background: #e6f0ea;
+  color: #2f4a3d;
+}
+
+.badge-green {
+  background: #e6f0ea;
+  color: #6a8f78;
+}
+
+.badge-gray {
+  background: #F8F8F8;
+  color: #666;
+}
 
 .notif-event-name {
   font-size: 20px;
@@ -89,27 +123,30 @@
   gap: 10px;
   margin-bottom: 18px;
 }
+
 .notif-info-item {
-  background: #f6f7fb;
+  background: #F8F8F8;
   border-radius: 10px;
   padding: 10px 14px;
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
+
 .notif-info-label {
   font-size: 10.5px;
   font-weight: 700;
-  color: #999;
+  color: #888;
   letter-spacing: 0.4px;
 }
+
 .notif-info-value {
   font-size: 14px;
   font-weight: 700;
-  color: #222;
+  color: #1B0833;
 }
 
-/* ── Media row: banner and program rules side by side, below the info grid ── */
+/* Media row: banner and program rules side by side */
 .notif-media-stack {
   display: flex;
   flex-direction: row;
@@ -117,6 +154,7 @@
   margin-top: 4px;
   margin-bottom: 4px;
 }
+
 .notif-media-row {
   display: flex;
   flex-direction: column;
@@ -125,17 +163,18 @@
   min-width: 0;
 }
 
-/* ── Small clickable thumbnail — used for both banner and rules image ────── */
+/* Small clickable thumbnail */
 .notif-thumb {
   flex-shrink: 0;
   width: 72px;
   height: 72px;
   border-radius: 10px;
   overflow: hidden;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #E8E8E8;
   cursor: pointer;
-  background: #f6f7fb;
+  background: #F8F8F8;
 }
+
 .notif-thumb img {
   width: 100%;
   height: 100%;
@@ -143,14 +182,17 @@
   display: block;
   transition: transform 0.15s;
 }
+
 .notif-thumb:hover img {
   transform: scale(1.06);
 }
+
 .notif-thumb-pdf {
   display: flex;
   align-items: center;
   justify-content: center;
 }
+
 .notif-thumb-pdf-icon {
   font-size: 28px;
 }
@@ -166,17 +208,28 @@
   cursor: pointer;
   transition: opacity 0.15s;
 }
-.notif-action-btn:hover { opacity: 0.9; }
 
-.btn-blue   { background: #2f4a3d; }
-.btn-orange { background: #f0b429; }
-.btn-gray   { background: #aaa; }
+.notif-action-btn:hover {
+  opacity: 0.9;
+}
+
+.btn-blue {
+  background: #2f4a3d;
+}
+
+.btn-orange {
+  background: #6a8f78;
+}
+
+.btn-gray {
+  background: #aaa;
+}
 
 .notif-completed-msg {
   text-align: center;
   padding: 13px;
-  background: #e8f8ee;
-  color: #27ae60;
+  background: #e6f0ea;
+  color: #6a8f78;
   border-radius: 10px;
   font-weight: 700;
   font-size: 14px;
@@ -186,21 +239,22 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #e94560;
+  background: #6a8f78;
   position: absolute;
   top: 18px;
   right: 18px;
 }
+
 .notif-dismiss-btn {
   margin-left: auto;
   background: none;
   border: none;
   cursor: pointer;
-  color: #999;
+  color: #888;
   font-size: 14px;
 }
 
-/* ── Full-size lightbox ────────────────────────────────────────────────── */
+/* Full-size lightbox */
 .lightbox-overlay {
   position: fixed;
   inset: 0;
@@ -211,6 +265,7 @@
   z-index: 1000;
   padding: 40px;
 }
+
 .lightbox-img {
   max-width: 90vw;
   max-height: 90vh;
@@ -218,6 +273,7 @@
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
   cursor: default;
 }
+
 .lightbox-close {
   position: absolute;
   top: 24px;
@@ -235,6 +291,7 @@
   justify-content: center;
   transition: background 0.15s;
 }
+
 .lightbox-close:hover {
   background: rgba(255, 255, 255, 0.3);
 }
@@ -252,7 +309,7 @@
 .program-flow {
   margin-top: 14px;
   padding-top: 14px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid #E8E8E8;
 }
 
 .program-flow-timeline {
@@ -306,7 +363,7 @@
 .program-flow-title {
   font-size: 14px;
   font-weight: 700;
-  color: #222;
+  color: #1B0833;
   margin-top: 2px;
 }
 
