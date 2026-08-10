@@ -6,20 +6,32 @@ import './MyEvents.css';
 import './Notifications.css'; // reuse lightbox + media-thumb styles for banner/rules viewer
 
 // api.defaults.baseURL is 'http://localhost:5000/api' — strip the /api
-// to get the root the /uploads static folder is served from.
+// to get the root the /uploads static folder is served from. Only used
+// as a fallback for any older records saved before the Cloudinary switch.
 const UPLOADS_BASE = api.defaults.baseURL.replace(/\/api\/?$/, '');
 
+// banner_image is now a full Cloudinary URL (stored that way since the
+// uploadMiddleware Cloudinary migration) — falls back to the old
+// local-path style for any records saved before that switch.
 const getBannerSrc = (event) => {
-  if (event.banner_image) return `${UPLOADS_BASE}/uploads/banners/${event.banner_image}`;
+  if (!event) return null;
+  if (event.banner_image) {
+    return event.banner_image.startsWith('http')
+      ? event.banner_image
+      : `${UPLOADS_BASE}/uploads/banners/${event.banner_image}`;
+  }
   if (event.banner_url) return event.banner_url;
   return null;
 };
 
-// rules_file is stored as a relative path like "rules/rules-12345.pdf"
-// (see eventRoutes.js's /:id/rules-file handler), served straight from /uploads/.
+// rules_file is now a full Cloudinary URL for the same reason — falls
+// back to the old local-path style ("rules/rules-12345.pdf") for any
+// records saved before the switch.
 const getRulesSrc = (event) => {
   if (!event?.rules_file) return null;
-  return `${UPLOADS_BASE}/uploads/${event.rules_file}`;
+  return event.rules_file.startsWith('http')
+    ? event.rules_file
+    : `${UPLOADS_BASE}/uploads/${event.rules_file}`;
 };
 
 const isPdfFile = (path) => !!path && path.toLowerCase().endsWith('.pdf');
@@ -49,6 +61,7 @@ const STATUS_CONFIG = {
   not_registered:      { label: 'NOT REGISTERED',      theme: 'blue',   button: 'Register Attendance' },
   upload_receipt:      { label: 'UPLOAD RECEIPT',      theme: 'orange', button: 'Pay Now' },
   register_attendance: { label: 'REGISTER ATTENDANCE', theme: 'blue',   button: 'Upload Attendance Proof' },
+  attending:            { label: 'EVENT ONGOING',       theme: 'blue',   button: null },
   checkout:            { label: 'CHECKOUT REQUIRED',   theme: 'orange', button: 'Checkout (Upload Proof)' },
   missed:               { label: 'MISSED',              theme: 'orange', button: null },
   pending_evaluation:  { label: 'PENDING EVALUATION',  theme: 'orange', button: 'Evaluate Event' },
@@ -154,11 +167,11 @@ const MyEvents = () => {
       return 'register_attendance';
     }
 
-    // Checked in. Offer checkout while the event is still ongoing and they
-    // haven't checked out yet. Once the event ends, checkout is no longer
-    // required to move on to evaluation.
-    if (attendance && !attendance.checkout_at && !hasEventEnded(event)) {
-      return 'checkout';
+    // Checked in but not checked out yet. Checkout only becomes available
+    // once the event has ended — while it's still ongoing there's nothing
+    // to do but attend.
+    if (attendance && !attendance.checkout_at) {
+      return hasEventEnded(event) ? 'checkout' : 'attending';
     }
 
     return isEvaluated(event) ? 'completed' : 'pending_evaluation';
@@ -505,6 +518,10 @@ const MyEvents = () => {
                   ) : status === 'not_started' ? (
                     <div className="completed-msg" style={{ background: '#eef2ff', color: '#3949ab' }}>
                        Opens {formatDate(event.date_start)} at {formatTime(event.time_start)}
+                    </div>
+                  ) : status === 'attending' ? (
+                    <div className="completed-msg" style={{ background: '#eef2ff', color: '#3949ab' }}>
+                      Event in progress — checkout unlocks when it ends
                     </div>
                   ) : status === 'missed' ? (
                     <div className="completed-msg" style={{ background: '#fdecea', color: '#c0392b' }}>

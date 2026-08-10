@@ -245,6 +245,10 @@ const getEventQR = async (req, res) => {
 };
 
 // ─── UPLOAD BANNER IMAGE (admin only) ────────────────────────────────────────
+// req.file.path here is the full Cloudinary URL (not a local filename) —
+// uploadBanner (via multer-storage-cloudinary) uploads directly to
+// Cloudinary and gives back its permanent hosted URL, which is what
+// MyEvents.jsx / Notifications.jsx now expect in banner_image.
 const uploadBannerImage = async (req, res) => {
   try {
     const { id } = req.params;
@@ -255,13 +259,13 @@ const uploadBannerImage = async (req, res) => {
 
     await pool.query(
       'UPDATE events SET banner_image = ?, banner_url = NULL WHERE event_id = ?',
-      [req.file.filename, id]
+      [req.file.path, id]
     );
 
     return res.status(200).json({
       success: true,
       message: 'Banner image uploaded.',
-      filename: req.file.filename,
+      banner_image: req.file.path,
     });
   } catch (error) {
     console.error('UploadBannerImage error:', error);

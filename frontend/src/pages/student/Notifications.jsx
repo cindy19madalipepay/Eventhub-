@@ -6,24 +6,33 @@ import './Notifications.css';
 import '../student/MyEvents.css'; // reuse attendance-modal styles — adjust path if MyEvents.css lives elsewhere
 
 // api.defaults.baseURL is 'http://localhost:5000/api' — strip the /api
-// to get the root the /uploads static folder is served from.
+// to get the root the /uploads static folder is served from. Only used
+// as a fallback for any older records saved before the Cloudinary switch.
 const UPLOADS_BASE = api.defaults.baseURL.replace(/\/api\/?$/, '');
 
-// A banner is either an uploaded image (banner_image, served from
-// /uploads/banners/) or a pasted external link (banner_url) — whichever
-// the event actually has set.
+// A banner is either an uploaded image (banner_image, now a full Cloudinary
+// URL since the uploadMiddleware Cloudinary migration) or a pasted external
+// link (banner_url) — whichever the event actually has set. Falls back to
+// the old local-path style for any records saved before the switch.
 const getBannerSrc = (event) => {
   if (!event) return null;
-  if (event.banner_image) return `${UPLOADS_BASE}/uploads/banners/${event.banner_image}`;
+  if (event.banner_image) {
+    return event.banner_image.startsWith('http')
+      ? event.banner_image
+      : `${UPLOADS_BASE}/uploads/banners/${event.banner_image}`;
+  }
   if (event.banner_url) return event.banner_url;
   return null;
 };
 
-// rules_file is stored as a relative path like "rules/rules-12345.pdf"
-// (see eventRoutes.js's /:id/rules-file handler), served straight from /uploads/.
+// rules_file is now a full Cloudinary URL for the same reason — falls
+// back to the old local-path style ("rules/rules-12345.pdf") for any
+// records saved before the switch.
 const getRulesSrc = (event) => {
   if (!event?.rules_file) return null;
-  return `${UPLOADS_BASE}/uploads/${event.rules_file}`;
+  return event.rules_file.startsWith('http')
+    ? event.rules_file
+    : `${UPLOADS_BASE}/uploads/${event.rules_file}`;
 };
 
 const isPdfFile = (path) => !!path && path.toLowerCase().endsWith('.pdf');
@@ -42,18 +51,30 @@ const getProgramFlow = (event) => {
   }
 };
 
+// How long after an event's start time a student can still register/confirm
+// attendance. After this, if they haven't completed check-in, the event is
+// marked as missed and the action is locked out entirely. Matches the
+// backend's 30-minute check-in window (see attendanceController.js) and
+// mirrors the same constant in MyEvents.jsx.
+const REGISTRATION_GRACE_MINUTES = 30;
+
 const STATUS_CONFIG = {
-  not_registered:      { label: 'NOT REGISTERED',     theme: 'blue',   button: 'Register Attendance' },
-  upload_receipt:      { label: 'UPLOAD RECEIPT',     theme: 'orange', button: 'Upload Receipt' },
-  register_attendance: { label: 'REGISTER ATTENDANCE',theme: 'blue',   button: 'Upload Attendance Proof' },
-  pending_evaluation:  { label: 'PENDING EVALUATION', theme: 'orange', button: 'Evaluate Event' },
-  completed:           { label: 'COMPLETED',          theme: 'green',  button: null },
+  not_started:          { label: 'NOT YET OPEN',        theme: 'blue',   button: null },
+  not_registered:       { label: 'NOT REGISTERED',      theme: 'blue',   button: 'Register Attendance' },
+  upload_receipt:       { label: 'UPLOAD RECEIPT',      theme: 'orange', button: 'Upload Receipt' },
+  register_attendance:  { label: 'REGISTER ATTENDANCE', theme: 'blue',   button: 'Upload Attendance Proof' },
+  attending:             { label: 'EVENT ONGOING',       theme: 'blue',   button: null },
+  checkout:             { label: 'CHECKOUT REQUIRED',   theme: 'orange', button: 'Checkout (Upload Proof)' },
+  missed:                { label: 'MISSED',              theme: 'orange', button: null },
+  pending_evaluation:   { label: 'PENDING EVALUATION',  theme: 'orange', button: 'Evaluate Event' },
+  completed:            { label: 'COMPLETED',           theme: 'green',  button: null },
 };
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [events, setEvents] = useState([]);
   const [tickets, setTickets] = useState([]);
+  const [attendanceRecords, setAttendanceRecords] = useState([]);
   const [evaluations, setEvaluations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
@@ -68,6 +89,11 @@ const Notifications = () => {
   const [attendancePhoto, setAttendancePhoto] = useState(null);
   const [submittingAttendance, setSubmittingAttendance] = useState(false);
 
+  // Checkout (logout) proof modal
+  const [checkoutModal, setCheckoutModal] = useState(null); // { event }
+  const [checkoutPhoto, setCheckoutPhoto] = useState(null);
+  const [submittingCheckout, setSubmittingCheckout] = useState(false);
+
   // Evaluation modal (shared rubric component)
   const [evalEvent, setEvalEvent] = useState(null);
 
@@ -78,15 +104,17 @@ const Notifications = () => {
 
   const fetchAll = async () => {
     try {
-      const [notifRes, eventsRes, ticketsRes, evalRes] = await Promise.all([
+      const [notifRes, eventsRes, ticketsRes, attendanceRes, evalRes] = await Promise.all([
         api.get('/notifications/my'),
         api.get('/events'),
         api.get('/tickets/my'),
+        api.get('/attendance/my'),
         api.get('/evaluations/my'),
       ]);
       setNotifications(notifRes.data.notifications || []);
       setEvents(eventsRes.data.events || []);
       setTickets(ticketsRes.data.tickets || []);
+      setAttendanceRecords(attendanceRes.data.attended || []);
       setEvaluations(evalRes.data.evaluations || []);
     } catch (e) {
       console.error(e);
@@ -122,18 +150,59 @@ const Notifications = () => {
   };
 
   const getTicketForEvent = (event_id) => tickets.find((t) => t.event_id === event_id);
+  const getAttendanceForEvent = (event_id) => attendanceRecords.find((a) => a.event_id === event_id);
 
   const isEvaluated = (event) =>
     evaluations.some((e) => e.event_name === event.event_name && e.date_start === event.date_start);
 
+  const getEventStart = (event) => new Date(`${event.date_start}T${event.time_start || '00:00'}`);
+
+  const hasEventStarted = (event) => new Date() >= getEventStart(event);
+
+  // True once the 30-minute check-in window from the event's start time has
+  // fully elapsed — after this, registering/confirming attendance is locked
+  // out for good and the event counts as missed.
+  const isPastRegistrationWindow = (event) => {
+    const deadline = new Date(getEventStart(event).getTime() + REGISTRATION_GRACE_MINUTES * 60000);
+    return new Date() > deadline;
+  };
+
+  const hasEventEnded = (event) => {
+    const endDateStr = event.date_end || event.date_start;
+    const endTime = event.time_end || event.time_start || '23:59';
+    const eventEnd = new Date(`${endDateStr}T${endTime}`);
+    return new Date() > eventEnd;
+  };
+
   const getStatus = (event) => {
     if (!event) return null;
     const ticket = getTicketForEvent(event.event_id);
-    if (!ticket) return 'not_registered';
+    const attendance = getAttendanceForEvent(event.event_id);
+
+    if (!ticket) {
+      if (!hasEventStarted(event)) return 'not_started';
+      if (isPastRegistrationWindow(event)) return 'missed';
+      return 'not_registered';
+    }
+
     if (event.requires_payment && (ticket.payment_status === 'pending' || ticket.payment_status === 'rejected')) {
       return 'upload_receipt';
     }
-    if (ticket.status !== 'used') return 'register_attendance';
+
+    if (ticket.status !== 'used') {
+      // Registered (e.g. paid) but never confirmed attendance before the
+      // window closed — counts as missed, same as never registering at all.
+      if (isPastRegistrationWindow(event)) return 'missed';
+      return 'register_attendance';
+    }
+
+    // Checked in but not checked out yet. Checkout only becomes available
+    // once the event has ended — while it's still ongoing there's nothing
+    // to do but attend.
+    if (attendance && !attendance.checkout_at) {
+      return hasEventEnded(event) ? 'checkout' : 'attending';
+    }
+
     return isEvaluated(event) ? 'completed' : 'pending_evaluation';
   };
 
@@ -271,6 +340,36 @@ const Notifications = () => {
     }
   };
 
+  // ─── Checkout (logout) proof modal ──────────────────────────────────────
+  const openCheckoutModal = (event) => {
+    setCheckoutModal({ event });
+    setCheckoutPhoto(null);
+  };
+
+  const submitCheckout = async () => {
+    if (!checkoutModal) return;
+    if (!checkoutPhoto) {
+      toast.error('Please choose a photo first.');
+      return;
+    }
+    setSubmittingCheckout(true);
+    try {
+      const formData = new FormData();
+      formData.append('event_id', checkoutModal.event.event_id);
+      formData.append('photo', checkoutPhoto);
+      await api.post('/attendance/checkout', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      toast.success('Checked out successfully!');
+      setCheckoutModal(null);
+      fetchAll();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to submit checkout.');
+    } finally {
+      setSubmittingCheckout(false);
+    }
+  };
+
   // ─── Action button dispatcher ────────────────────────────────────────────
   const handleAction = (n) => {
     if (!n.is_read) markAsRead(n.notification_id);
@@ -283,7 +382,14 @@ const Notifications = () => {
     }
     if (status === 'upload_receipt') return openFilePicker('payment', ticket);
     if (status === 'register_attendance') return openAttendanceModal(event, ticket);
-    if (status === 'pending_evaluation') return setEvalEvent(event);
+    if (status === 'checkout') return openCheckoutModal(event);
+    if (status === 'pending_evaluation') {
+      if (!hasEventEnded(event)) {
+        toast('You can evaluate this event after it ends.', { icon: '⏳' });
+        return;
+      }
+      return setEvalEvent(event);
+    }
   };
 
   return (
@@ -328,6 +434,7 @@ const Notifications = () => {
           {filtered.map((n) => {
             const cfg = n.status ? STATUS_CONFIG[n.status] : null;
             const isBusy = busyId === n.event?.event_id || busyId === n.ticket?.ticket_id;
+            const evalReady = n.status === 'pending_evaluation' && n.event && hasEventEnded(n.event);
             const bannerSrc = getBannerSrc(n.event);
             const rulesSrc = getRulesSrc(n.event);
             const rulesIsPdf = isPdfFile(n.event?.rules_file);
@@ -454,14 +561,30 @@ const Notifications = () => {
 
                 {cfg?.button ? (
                   <button
-                    className={`notif-action-btn btn-${cfg.theme}`}
+                    className={`notif-action-btn btn-${cfg.theme} ${n.status === 'pending_evaluation' && !evalReady ? 'disabled' : ''}`}
                     onClick={() => handleAction(n)}
-                    disabled={isBusy}
+                    disabled={isBusy || (n.status === 'pending_evaluation' && !evalReady)}
                   >
-                    {isBusy ? 'Please wait...' : cfg.button}
+                    {isBusy
+                      ? 'Please wait...'
+                      : n.status === 'pending_evaluation' && !evalReady
+                      ? 'Available After Event'
+                      : cfg.button}
                   </button>
                 ) : n.status === 'completed' ? (
                   <div className="notif-completed-msg">All Done!</div>
+                ) : n.status === 'not_started' ? (
+                  <div className="notif-completed-msg" style={{ background: '#eef2ff', color: '#3949ab' }}>
+                    Opens {formatDate(n.event?.date_start)} at {formatTime(n.event?.time_start)}
+                  </div>
+                ) : n.status === 'attending' ? (
+                  <div className="notif-completed-msg" style={{ background: '#eef2ff', color: '#3949ab' }}>
+                    Event in progress — checkout unlocks when it ends
+                  </div>
+                ) : n.status === 'missed' ? (
+                  <div className="notif-completed-msg" style={{ background: '#fdecea', color: '#c0392b' }}>
+                    You missed this event
+                  </div>
                 ) : (
                   <button className="notif-action-btn btn-gray" onClick={() => markAsRead(n.notification_id)}>
                     Mark as Read
@@ -508,6 +631,47 @@ const Notifications = () => {
               <button className="attendance-cancel-btn" onClick={() => setAttendanceModal(null)}>Cancel</button>
               <button className="attendance-submit-btn" onClick={submitAttendance} disabled={submittingAttendance}>
                 {submittingAttendance ? 'Submitting...' : 'Submit Attendance'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {checkoutModal && (
+        <div className="attendance-modal-overlay" onClick={() => setCheckoutModal(null)}>
+          <div className="attendance-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="attendance-modal-header">
+              <h3>Event Checkout - {checkoutModal.event.event_name}</h3>
+              <button className="attendance-modal-close" onClick={() => setCheckoutModal(null)}>✕</button>
+            </div>
+
+            <div className="attendance-modal-info">
+              <div className="attendance-info-row">
+                <strong>Date:</strong>
+                <span>{formatDate(checkoutModal.event.date_start)} at {formatTime(checkoutModal.event.time_start)}</span>
+              </div>
+              <div className="attendance-info-row">
+                <strong>Venue:</strong>
+                <span>{checkoutModal.event.venue || '—'}</span>
+              </div>
+            </div>
+
+            <div className="attendance-modal-body">
+              <label className="attendance-upload-label">Upload Checkout Photo</label>
+              <div className="attendance-file-input-wrap">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setCheckoutPhoto(e.target.files[0] || null)}
+                />
+              </div>
+              <p className="attendance-upload-hint">Upload a photo as proof you are leaving the event</p>
+            </div>
+
+            <div className="attendance-modal-actions">
+              <button className="attendance-cancel-btn" onClick={() => setCheckoutModal(null)}>Cancel</button>
+              <button className="attendance-submit-btn" onClick={submitCheckout} disabled={submittingCheckout}>
+                {submittingCheckout ? 'Submitting...' : 'Submit Checkout'}
               </button>
             </div>
           </div>
