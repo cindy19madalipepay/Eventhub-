@@ -7,32 +7,21 @@ import './Login.css';
 const ForgotPassword = () => {
   const navigate = useNavigate();
 
-  // Step 1 = enter email
-  // Step 2 = enter verification code + new password
   const [step, setStep] = useState(1);
-
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-
   const [loading, setLoading] = useState(false);
 
-  // ============================================================
-  // SEND VERIFICATION CODE
-  // ============================================================
   const handleSendCode = async (e) => {
     e.preventDefault();
-
     setLoading(true);
 
     try {
-      await api.post('/auth/forgot-password', {
-        email,
-      });
+      await api.post('/auth/forgot-password', { email });
 
       toast.success('Code sent! Check your email.');
-
       setStep(2);
     } catch (err) {
       toast.error(
@@ -44,15 +33,11 @@ const ForgotPassword = () => {
     }
   };
 
-  // ============================================================
-  // RESET PASSWORD
-  // ============================================================
   const handleResetPassword = async (e) => {
     e.preventDefault();
 
     if (newPassword !== confirmPassword) {
-      toast.error('Passwords do not match.');
-      return;
+      return toast.error('Passwords do not match.');
     }
 
     setLoading(true);
@@ -81,36 +66,22 @@ const ForgotPassword = () => {
 
   return (
     <div className="login-page">
-      <div className="login-card">
+      <div className="login-container">
 
-        {/* =====================================================
-            EVENTHUB LOGO
-            Same logo used in Login.jsx
-        ===================================================== */}
+        {/* EventHub Logo - same EH style */}
         <div className="login-logo">
-          <img
-            src="/LG.png"
-            alt="EventHub Logo"
-            className="logo-img"
-          />
-
-          <h1 className="logo-text">
-            EventHub
-          </h1>
+          <div className="logo-icon">EH</div>
+          <h1 className="logo-text">EventHub</h1>
         </div>
 
-        {/* =====================================================
-            STEP 1 - ENTER EMAIL
-        ===================================================== */}
+        {/* STEP 1: ENTER EMAIL */}
         {step === 1 && (
           <form
             onSubmit={handleSendCode}
             className="login-form"
           >
             <div className="form-group">
-              <label>
-                Email Address
-              </label>
+              <label>Email Address</label>
 
               <input
                 type="email"
@@ -128,16 +99,12 @@ const ForgotPassword = () => {
               className="btn-login"
               disabled={loading}
             >
-              {loading
-                ? 'Sending...'
-                : 'Send Code'}
+              {loading ? 'Sending...' : 'Send Code'}
             </button>
           </form>
         )}
 
-        {/* =====================================================
-            STEP 2 - CODE + NEW PASSWORD
-        ===================================================== */}
+        {/* STEP 2: CODE + NEW PASSWORD */}
         {step === 2 && (
           <form
             onSubmit={handleResetPassword}
@@ -153,33 +120,23 @@ const ForgotPassword = () => {
               <strong>{email}</strong>
             </p>
 
-            {/* Verification Code */}
             <div className="form-group">
-              <label>
-                Verification Code
-              </label>
+              <label>Verification Code</label>
 
               <input
                 type="text"
                 placeholder="123456"
                 value={code}
                 onChange={(e) =>
-                  setCode(
-                    e.target.value
-                      .replace(/\D/g, '')
-                      .slice(0, 6)
-                  )
+                  setCode(e.target.value)
                 }
                 maxLength={6}
                 required
               />
             </div>
 
-            {/* New Password */}
             <div className="form-group">
-              <label>
-                New Password
-              </label>
+              <label>New Password</label>
 
               <input
                 type="password"
@@ -192,26 +149,20 @@ const ForgotPassword = () => {
               />
             </div>
 
-            {/* Confirm Password */}
             <div className="form-group">
-              <label>
-                Confirm New Password
-              </label>
+              <label>Confirm New Password</label>
 
               <input
                 type="password"
                 placeholder="Re-enter new password"
                 value={confirmPassword}
                 onChange={(e) =>
-                  setConfirmPassword(
-                    e.target.value
-                  )
+                  setConfirmPassword(e.target.value)
                 }
                 required
               />
             </div>
 
-            {/* Reset Password Button */}
             <button
               type="submit"
               className="btn-login"
@@ -222,21 +173,13 @@ const ForgotPassword = () => {
                 : 'Reset Password'}
             </button>
 
-            {/* Use Different Email */}
             <p
               className="register-link"
-              style={{
-                marginTop: '0.75rem',
-              }}
+              style={{ marginTop: '0.75rem' }}
             >
               <button
                 type="button"
-                onClick={() => {
-                  setStep(1);
-                  setCode('');
-                  setNewPassword('');
-                  setConfirmPassword('');
-                }}
+                onClick={() => setStep(1)}
                 style={{
                   background: 'none',
                   border: 'none',
@@ -251,14 +194,10 @@ const ForgotPassword = () => {
           </form>
         )}
 
-        {/* =====================================================
-            LOGIN LINK
-        ===================================================== */}
+        {/* LOGIN LINK */}
         <p className="register-link">
           Remembered your password?{' '}
-          <Link to="/login">
-            Login
-          </Link>
+          <Link to="/login">Login</Link>
         </p>
 
       </div>
