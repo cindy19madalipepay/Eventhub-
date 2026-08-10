@@ -7,20 +7,13 @@ import './Login.css';
 const ForgotPassword = () => {
   const navigate = useNavigate();
 
-  // Step 1 = enter email
-  // Step 2 = enter verification code + new password
   const [step, setStep] = useState(1);
-
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-
   const [loading, setLoading] = useState(false);
 
-  // ============================================================
-  // SEND VERIFICATION CODE
-  // ============================================================
   const handleSendCode = async (e) => {
     e.preventDefault();
 
@@ -32,7 +25,6 @@ const ForgotPassword = () => {
       });
 
       toast.success('Code sent! Check your email.');
-
       setStep(2);
     } catch (err) {
       toast.error(
@@ -44,15 +36,11 @@ const ForgotPassword = () => {
     }
   };
 
-  // ============================================================
-  // RESET PASSWORD
-  // ============================================================
   const handleResetPassword = async (e) => {
     e.preventDefault();
 
     if (newPassword !== confirmPassword) {
-      toast.error('Passwords do not match.');
-      return;
+      return toast.error('Passwords do not match.');
     }
 
     setLoading(true);
@@ -79,16 +67,11 @@ const ForgotPassword = () => {
     }
   };
 
-  // ============================================================
-  // RETURN
-  // ============================================================
   return (
     <div className="login-page">
-      <div className="login-card forgot-password-card">
+      <div className="login-card">
 
-        {/* =====================================================
-            EVENTHUB LOGO
-        ===================================================== */}
+        {/* EventHub Logo - ONLY CHANGE */}
         <div className="login-logo">
           <img
             src="/LG.png"
@@ -101,31 +84,13 @@ const ForgotPassword = () => {
           </h1>
         </div>
 
-        {/* =====================================================
-            TITLE
-        ===================================================== */}
-        <div className="forgot-title">
-          <h2>Forgot Password?</h2>
-
-          <p>
-            {step === 1
-              ? 'Enter your email to reset your password.'
-              : 'Enter the verification code and create a new password.'}
-          </p>
-        </div>
-
-        {/* =====================================================
-            STEP 1 - ENTER EMAIL
-        ===================================================== */}
         {step === 1 && (
           <form
             onSubmit={handleSendCode}
             className="login-form"
           >
             <div className="form-group">
-              <label>
-                Email Address
-              </label>
+              <label>Email Address</label>
 
               <input
                 type="email"
@@ -150,20 +115,21 @@ const ForgotPassword = () => {
           </form>
         )}
 
-        {/* =====================================================
-            STEP 2 - CODE + NEW PASSWORD
-        ===================================================== */}
         {step === 2 && (
           <form
             onSubmit={handleResetPassword}
             className="login-form"
           >
-            <p className="verification-text">
+            <p
+              style={{
+                marginBottom: '1rem',
+                fontSize: '0.9rem',
+              }}
+            >
               Enter the 6-digit code sent to{' '}
               <strong>{email}</strong>
             </p>
 
-            {/* Verification Code */}
             <div className="form-group">
               <label>
                 Verification Code
@@ -174,18 +140,13 @@ const ForgotPassword = () => {
                 placeholder="123456"
                 value={code}
                 onChange={(e) =>
-                  setCode(
-                    e.target.value
-                      .replace(/\D/g, '')
-                      .slice(0, 6)
-                  )
+                  setCode(e.target.value)
                 }
                 maxLength={6}
                 required
               />
             </div>
 
-            {/* New Password */}
             <div className="form-group">
               <label>
                 New Password
@@ -202,7 +163,6 @@ const ForgotPassword = () => {
               />
             </div>
 
-            {/* Confirm Password */}
             <div className="form-group">
               <label>
                 Confirm New Password
@@ -213,13 +173,14 @@ const ForgotPassword = () => {
                 placeholder="Re-enter new password"
                 value={confirmPassword}
                 onChange={(e) =>
-                  setConfirmPassword(e.target.value)
+                  setConfirmPassword(
+                    e.target.value
+                  )
                 }
                 required
               />
             </div>
 
-            {/* Reset Password Button */}
             <button
               type="submit"
               className="btn-login"
@@ -230,15 +191,21 @@ const ForgotPassword = () => {
                 : 'Reset Password'}
             </button>
 
-            {/* Use Different Email */}
-            <p className="register-link forgot-back">
+            <p
+              className="register-link"
+              style={{
+                marginTop: '0.75rem',
+              }}
+            >
               <button
                 type="button"
-                onClick={() => {
-                  setStep(1);
-                  setCode('');
-                  setNewPassword('');
-                  setConfirmPassword('');
+                onClick={() => setStep(1)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#0f3460',
+                  cursor: 'pointer',
+                  fontWeight: 600,
                 }}
               >
                 ← Use a different email
@@ -247,9 +214,6 @@ const ForgotPassword = () => {
           </form>
         )}
 
-        {/* =====================================================
-            LOGIN LINK
-        ===================================================== */}
         <p className="register-link">
           Remembered your password?{' '}
           <Link to="/login">
