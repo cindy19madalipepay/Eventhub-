@@ -2,25 +2,36 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import toast from 'react-hot-toast';
+import './Login.css';
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
 
+  // Step 1 = enter email
+  // Step 2 = enter verification code + new password
   const [step, setStep] = useState(1);
+
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // ============================================================
+  // SEND VERIFICATION CODE
+  // ============================================================
   const handleSendCode = async (e) => {
     e.preventDefault();
+
     setLoading(true);
 
     try {
-      await api.post('/auth/forgot-password', { email });
+      await api.post('/auth/forgot-password', {
+        email,
+      });
 
       toast.success('Code sent! Check your email.');
+
       setStep(2);
     } catch (err) {
       toast.error(
@@ -32,6 +43,9 @@ const ForgotPassword = () => {
     }
   };
 
+  // ============================================================
+  // RESET PASSWORD
+  // ============================================================
   const handleResetPassword = async (e) => {
     e.preventDefault();
 
@@ -64,6 +78,9 @@ const ForgotPassword = () => {
     }
   };
 
+  // ============================================================
+  // USE DIFFERENT EMAIL
+  // ============================================================
   const handleDifferentEmail = () => {
     setStep(1);
     setCode('');
@@ -74,246 +91,473 @@ const ForgotPassword = () => {
   return (
     <>
       <style>{`
+
+        /* =====================================================
+           FORGOT PASSWORD PAGE
+        ===================================================== */
+
         .forgot-password-page {
           min-height: 100vh;
           width: 100%;
+
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 24px;
+
+          padding: 30px 20px;
+
           box-sizing: border-box;
-          background: #f5f7fb;
+
+          background: linear-gradient(
+            135deg,
+            #dcefe4 0%,
+            #a8d5ba 45%,
+            #6f9f86 100%
+          );
         }
+
+
+        /* =====================================================
+           FORGOT PASSWORD CARD
+        ===================================================== */
 
         .forgot-password-card {
           width: 100%;
           max-width: 500px;
+
           background: #ffffff;
-          padding: 42px 48px 34px;
-          border-radius: 24px;
+
+          padding: 42px 46px;
+
           box-sizing: border-box;
+
+          border-radius: 24px;
+
           box-shadow:
-            0 20px 45px rgba(26, 46, 34, 0.14),
-            0 5px 15px rgba(26, 46, 34, 0.06);
+            0 20px 50px rgba(27, 50, 39, 0.20);
+
+          animation: forgotPasswordAppear 0.35s ease;
         }
 
-        .forgot-logo {
+
+        /* =====================================================
+           EVENTHUB LOGO
+        ===================================================== */
+
+        .forgot-password-card .login-logo {
           display: flex;
           flex-direction: column;
+
           align-items: center;
           justify-content: center;
+
           margin-bottom: 34px;
         }
 
-        .forgot-logo-img {
-          width: 70px;
-          height: 70px;
+        .forgot-password-card .logo-img {
+          width: 72px;
+          height: 72px;
+
           object-fit: contain;
+
           display: block;
+
           margin-bottom: 12px;
         }
 
-        .forgot-logo h1 {
+        .forgot-password-card .logo-text {
           margin: 0;
-          color: #17002f;
-          font-size: 34px;
+
+          font-size: 32px;
           font-weight: 800;
+
           line-height: 1.1;
+
+          color: #16002f;
+
           text-align: center;
         }
 
-        .forgot-form {
+
+        /* =====================================================
+           FORM
+        ===================================================== */
+
+        .forgot-password-card .login-form {
           width: 100%;
         }
 
-        .forgot-form-group {
-          margin-bottom: 21px;
+        .forgot-password-card .form-group {
+          margin-bottom: 22px;
         }
 
-        .forgot-form-group label {
+        .forgot-password-card .form-group label {
           display: block;
+
           margin-bottom: 8px;
+
           color: #1f2937;
+
           font-size: 15px;
-          font-weight: 600;
+          font-weight: 700;
         }
 
-        .forgot-form-group input {
+
+        /* =====================================================
+           INPUTS
+        ===================================================== */
+
+        .forgot-password-card .form-group input {
           width: 100%;
           height: 54px;
+
           padding: 0 16px;
+
           box-sizing: border-box;
-          border: 1px solid #d9dee7;
+
+          border: 1px solid #d9dfe5;
+
           border-radius: 12px;
+
           background: #ffffff;
+
           color: #1f2937;
+
           font-size: 15px;
+
           outline: none;
-          transition: 0.2s ease;
+
+          transition:
+            border-color 0.2s ease,
+            box-shadow 0.2s ease;
         }
 
-        .forgot-form-group input::placeholder {
+        .forgot-password-card .form-group input::placeholder {
           color: #9ca3af;
         }
 
-        .forgot-form-group input:focus {
-          border-color: #72c92d;
-          box-shadow: 0 0 0 3px rgba(114, 201, 45, 0.14);
+        .forgot-password-card .form-group input:focus {
+          border-color: #5c8f73;
+
+          box-shadow:
+            0 0 0 3px rgba(92, 143, 115, 0.15);
         }
 
-        .forgot-description {
+
+        /* =====================================================
+           VERIFICATION MESSAGE
+        ===================================================== */
+
+        .verification-message {
           margin: 0 0 24px;
-          color: #4b5563;
+
+          color: #374151;
+
           font-size: 15px;
+
           line-height: 1.5;
         }
 
-        .forgot-description strong {
-          color: #1f2937;
+        .verification-message strong {
+          color: #172d22;
+
           font-weight: 700;
+
           word-break: break-word;
         }
 
-        .forgot-submit-btn {
+
+        /* =====================================================
+           RESET PASSWORD / SEND CODE BUTTON
+        ===================================================== */
+
+        .forgot-password-card .btn-login {
           width: 100%;
           height: 54px;
+
           border: none;
+
           border-radius: 12px;
+
           background: linear-gradient(
             135deg,
-            #78a98c,
-            #294d3d
+            #719c83,
+            #315b48
           );
+
           color: #ffffff;
+
           font-size: 16px;
           font-weight: 700;
+
           cursor: pointer;
-          transition: 0.2s ease;
+
+          transition:
+            transform 0.2s ease,
+            box-shadow 0.2s ease,
+            opacity 0.2s ease;
         }
 
-        .forgot-submit-btn:hover:not(:disabled) {
+        .forgot-password-card .btn-login:hover:not(:disabled) {
           transform: translateY(-1px);
+
           box-shadow:
-            0 8px 18px rgba(41, 77, 61, 0.22);
+            0 8px 18px rgba(49, 91, 72, 0.25);
         }
 
-        .forgot-submit-btn:disabled {
+        .forgot-password-card .btn-login:active {
+          transform: translateY(0);
+        }
+
+        .forgot-password-card .btn-login:disabled {
           opacity: 0.65;
+
           cursor: not-allowed;
+
+          transform: none;
+
+          box-shadow: none;
         }
 
-        .forgot-different-email {
-          display: block;
-          margin: 20px auto 0;
-          padding: 0;
-          border: none;
-          background: transparent;
-          color: #294d3d;
+
+        /* =====================================================
+           USE DIFFERENT EMAIL BUTTON
+        ===================================================== */
+
+        .forgot-password-card .different-email {
+          margin-top: 14px;
+
+          width: 100%;
+        }
+
+        .forgot-password-card .different-email button {
+          width: 100%;
+          height: 48px;
+
+          border: 1px solid #315b48;
+
+          border-radius: 12px;
+
+          background: #eef6f1;
+
+          color: #315b48;
+
           font-size: 14px;
+
           font-weight: 700;
+
           cursor: pointer;
+
+          transition:
+            background 0.2s ease,
+            color 0.2s ease,
+            transform 0.2s ease,
+            box-shadow 0.2s ease;
         }
 
-        .forgot-different-email:hover {
-          color: #72c92d;
-          text-decoration: underline;
+        .forgot-password-card .different-email button:hover {
+          background: linear-gradient(
+            135deg,
+            #719c83,
+            #315b48
+          );
+
+          color: #ffffff;
+
+          transform: translateY(-1px);
+
+          box-shadow:
+            0 7px 16px rgba(49, 91, 72, 0.20);
         }
 
-        .forgot-login-link {
-          margin: 26px 0 0;
+        .forgot-password-card .different-email button:active {
+          transform: translateY(0);
+        }
+
+
+        /* =====================================================
+           LOGIN LINK
+        ===================================================== */
+
+        .forgot-password-card .register-link {
+          margin: 22px 0 0;
+
           text-align: center;
+
           color: #6b7280;
+
           font-size: 14px;
         }
 
-        .forgot-login-link a {
-          color: #1f2937;
+        .forgot-password-card .register-link a {
+          color: #172d22;
+
           font-weight: 700;
+
           text-decoration: none;
+
+          transition: color 0.2s ease;
         }
 
-        .forgot-login-link a:hover {
-          color: #72c92d;
+        .forgot-password-card .register-link a:hover {
+          color: #315b48;
+
           text-decoration: underline;
         }
+
+
+        /* =====================================================
+           ANIMATION
+        ===================================================== */
+
+        @keyframes forgotPasswordAppear {
+          from {
+            opacity: 0;
+
+            transform: translateY(12px);
+          }
+
+          to {
+            opacity: 1;
+
+            transform: translateY(0);
+          }
+        }
+
+
+        /* =====================================================
+           MOBILE
+        ===================================================== */
 
         @media (max-width: 600px) {
+
           .forgot-password-page {
-            padding: 16px;
+            padding: 20px 14px;
           }
 
           .forgot-password-card {
             max-width: 100%;
-            padding: 32px 24px 28px;
+
+            padding: 32px 24px;
+
             border-radius: 20px;
           }
 
-          .forgot-logo-img {
-            width: 62px;
-            height: 62px;
+          .forgot-password-card .logo-img {
+            width: 64px;
+            height: 64px;
           }
 
-          .forgot-logo h1 {
-            font-size: 30px;
+          .forgot-password-card .logo-text {
+            font-size: 28px;
+          }
+
+          .forgot-password-card .form-group input {
+            height: 52px;
+          }
+
+          .forgot-password-card .btn-login {
+            height: 52px;
           }
         }
+
       `}</style>
 
+      {/* =====================================================
+          FORGOT PASSWORD PAGE
+      ===================================================== */}
+
       <div className="forgot-password-page">
+
         <div className="forgot-password-card">
 
-          {/* EventHub Logo */}
-          <div className="forgot-logo">
+          {/* =================================================
+              EVENTHUB LOGO
+          ================================================= */}
+
+          <div className="login-logo">
+
             <img
               src="/LG.png"
               alt="EventHub Logo"
-              className="forgot-logo-img"
+              className="logo-img"
             />
 
-            <h1>EventHub</h1>
+            <h1 className="logo-text">
+              EventHub
+            </h1>
+
           </div>
 
-          {/* STEP 1 */}
+
+          {/* =================================================
+              STEP 1 - ENTER EMAIL
+          ================================================= */}
+
           {step === 1 && (
             <form
               onSubmit={handleSendCode}
-              className="forgot-form"
+              className="login-form"
             >
-              <div className="forgot-form-group">
-                <label>Email Address</label>
+
+              <div className="form-group">
+
+                <label>
+                  Email Address
+                </label>
 
                 <input
                   type="email"
                   placeholder="Enter your registered email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) =>
+                    setEmail(e.target.value)
+                  }
                   required
                 />
+
               </div>
+
 
               <button
                 type="submit"
-                className="forgot-submit-btn"
+                className="btn-login"
                 disabled={loading}
               >
-                {loading ? 'Sending...' : 'Send Code'}
+                {loading
+                  ? 'Sending...'
+                  : 'Send Code'}
               </button>
+
             </form>
           )}
 
-          {/* STEP 2 */}
+
+          {/* =================================================
+              STEP 2 - VERIFICATION + PASSWORD
+          ================================================= */}
+
           {step === 2 && (
             <form
               onSubmit={handleResetPassword}
-              className="forgot-form"
+              className="login-form"
             >
-              <p className="forgot-description">
+
+              {/* Verification message */}
+
+              <p className="verification-message">
                 Enter the 6-digit code sent to{' '}
                 <strong>{email}</strong>
               </p>
 
-              <div className="forgot-form-group">
-                <label>Verification Code</label>
+
+              {/* Verification Code */}
+
+              <div className="form-group">
+
+                <label>
+                  Verification Code
+                </label>
 
                 <input
                   type="text"
@@ -330,10 +574,17 @@ const ForgotPassword = () => {
                   maxLength={6}
                   required
                 />
+
               </div>
 
-              <div className="forgot-form-group">
-                <label>New Password</label>
+
+              {/* New Password */}
+
+              <div className="form-group">
+
+                <label>
+                  New Password
+                </label>
 
                 <input
                   type="password"
@@ -344,10 +595,17 @@ const ForgotPassword = () => {
                   }
                   required
                 />
+
               </div>
 
-              <div className="forgot-form-group">
-                <label>Confirm New Password</label>
+
+              {/* Confirm Password */}
+
+              <div className="form-group">
+
+                <label>
+                  Confirm New Password
+                </label>
 
                 <input
                   type="password"
@@ -358,11 +616,15 @@ const ForgotPassword = () => {
                   }
                   required
                 />
+
               </div>
+
+
+              {/* Reset Password */}
 
               <button
                 type="submit"
-                className="forgot-submit-btn"
+                className="btn-login"
                 disabled={loading}
               >
                 {loading
@@ -370,23 +632,40 @@ const ForgotPassword = () => {
                   : 'Reset Password'}
               </button>
 
-              <button
-                type="button"
-                className="forgot-different-email"
-                onClick={handleDifferentEmail}
-              >
-                ← Use a different email
-              </button>
+
+              {/* Use Different Email */}
+
+              <p className="different-email">
+
+                <button
+                  type="button"
+                  onClick={handleDifferentEmail}
+                >
+                  ← Use a different email
+                </button>
+
+              </p>
+
             </form>
           )}
 
-          {/* Login */}
-          <p className="forgot-login-link">
+
+          {/* =================================================
+              LOGIN LINK
+          ================================================= */}
+
+          <p className="register-link">
+
             Remembered your password?{' '}
-            <Link to="/login">Login</Link>
+
+            <Link to="/login">
+              Login
+            </Link>
+
           </p>
 
         </div>
+
       </div>
     </>
   );
