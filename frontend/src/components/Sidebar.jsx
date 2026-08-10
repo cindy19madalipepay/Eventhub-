@@ -189,9 +189,10 @@ const Sidebar = () => {
   const items = menuItems[user?.role] || [];
 
   const getRoleDisplay = (role) => {
-    if (role === 'department_head') return 'Dept. Head';
-    if (role === 'student_leader') return 'Student Leader';
-    return role;
+  if (!role) return '';
+  return role
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (char) => char.toUpperCase());
   };
 
   return (
