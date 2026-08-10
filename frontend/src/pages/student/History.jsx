@@ -83,7 +83,7 @@ const History = () => {
     <div className="history-page">
       <div className="history-header">
         <h2 className="history-title">
-           My Activity History
+          My Activity History
         </h2>
       </div>
 
@@ -127,7 +127,6 @@ const History = () => {
           <>
             {(showAllAttendance ? attendance : attendance.slice(0, VISIBLE_LIMIT)).map((record) => (
               <div key={record.attendance_id} className="history-row">
-                <div className="row-icon check-icon">✓</div>
                 <div className="row-body">
                   <h4 className="row-title">{record.event_name}</h4>
                   <span className="row-meta">{formatDate(record.scanned_at)}</span>
