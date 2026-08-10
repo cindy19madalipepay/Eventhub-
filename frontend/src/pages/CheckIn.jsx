@@ -8,6 +8,7 @@ const CheckIn = () => {
 
   const [event, setEvent] = useState(null);
   const [ticket, setTicket] = useState(null);
+
   const [photo, setPhoto] = useState(null);
 
   const [loading, setLoading] = useState(true);
@@ -28,33 +29,56 @@ const CheckIn = () => {
 
         if (!eventId) {
           setError('Event ID is missing.');
+          setLoading(false);
           return;
         }
 
-        // ------------------------------------------------------
+        // ======================================================
+        // CHECK LOGIN FIRST
+        // ======================================================
+        const token = localStorage.getItem('eventhub_token');
+
+        if (!token) {
+          const redirectPath = `/checkin/${eventId}`;
+
+          navigate(
+            `/login?redirect=${encodeURIComponent(redirectPath)}`,
+            { replace: true }
+          );
+
+          return;
+        }
+
+        // ======================================================
         // LOAD EVENT
-        // ------------------------------------------------------
+        // ======================================================
         const eventResponse = await api.get(
           `/events/${eventId}`
         );
 
         if (!eventResponse.data?.success) {
-          setError('Unable to load event information.');
+          setError(
+            'Unable to load event information.'
+          );
           return;
         }
 
         setEvent(eventResponse.data.event);
 
-        // ------------------------------------------------------
+        // ======================================================
         // LOAD STUDENT TICKETS
-        // ------------------------------------------------------
-        const ticketsResponse = await api.get('/tickets/my');
+        // ======================================================
+        const ticketsResponse = await api.get(
+          '/tickets/my'
+        );
 
-        const tickets = ticketsResponse.data?.tickets || [];
+        const tickets =
+          ticketsResponse.data?.tickets || [];
 
         const foundTicket = tickets.find(
           (item) =>
-            Number(item.event_id) === Number(eventId)
+            Number(item.event_id) ===
+            Number(eventId)
         );
 
         if (!foundTicket) {
@@ -65,20 +89,50 @@ const CheckIn = () => {
         }
 
         setTicket(foundTicket);
+
       } catch (err) {
-        console.error('CheckIn load error:', err);
+        console.error(
+          'CheckIn load error:',
+          err
+        );
+
+        // ======================================================
+        // IF TOKEN IS INVALID / EXPIRED
+        // ======================================================
+        if (err.response?.status === 401) {
+          localStorage.removeItem(
+            'eventhub_token'
+          );
+
+          localStorage.removeItem(
+            'eventhub_user'
+          );
+
+          const redirectPath =
+            `/checkin/${eventId}`;
+
+          navigate(
+            `/login?redirect=${encodeURIComponent(
+              redirectPath
+            )}`,
+            { replace: true }
+          );
+
+          return;
+        }
 
         setError(
           err.response?.data?.message ||
             'Unable to load event information.'
         );
+
       } finally {
         setLoading(false);
       }
     };
 
     loadData();
-  }, [eventId]);
+  }, [eventId, navigate]);
 
   // ==========================================================
   // SELECT PHOTO
@@ -92,16 +146,23 @@ const CheckIn = () => {
     }
 
     if (!file.type.startsWith('image/')) {
-      setError('Please select a valid image file.');
+      setError(
+        'Please select a valid image file.'
+      );
+
       e.target.value = '';
       setPhoto(null);
       return;
     }
 
+    // Maximum 10MB
     const maxSize = 10 * 1024 * 1024;
 
     if (file.size > maxSize) {
-      setError('The photo must be smaller than 10MB.');
+      setError(
+        'The photo must be smaller than 10MB.'
+      );
+
       e.target.value = '';
       setPhoto(null);
       return;
@@ -119,7 +180,9 @@ const CheckIn = () => {
     e.preventDefault();
 
     if (!ticket) {
-      setError('No ticket was found for this event.');
+      setError(
+        'No ticket was found for this event.'
+      );
       return;
     }
 
@@ -142,7 +205,10 @@ const CheckIn = () => {
         String(ticket.ticket_id)
       );
 
-      formData.append('photo', photo);
+      formData.append(
+        'photo',
+        photo
+      );
 
       const response = await api.post(
         '/attendance/register',
@@ -157,9 +223,10 @@ const CheckIn = () => {
 
         setPhoto(null);
 
-        const fileInput = document.getElementById(
-          'attendance-photo'
-        );
+        const fileInput =
+          document.getElementById(
+            'attendance-photo'
+          );
 
         if (fileInput) {
           fileInput.value = '';
@@ -169,13 +236,37 @@ const CheckIn = () => {
           navigate('/student');
         }, 1500);
       }
+
     } catch (err) {
-      console.error('Check-in error:', err);
+      console.error(
+        'Check-in error:',
+        err
+      );
+
+      if (err.response?.status === 401) {
+        localStorage.removeItem(
+          'eventhub_token'
+        );
+
+        localStorage.removeItem(
+          'eventhub_user'
+        );
+
+        navigate(
+          `/login?redirect=${encodeURIComponent(
+            `/checkin/${eventId}`
+          )}`,
+          { replace: true }
+        );
+
+        return;
+      }
 
       setError(
         err.response?.data?.message ||
           'Unable to register attendance.'
       );
+
     } finally {
       setSubmitting(false);
     }
@@ -197,7 +288,7 @@ const CheckIn = () => {
           color: '#475569',
         }}
       >
-        Loading event...
+        Loading...
       </div>
     );
   }
@@ -224,7 +315,10 @@ const CheckIn = () => {
             '0 4px 20px rgba(0,0,0,0.08)',
         }}
       >
-        {/* TITLE */}
+
+        {/* ====================================================
+            TITLE
+        ==================================================== */}
         <h1
           style={{
             marginTop: 0,
@@ -244,7 +338,9 @@ const CheckIn = () => {
           Register your attendance for this event.
         </p>
 
-        {/* EVENT INFORMATION */}
+        {/* ====================================================
+            EVENT INFORMATION
+        ==================================================== */}
         {event && (
           <div
             style={{
@@ -281,14 +377,16 @@ const CheckIn = () => {
 
             {event.venue && (
               <p>
-                <strong>Venue:</strong>{' '}
+                <strong> Venue:</strong>{' '}
                 {event.venue}
               </p>
             )}
           </div>
         )}
 
-        {/* TICKET */}
+        {/* ====================================================
+            TICKET
+        ==================================================== */}
         {ticket && (
           <div
             style={{
@@ -303,7 +401,9 @@ const CheckIn = () => {
           </div>
         )}
 
-        {/* ERROR */}
+        {/* ====================================================
+            ERROR
+        ==================================================== */}
         {error && (
           <div
             style={{
@@ -319,7 +419,9 @@ const CheckIn = () => {
           </div>
         )}
 
-        {/* SUCCESS */}
+        {/* ====================================================
+            SUCCESS
+        ==================================================== */}
         {message && (
           <div
             style={{
@@ -335,9 +437,12 @@ const CheckIn = () => {
           </div>
         )}
 
-        {/* CHECK-IN FORM */}
+        {/* ====================================================
+            CHECK-IN FORM
+        ==================================================== */}
         {ticket && (
           <form onSubmit={handleCheckIn}>
+
             <label
               htmlFor="attendance-photo"
               style={{
@@ -363,7 +468,9 @@ const CheckIn = () => {
               }}
             />
 
-            {/* PHOTO PREVIEW */}
+            {/* =================================================
+                PHOTO PREVIEW
+            ================================================= */}
             {photo && (
               <div
                 style={{
@@ -388,10 +495,14 @@ const CheckIn = () => {
               </div>
             )}
 
-            {/* CHECK-IN BUTTON */}
+            {/* =================================================
+                CHECK-IN BUTTON
+            ================================================= */}
             <button
               type="submit"
-              disabled={submitting || !photo}
+              disabled={
+                submitting || !photo
+              }
               style={{
                 width: '100%',
                 padding: '14px',
@@ -414,10 +525,13 @@ const CheckIn = () => {
                 ? 'Registering...'
                 : 'Check In'}
             </button>
+
           </form>
         )}
 
-        {/* NO TICKET */}
+        {/* ====================================================
+            NO TICKET
+        ==================================================== */}
         {!ticket && !error && (
           <p
             style={{
@@ -427,6 +541,7 @@ const CheckIn = () => {
             No ticket was found for this event.
           </p>
         )}
+
       </div>
     </div>
   );
