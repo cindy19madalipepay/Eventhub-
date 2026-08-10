@@ -1,7 +1,7 @@
 /* ===== HISTORY PAGE ===== */
 .history-page {
   padding: 24px 32px;
-  background: #f4f6fa;
+  background: #f5f7fb;
   min-height: 100vh;
 }
 
@@ -34,10 +34,10 @@
 .stat-card {
   background: #fff;
   border-radius: 14px;
-  border-top: 4px solid #2f4a3d;
+  border-top: 4px solid #6a8f78;
   padding: 28px 16px;
   text-align: center;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 4px rgba(31, 51, 41, 0.06);
 }
 
 .stat-number {
@@ -53,7 +53,7 @@
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #6b7280;
+  color: #6b756e;
 }
 
 .stat-card.clickable {
@@ -71,7 +71,7 @@
 }
 
 .stat-card.clickable:focus-visible {
-  outline: 2px solid #2f4a3d;
+  outline: 2px solid #6a8f78;
   outline-offset: 2px;
 }
 
@@ -82,7 +82,7 @@
   color: #1f3329;
   margin: 0 0 14px 0;
   padding-bottom: 10px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid #dce7df;
   scroll-margin-top: 20px;
 }
 
@@ -101,7 +101,7 @@
   background: #fff;
   border-radius: 14px;
   padding: 16px 20px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 4px rgba(31, 51, 41, 0.06);
 }
 
 .evaluation-row {
@@ -121,18 +121,18 @@
 }
 
 .check-icon {
-  background: #d1fae5;
-  color: #059669;
+  background: #e5f1e9;
+  color: #2f4a3d;
 }
 
 .receipt-icon {
-  background: #fef3c7;
-  color: #d97706;
+  background: #f1f4e9;
+  color: #6a8f78;
 }
 
 .star-icon {
-  background: #fef3c7;
-  color: #f59e0b;
+  background: #f1f4e9;
+  color: #6a8f78;
 }
 
 .row-body {
@@ -143,13 +143,13 @@
 .row-title {
   font-size: 15px;
   font-weight: 700;
-  color: #374151;
+  color: #2f4a3d;
   margin: 0 0 4px 0;
 }
 
 .row-meta {
   font-size: 13px;
-  color: #9ca3af;
+  color: #8a968f;
 }
 
 .payment-details {
@@ -162,7 +162,7 @@
 .payment-amount {
   font-size: 14px;
   font-weight: 700;
-  color: #d97706;
+  color: #6a8f78;
 }
 
 .payment-status-badge {
@@ -174,18 +174,18 @@
 }
 
 .payment-status-badge.validated {
-  background: #d1fae5;
-  color: #059669;
+  background: #e5f1e9;
+  color: #2f4a3d;
 }
 
 .payment-status-badge.pending {
-  background: #fef3c7;
-  color: #d97706;
+  background: #f1f4e9;
+  color: #6a8f78;
 }
 
 .payment-status-badge.rejected {
-  background: #fee2e2;
-  color: #dc2626;
+  background: #f4e9e8;
+  color: #7a4038;
 }
 
 .star-rating {
@@ -196,20 +196,20 @@
 
 .star {
   font-size: 16px;
-  color: #d1d5db;
+  color: #cfd8d2;
 }
 
 .star.filled {
-  color: #f59e0b;
+  color: #6a8f78;
 }
 
 .feedback-text {
   font-size: 13px;
-  color: #6b7280;
+  color: #6b756e;
   font-style: italic;
   margin: 8px 0 0 0;
   padding: 10px;
-  background: #f9fafb;
+  background: #f5f7f5;
   border-radius: 8px;
 }
 
@@ -233,17 +233,17 @@
 .empty-state {
   text-align: center;
   padding: 40px;
-  color: #9ca3af;
+  color: #8a968f;
   font-style: italic;
   background: #fff;
   border-radius: 14px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 4px rgba(31, 51, 41, 0.06);
 }
 
 .history-loading {
   padding: 40px;
   text-align: center;
-  color: #6b7280;
+  color: #6b756e;
 }
 
 .missed-row {
@@ -252,8 +252,8 @@
 
 .missed-badge {
   flex-shrink: 0;
-  background: #fee2e2;
-  color: #dc2626;
+  background: #f4e9e8;
+  color: #7a4038;
   font-size: 11px;
   font-weight: 700;
   padding: 4px 12px;
@@ -273,7 +273,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 4px rgba(31, 51, 41, 0.06);
 }
 
 .show-toggle-btn:hover {
@@ -285,7 +285,7 @@
 .preview-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.7);
+  background: rgba(31, 51, 41, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
