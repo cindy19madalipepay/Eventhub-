@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
 import toast from 'react-hot-toast';
@@ -7,6 +7,9 @@ import './Login.css';
 
 const Login = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get('redirect'); // e.g. /checkin/64f...
+
   const { login } = useAuth();
   const [form, setForm] = useState({ email: '', password: '', role: '' });
   const [loading, setLoading] = useState(false);
@@ -31,10 +34,17 @@ const Login = () => {
       login(res.data.user, res.data.token);
       toast.success(`Welcome back, ${res.data.user.first_name}!`);
 
-      // Redirect based on role
-      if (res.data.user.role === 'admin') navigate('/admin/dashboard');
-      else if (res.data.user.role === 'department_head') navigate('/dept/dashboard');
-      else navigate('/student/notifications'); // student, student_leader, alumni, stakeholder
+      // If we got here via a QR check-in link (or any other redirect), honor it.
+      // Otherwise fall back to the normal role-based landing page.
+      if (redirectTo) {
+        navigate(redirectTo);
+      } else if (res.data.user.role === 'admin') {
+        navigate('/admin/dashboard');
+      } else if (res.data.user.role === 'department_head') {
+        navigate('/dept/dashboard');
+      } else {
+        navigate('/student/notifications'); // student, student_leader, alumni, stakeholder
+      }
 
     } catch (err) {
       toast.error(err.response?.data?.message || 'Login failed. Please try again.');

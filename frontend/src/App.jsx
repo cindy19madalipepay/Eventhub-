@@ -9,6 +9,9 @@ import Login          from './pages/auth/Login';
 import Register       from './pages/auth/Register';
 import ForgotPassword from './pages/auth/ForgotPassword';
 
+// Public check-in page (what the poster QR code links to)
+import CheckIn from './pages/CheckIn';
+
 // Admin pages
 import AdminDashboard     from './pages/admin/AdminDashboard';
 import CreateEvent        from './pages/admin/CreateEvent';
@@ -41,6 +44,12 @@ function App() {
           <Route path="/login"           element={<Login />} />
           <Route path="/register"        element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+
+          {/* ── QR Check-in Route ────────────────────────── */}
+          {/* Public on purpose — NOT wrapped in ProtectedRoute. It has to load
+              for both logged-in and logged-out scanners so it can decide for
+              itself where to send each one (My Events vs Login). */}
+          <Route path="/checkin/:eventId" element={<CheckIn />} />
 
           {/* ── Admin Routes ─────────────────────────────── */}
           <Route path="/admin" element={
