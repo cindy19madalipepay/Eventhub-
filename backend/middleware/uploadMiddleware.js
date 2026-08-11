@@ -1,18 +1,26 @@
 const multer = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('../config/cloudinary');
+
 require('dotenv').config();
 
+// ============================================================
+// FILE SIZE LIMITS
+// ============================================================
+
 const MAX_IMAGE_SIZE =
-  parseInt(process.env.MAX_FILE_SIZE) || 5 * 1024 * 1024;
+  parseInt(process.env.MAX_FILE_SIZE, 10) || 5 * 1024 * 1024;
 
 const MAX_DOC_SIZE = 10 * 1024 * 1024;
 
 // ============================================================
 // IMAGE FILTER
 // ============================================================
+
 const imageFilter = (req, file, cb) => {
-  const allowedExtensions = /\.(jpeg|jpg|png|gif|webp)$/i;
+  const allowedExtensions =
+    /\.(jpeg|jpg|png|gif|webp)$/i;
+
   const allowedMimeTypes =
     /^image\/(jpeg|jpg|png|gif|webp)$/i;
 
@@ -36,8 +44,11 @@ const imageFilter = (req, file, cb) => {
 // ============================================================
 // DOCUMENT FILTER
 // ============================================================
+
 const docFilter = (req, file, cb) => {
-  const allowedExtensions = /\.(pdf|jpeg|jpg|png)$/i;
+  const allowedExtensions =
+    /\.(pdf|jpeg|jpg|png)$/i;
+
   const allowedMimeTypes =
     /^(application\/pdf|image\/jpeg|image\/jpg|image\/png)$/i;
 
@@ -59,14 +70,19 @@ const docFilter = (req, file, cb) => {
 };
 
 // ============================================================
-// PAYMENT PROOF
+// PAYMENT PROOF STORAGE
 // ============================================================
+
 const paymentStorage = new CloudinaryStorage({
   cloudinary,
+
   params: async (req, file) => ({
     folder: 'eventhub/payments',
     resource_type: 'image',
-    public_id: `payment-${req.user?.user_id || 'guest'}-${Date.now()}`,
+
+    public_id:
+      `payment-${req.user?.user_id || 'guest'}-${Date.now()}`,
+
     allowed_formats: [
       'jpg',
       'jpeg',
@@ -79,17 +95,21 @@ const paymentStorage = new CloudinaryStorage({
 
 const upload = multer({
   storage: paymentStorage,
+
   fileFilter: imageFilter,
+
   limits: {
     fileSize: MAX_IMAGE_SIZE,
   },
 });
 
 // ============================================================
-// RULES FILE
+// RULES FILE STORAGE
 // ============================================================
+
 const rulesStorage = new CloudinaryStorage({
   cloudinary,
+
   params: async () => ({
     folder: 'eventhub/rules',
     resource_type: 'auto',
@@ -99,17 +119,21 @@ const rulesStorage = new CloudinaryStorage({
 
 const uploadRules = multer({
   storage: rulesStorage,
+
   fileFilter: docFilter,
+
   limits: {
     fileSize: MAX_DOC_SIZE,
   },
 });
 
 // ============================================================
-// EVALUATION FILE
+// EVALUATION FILE STORAGE
 // ============================================================
+
 const evaluationStorage = new CloudinaryStorage({
   cloudinary,
+
   params: async () => ({
     folder: 'eventhub/evaluations',
     resource_type: 'auto',
@@ -119,21 +143,28 @@ const evaluationStorage = new CloudinaryStorage({
 
 const uploadEvaluation = multer({
   storage: evaluationStorage,
+
   fileFilter: docFilter,
+
   limits: {
     fileSize: MAX_DOC_SIZE,
   },
 });
 
 // ============================================================
-// ATTENDANCE PHOTO
+// ATTENDANCE PHOTO STORAGE
 // ============================================================
+
 const attendanceStorage = new CloudinaryStorage({
   cloudinary,
+
   params: async (req, file) => ({
     folder: 'eventhub/attendance',
     resource_type: 'image',
-    public_id: `attendance-${req.user?.user_id || 'guest'}-${Date.now()}`,
+
+    public_id:
+      `attendance-${req.user?.user_id || 'guest'}-${Date.now()}`,
+
     allowed_formats: [
       'jpg',
       'jpeg',
@@ -146,21 +177,28 @@ const attendanceStorage = new CloudinaryStorage({
 
 const uploadAttendance = multer({
   storage: attendanceStorage,
+
   fileFilter: imageFilter,
+
   limits: {
     fileSize: MAX_IMAGE_SIZE,
   },
 });
 
 // ============================================================
-// EVENT BANNER
+// EVENT BANNER STORAGE
 // ============================================================
+
 const bannerStorage = new CloudinaryStorage({
   cloudinary,
+
   params: async (req, file) => ({
     folder: 'eventhub/event-banners',
     resource_type: 'image',
-    public_id: `banner-${req.params.id || 'event'}-${Date.now()}`,
+
+    public_id:
+      `banner-${req.params.id || 'event'}-${Date.now()}`,
+
     allowed_formats: [
       'jpg',
       'jpeg',
@@ -173,7 +211,9 @@ const bannerStorage = new CloudinaryStorage({
 
 const uploadBanner = multer({
   storage: bannerStorage,
+
   fileFilter: imageFilter,
+
   limits: {
     fileSize: MAX_IMAGE_SIZE,
   },
@@ -182,6 +222,7 @@ const uploadBanner = multer({
 // ============================================================
 // EXPORT
 // ============================================================
+
 module.exports = {
   upload,
   uploadRules,
