@@ -1,127 +1,244 @@
-const express  = require('express');
-const cors     = require('cors');
-const path     = require('path');
+const express = require('express');
+const cors = require('cors');
+const path = require('path');
+
 require('dotenv').config();
 
 const { testConnection } = require('./config/db');
 
-// ── Route imports ─────────────────────────────────────────────
-const authRoutes         = require('./routes/authRoutes');
-const eventRoutes        = require('./routes/eventRoutes');
-const ticketRoutes       = require('./routes/ticketRoutes');
-const attendanceRoutes   = require('./routes/attendanceRoutes');
-const paymentRoutes      = require('./routes/paymentRoutes');
+/* ============================================================
+   ROUTES
+============================================================ */
+
+const authRoutes = require('./routes/authRoutes');
+const eventRoutes = require('./routes/eventRoutes');
+const ticketRoutes = require('./routes/ticketRoutes');
+const attendanceRoutes = require('./routes/attendanceRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
-const evaluationRoutes   = require('./routes/evaluationRoutes');
-const userRoutes         = require('./routes/userRoutes');
+const evaluationRoutes = require('./routes/evaluationRoutes');
+const userRoutes = require('./routes/userRoutes');
 
-const app  = express();
+/* ============================================================
+   APP
+============================================================ */
+
+const app = express();
+
 const PORT = Number(process.env.PORT || 5000);
-const HOST = '0.0.0.0'; // listen on all network interfaces, not just localhost,
-                         // so phones on the same Wi-Fi can reach this server
+const HOST = '0.0.0.0';
 
-// ── Middleware ────────────────────────────────────────────────
-// FRONTEND_URL (e.g. http://192.168.1.23:5173) must be allowed here too —
-// otherwise requests from a phone hitting the frontend's LAN address get
-// blocked by CORS even though the server itself is reachable.
-//
-// We also need to allow ANY eventhub-*.vercel.app URL, because Vercel
-// generates a new preview URL for every branch/deployment (e.g.
-// eventhub-8x27-git-main-can-i.vercel.app). Hardcoding just one URL in
-// FRONTEND_URL isn't enough to cover those, so we match them with a
-// pattern instead of a fixed list.
+/* ============================================================
+   CORS
+============================================================ */
+
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
 ];
+
 if (process.env.FRONTEND_URL) {
-  allowedOrigins.push(process.env.FRONTEND_URL);
+  allowedOrigins.push(
+    process.env.FRONTEND_URL.replace(/\/$/, '')
+  );
 }
 
-const vercelPreviewPattern = /^https:\/\/eventhub[a-z0-9-]*\.vercel\.app$/;
+/*
+ * Allow EventHub Vercel deployments.
+ *
+ * Examples:
+ * https://eventhub-8x27.vercel.app
+ * https://eventhub-5aznwgy3c-can-i.vercel.app
+ * https://eventhub-git-main-can-i.vercel.app
+ */
+const vercelPattern =
+  /^https:\/\/eventhub[a-zA-Z0-9-]*\.vercel\.app$/;
 
-app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (mobile apps, curl, Postman, server-to-server)
-    if (!origin) return callback(null, true);
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Requests without Origin
+      if (!origin) {
+        return callback(null, true);
+      }
 
-    const isAllowedStatic = allowedOrigins.includes(origin);
-    const isVercelPreview = vercelPreviewPattern.test(origin);
+      const cleanOrigin = origin.replace(/\/$/, '');
 
-    if (isAllowedStatic || isVercelPreview) {
-      callback(null, true);
-    } else {
-      console.warn(`❌ Blocked by CORS: ${origin}`);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-}));
+      const isAllowed =
+        allowedOrigins.includes(cleanOrigin);
+
+      const isVercel =
+        vercelPattern.test(cleanOrigin);
+
+      if (isAllowed || isVercel) {
+        return callback(null, true);
+      }
+
+      console.warn(
+        `❌ CORS blocked origin: ${origin}`
+      );
+
+      return callback(
+        new Error('Not allowed by CORS')
+      );
+    },
+
+    credentials: true,
+  })
+);
+
+/* ============================================================
+   BODY PARSERS
+============================================================ */
+
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
-// Serve uploaded payment proof images as static files
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use(
+  express.urlencoded({
+    extended: true,
+  })
+);
 
-// ── API Routes ────────────────────────────────────────────────
-app.use('/api/auth',          authRoutes);
-app.use('/api/events',        eventRoutes);
-app.use('/api/tickets',       ticketRoutes);
-app.use('/api/attendance',    attendanceRoutes);
-app.use('/api/payments',      paymentRoutes);
-app.use('/api/notifications', notificationRoutes);
-app.use('/api/evaluations',   evaluationRoutes);
-app.use('/api/users',         userRoutes);
+/* ============================================================
+   LOCAL UPLOADS
+============================================================ */
 
-// ── Health check ──────────────────────────────────────────────
+app.use(
+  '/uploads',
+  express.static(
+    path.join(__dirname, 'uploads')
+  )
+);
+
+/* ============================================================
+   API ROUTES
+============================================================ */
+
+app.use('/api/auth', authRoutes);
+
+app.use('/api/events', eventRoutes);
+
+app.use('/api/tickets', ticketRoutes);
+
+app.use('/api/attendance', attendanceRoutes);
+
+app.use('/api/payments', paymentRoutes);
+
+app.use(
+  '/api/notifications',
+  notificationRoutes
+);
+
+app.use(
+  '/api/evaluations',
+  evaluationRoutes
+);
+
+app.use('/api/users', userRoutes);
+
+/* ============================================================
+   HEALTH CHECK
+============================================================ */
+
 app.get('/api/health', (req, res) => {
-  res.json({
-    success:   true,
-    message:   ' EventHub API is running',
+  res.status(200).json({
+    success: true,
+    message: 'EventHub API is running',
     timestamp: new Date().toISOString(),
   });
 });
 
-// ── 404 Handler ───────────────────────────────────────────────
+/* ============================================================
+   404
+============================================================ */
+
 app.use((req, res) => {
-  res.status(404).json({ success: false, message: `Route ${req.originalUrl} not found.` });
+  res.status(404).json({
+    success: false,
+    message:
+      `Route ${req.originalUrl} not found.`,
+  });
 });
 
-// ── Global Error Handler ──────────────────────────────────────
+/* ============================================================
+   ERROR HANDLER
+============================================================ */
+
 app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err.stack);
-  res.status(500).json({ success: false, message: 'Something went wrong on the server.' });
+  console.error(
+    'Unhandled error:',
+    err.stack || err
+  );
+
+  res.status(500).json({
+    success: false,
+    message:
+      err.message ||
+      'Something went wrong on the server.',
+  });
 });
 
-// ── Start Server ──────────────────────────────────────────────
-// On Vercel, this file is imported by api/index.js and the app is exported
-// as a serverless handler — app.listen() never runs there. Locally, it
-// still starts a normal server like before.
+/* ============================================================
+   LOCAL SERVER
+============================================================ */
+
 if (!process.env.VERCEL) {
   const startServer = async () => {
-    await testConnection(); // Test DB before starting
+    try {
+      await testConnection();
 
-    const server = app.listen(PORT, HOST, () => {
-      console.log(`🚀 EventHub server running on http://localhost:${PORT}`);
-      console.log(`📡 API base: http://localhost:${PORT}/api`);
-      if (process.env.FRONTEND_URL) {
-        console.log(`📱 LAN access: ${process.env.FRONTEND_URL.replace(/:\d+$/, '')}:${PORT}/api`);
-      }
-      console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-    });
+      const server = app.listen(
+        PORT,
+        HOST,
+        () => {
+          console.log(
+            `🚀 EventHub server running on http://localhost:${PORT}`
+          );
 
-    server.on('error', (err) => {
-      if (err.code === 'EADDRINUSE') {
-        console.error(`❌ Port ${PORT} is already in use. Free it, or set a different PORT in your .env file.`);
+          console.log(
+            `📡 API base: http://localhost:${PORT}/api`
+          );
+
+          console.log(
+            `🌍 Environment: ${
+              process.env.NODE_ENV ||
+              'development'
+            }`
+          );
+        }
+      );
+
+      server.on('error', (err) => {
+        if (err.code === 'EADDRINUSE') {
+          console.error(
+            `❌ Port ${PORT} is already in use.`
+          );
+
+          process.exit(1);
+        }
+
+        console.error(
+          'Server startup error:',
+          err
+        );
+
         process.exit(1);
-      } else {
-        console.error('Server startup error:', err);
-        process.exit(1);
-      }
-    });
+      });
+    } catch (error) {
+      console.error(
+        '❌ Database connection failed:',
+        error
+      );
+
+      process.exit(1);
+    }
   };
 
   startServer();
 }
+
+/* ============================================================
+   EXPORT
+============================================================ */
 
 module.exports = app;

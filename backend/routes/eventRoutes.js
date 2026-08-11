@@ -2,72 +2,57 @@ const express = require('express');
 
 const router = express.Router();
 
-const eventController = require('../controllers/eventController');
-const authMiddleware = require('../middleware/authMiddleware');
-const roleMiddleware = require('../middleware/roleMiddleware');
+const {
+  createEvent,
+  uploadEventBanner,
+  getEvents,
+  getEventById,
+  updateEvent,
+  deleteEvent,
+  getEventQR,
+} = require('../controllers/eventController');
+
+const {
+  uploadBanner,
+} = require('../middleware/uploadMiddleware');
 
 // ============================================================
 // CREATE EVENT
-// ADMIN ONLY
 // ============================================================
-router.post(
-  '/',
-  authMiddleware,
-  roleMiddleware('admin'),
-  eventController.createEvent
-);
+router.post('/', createEvent);
 
 // ============================================================
 // GET ALL EVENTS
-// AUTHENTICATED USERS
 // ============================================================
-router.get(
-  '/',
-  authMiddleware,
-  eventController.getEvents
-);
+router.get('/', getEvents);
 
 // ============================================================
 // GET EVENT QR
-// IMPORTANT:
-// This MUST come before /:id
 // ============================================================
-router.get(
-  '/:id/qr',
-  authMiddleware,
-  roleMiddleware('admin'),
-  eventController.getEventQR
-);
+router.get('/:id/qr', getEventQR);
 
 // ============================================================
-// GET EVENT BY ID
+// UPLOAD EVENT BANNER
 // ============================================================
-router.get(
-  '/:id',
-  authMiddleware,
-  eventController.getEventById
+router.post(
+  '/:id/banner-image',
+  uploadBanner.single('banner_image'),
+  uploadEventBanner
 );
 
 // ============================================================
 // UPDATE EVENT
-// ADMIN ONLY
 // ============================================================
-router.put(
-  '/:id',
-  authMiddleware,
-  roleMiddleware('admin'),
-  eventController.updateEvent
-);
+router.put('/:id', updateEvent);
 
 // ============================================================
 // DELETE EVENT
-// ADMIN ONLY
 // ============================================================
-router.delete(
-  '/:id',
-  authMiddleware,
-  roleMiddleware('admin'),
-  eventController.deleteEvent
-);
+router.delete('/:id', deleteEvent);
+
+// ============================================================
+// GET EVENT BY ID
+// ============================================================
+router.get('/:id', getEventById);
 
 module.exports = router;
