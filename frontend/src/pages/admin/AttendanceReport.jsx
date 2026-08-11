@@ -74,7 +74,14 @@ const AttendanceReport = () => {
   // identical for both roles.
   const isDeptHead = user?.role === 'department_head';
 
-  const [view, setView] = useState(isDeptHead ? 'year-blocks' : 'departments');
+  // Skip the "Select Department" picker screen entirely — not just once the
+  // auto-select effect fires, but from the very first render — whenever we
+  // already know where we're headed: a dept head's own department, or an
+  // admin arriving via a "View Attendance →" link with ?dept= in the URL.
+  // Without this, the picker grid flashes on screen for a moment before the
+  // effect below jumps away from it, which reads as "it sent me to pick
+  // instead of going straight there."
+  const [view, setView] = useState((isDeptHead || linkedDeptCode) ? 'year-blocks' : 'departments');
   const [selectedDept, setSelectedDept] = useState(null);
   const [selectedYear, setSelectedYear] = useState(null);
   const [selectedBlock, setSelectedBlock] = useState(null);
