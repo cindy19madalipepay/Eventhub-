@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import api from '../../utils/api';
 import toast from 'react-hot-toast';
 import EvaluationModal from '../../components/EvaluationModal';
@@ -77,6 +78,11 @@ const MyEvents = () => {
   const [filter, setFilter] = useState('all'); // 'all' | 'upcoming' | 'completed'
   const [busyEventId, setBusyEventId] = useState(null);
 
+  // Coming from a QR scan (?event=123) — used to scroll to and highlight
+  // that specific event card once the list has loaded.
+  const [searchParams] = useSearchParams();
+  const highlightedEventId = searchParams.get('event');
+
   // File upload plumbing — one hidden input reused for payment receipts
   const fileInputRef = useRef(null);
   const [pendingUpload, setPendingUpload] = useState(null); // { type: 'payment', ticketId }
@@ -100,6 +106,17 @@ const MyEvents = () => {
   useEffect(() => {
     fetchAll();
   }, []);
+
+  // Once events have loaded, if we arrived here from a QR scan, scroll to
+  // that event's card so the student sees it immediately instead of having
+  // to hunt for it in the list.
+  useEffect(() => {
+    if (!highlightedEventId || loading) return;
+    const el = document.getElementById(`event-card-${highlightedEventId}`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [highlightedEventId, loading, allEvents]);
 
   const fetchAll = async () => {
     try {
@@ -395,9 +412,19 @@ const MyEvents = () => {
             const rulesSrc = getRulesSrc(event);
             const rulesIsPdf = isPdfFile(event.rules_file);
             const programFlow = getProgramFlow(event);
+            const isHighlighted = highlightedEventId != null && String(event.event_id) === String(highlightedEventId);
 
             return (
-              <div key={event.event_id} className={`event-card theme-${cfg.theme}`}>
+              <div
+                key={event.event_id}
+                id={`event-card-${event.event_id}`}
+                className={`event-card theme-${cfg.theme}`}
+                style={isHighlighted ? {
+                  outline: '3px solid #2563eb',
+                  outlineOffset: '2px',
+                  boxShadow: '0 0 0 6px rgba(37,99,235,0.15)',
+                } : undefined}
+              >
                 {bannerSrc && (
                   <div
                     className="event-banner"
