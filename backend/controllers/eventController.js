@@ -102,6 +102,21 @@ const createEvent = async (req, res) => {
         : null;
 
     // --------------------------------------------------------
+    // Creator
+    // The `events.created_by` column is required (NOT NULL, no default)
+    // and comes from the logged-in admin's token, set by authMiddleware
+    // as req.user.user_id — not from the request body.
+    // --------------------------------------------------------
+    const createdBy = req.user?.user_id;
+
+    if (!createdBy) {
+      return res.status(401).json({
+        success: false,
+        message: 'Unable to identify the logged-in user creating this event.',
+      });
+    }
+
+    // --------------------------------------------------------
     // Start transaction
     // --------------------------------------------------------
     const connection = await pool.getConnection();
@@ -124,9 +139,10 @@ const createEvent = async (req, res) => {
           venue,
           requires_payment,
           payment_amount,
-          banner_image
+          banner_image,
+          created_by
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `,
         [
           event_name.trim(),
@@ -139,6 +155,7 @@ const createEvent = async (req, res) => {
           requiresPayment ? 1 : 0,
           paymentAmount,
           bannerImage,
+          createdBy,
         ]
       );
 
@@ -179,6 +196,7 @@ const createEvent = async (req, res) => {
           payment_amount: paymentAmount,
           banner_image: bannerImage,
           department_ids: departmentIds,
+          created_by: createdBy,
         },
       });
     } catch (error) {
