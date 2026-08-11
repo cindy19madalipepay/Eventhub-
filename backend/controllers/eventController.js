@@ -1,4 +1,5 @@
 const { pool } = require('../config/db');
+const crypto = require('crypto');
 
 // ============================================================
 // CREATE EVENT
@@ -117,6 +118,14 @@ const createEvent = async (req, res) => {
     }
 
     // --------------------------------------------------------
+    // QR code data
+    // The `events.qr_code_data` column is also required (NOT NULL, no
+    // default). It needs to be unique per event, so it's generated here
+    // rather than left for the database to fill in.
+    // --------------------------------------------------------
+    const qrCodeData = crypto.randomUUID();
+
+    // --------------------------------------------------------
     // Start transaction
     // --------------------------------------------------------
     const connection = await pool.getConnection();
@@ -140,9 +149,10 @@ const createEvent = async (req, res) => {
           requires_payment,
           payment_amount,
           banner_image,
-          created_by
+          created_by,
+          qr_code_data
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `,
         [
           event_name.trim(),
@@ -156,6 +166,7 @@ const createEvent = async (req, res) => {
           paymentAmount,
           bannerImage,
           createdBy,
+          qrCodeData,
         ]
       );
 
@@ -197,6 +208,7 @@ const createEvent = async (req, res) => {
           banner_image: bannerImage,
           department_ids: departmentIds,
           created_by: createdBy,
+          qr_code_data: qrCodeData,
         },
       });
     } catch (error) {
