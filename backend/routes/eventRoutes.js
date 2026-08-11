@@ -1,79 +1,89 @@
 const express = require('express');
-
 const router = express.Router();
 
 const {
   createEvent,
   uploadEventBanner,
+  uploadEventRules,
   getEvents,
   getEventById,
   updateEvent,
   deleteEvent,
   getEventQR,
-  uploadEventRules,
 } = require('../controllers/eventController');
+
+const authenticate = require('../middleware/authMiddleware');
 
 const {
   uploadBanner,
   uploadRules,
 } = require('../middleware/uploadMiddleware');
 
+
+// ============================================================
+// GET EVENTS
+// ============================================================
+
+router.get('/', authenticate, getEvents);
+
+
+// ============================================================
+// GET SINGLE EVENT
+// ============================================================
+
+router.get('/:id', authenticate, getEventById);
+
+
 // ============================================================
 // CREATE EVENT
-// POST /api/events
 // ============================================================
-router.post('/', createEvent);
 
-// ============================================================
-// GET ALL EVENTS
-// GET /api/events
-// ============================================================
-router.get('/', getEvents);
+router.post('/', authenticate, createEvent);
 
-// ============================================================
-// GET EVENT QR
-// GET /api/events/:id/qr
-// ============================================================
-router.get('/:id/qr', getEventQR);
 
 // ============================================================
 // UPLOAD EVENT BANNER
-// POST /api/events/:id/banner-image
-// Field name: banner_image
 // ============================================================
+
 router.post(
-  '/:id/banner-image',
-  uploadBanner.single('banner_image'),
+  '/:id/banner',
+  authenticate,
+  uploadBanner.single('banner'),
   uploadEventBanner
 );
 
+
 // ============================================================
 // UPLOAD EVENT RULES
-// POST /api/events/:id/rules-file
-// Field name: rules_file
 // ============================================================
+
 router.post(
-  '/:id/rules-file',
-  uploadRules.single('rules_file'),
+  '/:id/rules',
+  authenticate,
+  uploadRules.single('rules'),
   uploadEventRules
 );
 
+
 // ============================================================
 // UPDATE EVENT
-// PUT /api/events/:id
 // ============================================================
-router.put('/:id', updateEvent);
+
+router.put('/:id', authenticate, updateEvent);
+
 
 // ============================================================
 // DELETE EVENT
-// DELETE /api/events/:id
 // ============================================================
-router.delete('/:id', deleteEvent);
+
+router.delete('/:id', authenticate, deleteEvent);
+
 
 // ============================================================
-// GET EVENT BY ID
-// GET /api/events/:id
+// EVENT QR
 // ============================================================
-router.get('/:id', getEventById);
+
+router.get('/:id/qr', authenticate, getEventQR);
+
 
 module.exports = router;
