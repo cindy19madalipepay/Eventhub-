@@ -16,14 +16,14 @@ const createEvent = async (req, res) => {
       venue,
       capacity,
       status,
+      banner_image,
+      banner_url,
     } = req.body;
 
-    if (
-      !event_name ||
-      !date_start ||
-      !time_start ||
-      !venue
-    ) {
+    // --------------------------------------------------------
+    // Validate required fields
+    // --------------------------------------------------------
+    if (!event_name || !date_start || !time_start || !venue) {
       return res.status(400).json({
         success: false,
         message:
@@ -31,12 +31,31 @@ const createEvent = async (req, res) => {
       });
     }
 
+    // --------------------------------------------------------
+    // Get Cloudinary banner URL
+    //
+    // Supports:
+    // 1. banner_image sent by frontend
+    // 2. banner_url sent by frontend
+    // 3. req.file.path when using Cloudinary multer storage
+    // --------------------------------------------------------
+    const finalBannerImage =
+      banner_image ||
+      banner_url ||
+      (req.file ? req.file.path : null);
+
+    // --------------------------------------------------------
+    // Generate QR code data
+    // --------------------------------------------------------
     const qr_code_data =
       `EVENT-${Date.now()}-${Math.random()
         .toString(36)
         .substring(2, 10)
         .toUpperCase()}`;
 
+    // --------------------------------------------------------
+    // Insert event
+    // --------------------------------------------------------
     const [result] = await pool.query(
       `INSERT INTO events
         (
@@ -49,9 +68,10 @@ const createEvent = async (req, res) => {
           venue,
           capacity,
           status,
-          qr_code_data
+          qr_code_data,
+          banner_image
         )
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         event_name,
         description || null,
@@ -63,6 +83,7 @@ const createEvent = async (req, res) => {
         capacity || null,
         status || 'upcoming',
         qr_code_data,
+        finalBannerImage || null,
       ]
     );
 
@@ -71,6 +92,7 @@ const createEvent = async (req, res) => {
       message: 'Event created successfully.',
       event_id: result.insertId,
       qr_code_data,
+      banner_image: finalBannerImage || null,
     });
   } catch (error) {
     console.error('CreateEvent error:', error);
@@ -171,6 +193,8 @@ const updateEvent = async (req, res) => {
       venue,
       capacity,
       status,
+      banner_image,
+      banner_url,
     } = req.body;
 
     if (!id) {
@@ -180,8 +204,11 @@ const updateEvent = async (req, res) => {
       });
     }
 
+    // --------------------------------------------------------
+    // Check if event exists
+    // --------------------------------------------------------
     const [existing] = await pool.query(
-      `SELECT event_id
+      `SELECT event_id, banner_image
        FROM events
        WHERE event_id = ?`,
       [id]
@@ -194,6 +221,22 @@ const updateEvent = async (req, res) => {
       });
     }
 
+    // --------------------------------------------------------
+    // Get new banner URL if one was uploaded
+    //
+    // If no new banner is provided, keep the existing banner.
+    // --------------------------------------------------------
+    const uploadedBanner =
+      banner_image ||
+      banner_url ||
+      (req.file ? req.file.path : null);
+
+    const finalBannerImage =
+      uploadedBanner || existing[0].banner_image || null;
+
+    // --------------------------------------------------------
+    // Update event
+    // --------------------------------------------------------
     await pool.query(
       `UPDATE events
        SET
@@ -205,7 +248,8 @@ const updateEvent = async (req, res) => {
          time_end = COALESCE(?, time_end),
          venue = COALESCE(?, venue),
          capacity = COALESCE(?, capacity),
-         status = COALESCE(?, status)
+         status = COALESCE(?, status),
+         banner_image = COALESCE(?, banner_image)
        WHERE event_id = ?`,
       [
         event_name ?? null,
@@ -217,6 +261,7 @@ const updateEvent = async (req, res) => {
         venue ?? null,
         capacity ?? null,
         status ?? null,
+        finalBannerImage,
         id,
       ]
     );
@@ -224,6 +269,7 @@ const updateEvent = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: 'Event updated successfully.',
+      banner_image: finalBannerImage,
     });
   } catch (error) {
     console.error('UpdateEvent error:', error);
@@ -249,6 +295,9 @@ const deleteEvent = async (req, res) => {
       });
     }
 
+    // --------------------------------------------------------
+    // Check if event exists
+    // --------------------------------------------------------
     const [existing] = await pool.query(
       `SELECT event_id
        FROM events
@@ -263,6 +312,9 @@ const deleteEvent = async (req, res) => {
       });
     }
 
+    // --------------------------------------------------------
+    // Delete event
+    // --------------------------------------------------------
     await pool.query(
       `DELETE FROM events
        WHERE event_id = ?`,
@@ -315,22 +367,30 @@ const getEventQR = async (req, res) => {
       });
     }
 
+    // --------------------------------------------------------
+    // Frontend URL
+    // --------------------------------------------------------
     const frontendURL =
       process.env.FRONTEND_URL ||
       'http://localhost:5173';
 
+    // --------------------------------------------------------
+    // QR destination
+    // --------------------------------------------------------
     const eventLink =
       `${frontendURL.replace(/\/$/, '')}/checkin/${rows[0].event_id}`;
 
-    const qrDataURL =
-      await QRCode.toDataURL(eventLink, {
-        width: 400,
-        margin: 4,
-        color: {
-          dark: '#000000',
-          light: '#ffffff',
-        },
-      });
+    // --------------------------------------------------------
+    // Generate QR image
+    // --------------------------------------------------------
+    const qrDataURL = await QRCode.toDataURL(eventLink, {
+      width: 400,
+      margin: 4,
+      color: {
+        dark: '#000000',
+        light: '#ffffff',
+      },
+    });
 
     return res.status(200).json({
       success: true,
@@ -350,6 +410,9 @@ const getEventQR = async (req, res) => {
   }
 };
 
+// ============================================================
+// EXPORT CONTROLLERS
+// ============================================================
 module.exports = {
   createEvent,
   getEvents,
