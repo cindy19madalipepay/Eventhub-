@@ -3,7 +3,7 @@ import api from '../../utils/api';
 import toast from 'react-hot-toast';
 import EvaluationModal from '../../components/EvaluationModal';
 import './Notifications.css';
-import '../student/MyEvents.css'; // reuse attendance-modal styles — adjust path if MyEvents.css lives elsewhere
+import '../student/MyEvents.css'; // reuse attendance-modal + event-banner styles — adjust path if MyEvents.css lives elsewhere
 
 // api.defaults.baseURL is 'http://localhost:5000/api' — strip the /api
 // to get the root the /uploads static folder is served from. Only used
@@ -61,7 +61,7 @@ const REGISTRATION_GRACE_MINUTES = 30;
 const STATUS_CONFIG = {
   not_started:          { label: 'NOT YET OPEN',        theme: 'blue',   button: null },
   not_registered:       { label: 'NOT REGISTERED',      theme: 'blue',   button: 'Register Attendance' },
-  upload_receipt:       { label: 'UPLOAD RECEIPT',      theme: 'orange', button: 'Upload Receipt' },
+  upload_receipt:       { label: 'UPLOAD RECEIPT',      theme: 'orange', button: 'Pay Now' },
   register_attendance:  { label: 'REGISTER ATTENDANCE', theme: 'blue',   button: 'Upload Attendance Proof' },
   attending:             { label: 'EVENT ONGOING',       theme: 'blue',   button: null },
   checkout:             { label: 'CHECKOUT REQUIRED',   theme: 'orange', button: 'Checkout (Upload Proof)' },
@@ -445,6 +445,25 @@ const Notifications = () => {
                 key={n.notification_id}
                 className={`notif-card theme-${cfg?.theme || 'gray'} ${!n.is_read ? 'unread' : ''}`}
               >
+                {/* Hero banner — same markup/class as MyEvents so both pages
+                    render banners at the same size and position. */}
+                {bannerSrc && (
+                  <div
+                    className="event-banner"
+                    onClick={() => setLightbox({ type: 'image', src: bannerSrc })}
+                    role="button"
+                    tabIndex={0}
+                    title="Click to view full size"
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <img
+                      src={bannerSrc}
+                      alt=""
+                      onError={(e) => { e.target.closest('.event-banner').style.display = 'none'; }}
+                    />
+                  </div>
+                )}
+
                 <div className="notif-card-top">
                   <span className="notif-sender">SSC (ADMIN)</span>
                   {cfg && <span className={`notif-badge badge-${cfg.theme}`}>{cfg.icon} {cfg.label}</span>}
@@ -486,59 +505,38 @@ const Notifications = () => {
                   </div>
                 )}
 
-                {(bannerSrc || rulesSrc) && (
+                {rulesSrc && (
                   <div className="notif-media-stack">
-                    {bannerSrc && (
-                      <div className="notif-media-row">
-                        <span className="notif-info-label">EVENT BANNER</span>
+                    <div className="notif-media-row">
+                      <span className="notif-info-label">PROGRAM RULES</span>
+                      {rulesIsPdf ? (
+                        <div
+                          className="notif-thumb notif-thumb-pdf"
+                          onClick={() => setLightbox({ type: 'pdf', src: rulesSrc })}
+                          role="button"
+                          tabIndex={0}
+                          title="Click to view"
+                        >
+                          <span className="notif-thumb-pdf-icon">📄</span>
+                        </div>
+                      ) : (
                         <div
                           className="notif-thumb"
-                          onClick={() => setLightbox({ type: 'image', src: bannerSrc })}
+                          onClick={() => setLightbox({ type: 'image', src: rulesSrc })}
                           role="button"
                           tabIndex={0}
                           title="Click to view full size"
                         >
-                          <img
-                            src={bannerSrc}
-                            alt=""
-                            onError={(e) => { e.target.closest('.notif-thumb').style.display = 'none'; }}
-                          />
+                          <img src={rulesSrc} alt="Program rules" />
                         </div>
-                      </div>
-                    )}
-
-                    {rulesSrc && (
-                      <div className="notif-media-row">
-                        <span className="notif-info-label">PROGRAM RULES</span>
-                        {rulesIsPdf ? (
-                          <div
-                            className="notif-thumb notif-thumb-pdf"
-                            onClick={() => setLightbox({ type: 'pdf', src: rulesSrc })}
-                            role="button"
-                            tabIndex={0}
-                            title="Click to view"
-                          >
-                            <span className="notif-thumb-pdf-icon">📄</span>
-                          </div>
-                        ) : (
-                          <div
-                            className="notif-thumb"
-                            onClick={() => setLightbox({ type: 'image', src: rulesSrc })}
-                            role="button"
-                            tabIndex={0}
-                            title="Click to view full size"
-                          >
-                            <img src={rulesSrc} alt="Program rules" />
-                          </div>
-                        )}
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 )}
 
                 {programFlow.length > 0 && (
                   <div className="program-flow">
-                    <span className="notif-info-label">PROGRAM FLOW</span>
+                    <span className="notif-info-label">EVENT FLOW</span>
                     <div className="program-flow-timeline">
                       {programFlow.map((step, idx) => (
                         <div className="program-flow-step" key={idx}>
