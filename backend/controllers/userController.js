@@ -1,22 +1,9 @@
 const bcrypt   = require('bcryptjs');
 const { pool } = require('../config/db');
 
-// Helper: upload buffer to Cloudinary
-const uploadToCloudinary = (buffer, mimetype, folder) => {
-  return new Promise((resolve, reject) => {
-    const cloudinary = require('../config/cloudinary');
-    const stream = cloudinary.uploader.upload_stream(
-      { folder, resource_type: 'image' },
-      (error, result) => {
-        if (error) return reject(error);
-        resolve(result);
-      }
-    );
-    stream.end(buffer);
-  });
-};
-
 // ─── CREATE USER (admin only) ────────────────────────────────────────────────
+// Used by Manage Users to create Admin / Department Head / Student accounts directly,
+// bypassing the public student-only /auth/register endpoint.
 const createUser = async (req, res) => {
   try {
     const { first_name, last_name, email, password, role, department_id, year_level, block } = req.body;
@@ -134,43 +121,42 @@ const updateUser = async (req, res) => {
 };
 
 // ─── UPDATE OWN PROFILE (any authenticated user) ─────────────────────────────
+// Distinct from updateUser: this is self-service (name + optional photo),
+// scoped to req.user.user_id from the auth token — never an :id param, so a
+// user can only ever edit their own account this way.
+//
+// req.file.path here is the full Cloudinary URL (not a local filename) —
+// multer-storage-cloudinary uploads the file directly to Cloudinary and
+// gives us back its permanent hosted URL, so that's what we store in the
+// profile_picture column now instead of a filename.
 const updateOwnProfile = async (req, res) => {
   try {
-    const user_id = req.user?.user_id;
-    if (!user_id) {
-      return res.status(401).json({ success: false, message: 'Unauthorized.' });
-    }
-
+    const userId = req.user.user_id;
     const { first_name, last_name } = req.body;
-    const updates = [];
-    const values = [];
 
-    if (first_name !== undefined) {
-      updates.push('first_name = ?');
-      values.push(first_name.trim());
-    }
-    if (last_name !== undefined) {
-      updates.push('last_name = ?');
-      values.push(last_name.trim());
+    if (!first_name || !last_name) {
+      return res.status(400).json({ success: false, message: 'First name and last name are required.' });
     }
 
+    // req.file is populated by the uploadProfilePhoto multer middleware
+    // when the request included an "avatar" file field
     if (req.file) {
-      const result = await uploadToCloudinary(req.file.buffer, req.file.mimetype, 'eventhub/avatars');
-      updates.push('profile_picture = ?');
-      values.push(result.secure_url);
+      await pool.query(
+        'UPDATE users SET first_name = ?, last_name = ?, profile_picture = ? WHERE user_id = ?',
+        [first_name, last_name, req.file.path, userId]
+      );
+    } else {
+      await pool.query(
+        'UPDATE users SET first_name = ?, last_name = ? WHERE user_id = ?',
+        [first_name, last_name, userId]
+      );
     }
-
-    if (updates.length === 0) {
-      return res.status(400).json({ success: false, message: 'No fields to update.' });
-    }
-
-    values.push(user_id);
-    await pool.query(`UPDATE users SET ${updates.join(', ')} WHERE user_id = ?`, values);
 
     const [rows] = await pool.query(
-      `SELECT user_id, first_name, last_name, email, role, profile_picture, department_id
+      `SELECT user_id, first_name, last_name, email, role, department_id,
+              year_level, block, profile_picture
        FROM users WHERE user_id = ?`,
-      [user_id]
+      [userId]
     );
 
     return res.status(200).json({
@@ -180,11 +166,7 @@ const updateOwnProfile = async (req, res) => {
     });
   } catch (error) {
     console.error('UpdateOwnProfile error:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Unable to update profile.',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
-    });
+    return res.status(500).json({ success: false, message: 'Server error.' });
   }
 };
 
@@ -231,7 +213,9 @@ const deleteUser = async (req, res) => {
   }
 };
 
-// ─── GET DEPARTMENT STUDENT STATS ────────────────────────────────────────────
+// ─── GET DEPARTMENT STUDENT STATS (admin / department_head) ─────────────────
+// Returns student counts grouped by year_level and block for a department.
+// Department heads are locked to their own department_id; admins may pass ?department_id=
 const getDepartmentStudentStats = async (req, res) => {
   try {
     const department_id = req.user.role === 'admin'
@@ -250,6 +234,7 @@ const getDepartmentStudentStats = async (req, res) => {
       [department_id]
     );
 
+    // Build a clean structure: { 1: { total, blocks: { A: 3, B: 2 } }, 2: {...}, ... }
     const byYear = {};
     let totalStudents = 0;
 
