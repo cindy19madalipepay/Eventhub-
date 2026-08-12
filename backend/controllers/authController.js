@@ -112,13 +112,29 @@ const login = async (req, res) => {
     );
 
     if (rows.length === 0) {
+      // TEMP DEBUG — remove after diagnosing department_head login issue
+      console.log('LOGIN DEBUG - no row found:', { email, role });
       return res.status(401).json({ success: false, message: 'Invalid credentials or account type.' });
     }
 
     const user = rows[0];
 
+    // TEMP DEBUG — remove after diagnosing department_head login issue
+    console.log('LOGIN DEBUG:', {
+      email,
+      role,
+      typed_password_length: password.length,
+      typed_password_preview: password.slice(0, 3) + '***',
+      stored_hash_preview: user.password_hash ? user.password_hash.substring(0, 15) : null,
+      stored_hash_length: user.password_hash ? user.password_hash.length : 0,
+    });
+
     // Compare passwords
     const isMatch = await bcrypt.compare(password, user.password_hash);
+
+    // TEMP DEBUG — remove after diagnosing department_head login issue
+    console.log('LOGIN DEBUG - compare result:', { isMatch });
+
     if (!isMatch) {
       return res.status(401).json({ success: false, message: 'Invalid credentials.' });
     }
@@ -199,6 +215,9 @@ const forgotPassword = async (req, res) => {
       [code, user.user_id]
     );
 
+    // TEMP DEBUG — remove after diagnosing department_head login issue
+    console.log('FORGOT PASSWORD DEBUG:', { email, user_id: user.user_id, code });
+
     const transporter = nodemailer.createTransport({
       host: process.env.EMAIL_HOST,
       port: process.env.EMAIL_PORT,
@@ -240,16 +259,33 @@ const resetPassword = async (req, res) => {
     );
 
     if (rows.length === 0) {
+      // TEMP DEBUG — remove after diagnosing department_head login issue
+      console.log('RESET DEBUG - no matching row (bad/expired code):', { email, code });
       return res.status(400).json({ success: false, message: 'Invalid or expired code.' });
     }
 
     const user = rows[0];
     const password_hash = await bcrypt.hash(new_password, 12);
 
-    await pool.query(
+    // TEMP DEBUG — remove after diagnosing department_head login issue
+    console.log('RESET DEBUG:', {
+      email,
+      user_id: user.user_id,
+      role: user.role,
+      new_password_length: new_password.length,
+      new_hash_preview: password_hash.substring(0, 15),
+    });
+
+    const [updateResult] = await pool.query(
       'UPDATE users SET password_hash = ?, reset_token = NULL, reset_token_expires = NULL WHERE user_id = ?',
       [password_hash, user.user_id]
     );
+
+    // TEMP DEBUG — remove after diagnosing department_head login issue
+    console.log('RESET DEBUG - update result:', {
+      affectedRows: updateResult.affectedRows,
+      changedRows: updateResult.changedRows,
+    });
 
     return res.status(200).json({ success: true, message: 'Password reset successfully.' });
 
