@@ -31,11 +31,5 @@ const uploadProfilePhoto = multer({
   fileFilter,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB, matches the frontend check
 });
-const multer = require('multer');
-
-// Memory storage — REQUIRED for Vercel (no local disk writes)
-const upload = multer({ storage: multer.memoryStorage() });
-
-module.exports = upload;
 
 module.exports = uploadProfilePhoto;
