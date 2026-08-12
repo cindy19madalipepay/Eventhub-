@@ -878,6 +878,8 @@ const deleteEvent = async (req, res) => {
 // ============================================================
 // GET EVENT QR
 // ============================================================
+const QRCode = require('qrcode');
+
 const getEventQR = async (req, res) => {
   try {
     const { id } = req.params;
@@ -908,14 +910,23 @@ const getEventQR = async (req, res) => {
     }
 
     // --------------------------------------------------------
-    // Return event information that the frontend can use
-    // to generate/display the QR code.
+    // Generate an actual QR code image (as a base64 data URL)
+    // encoding the link to the public check-in page, which
+    // decides where to route the scanner (login vs. My Events).
+    // FRONTEND_URL must be set as an env var on the backend host
+    // to your live Vercel frontend domain in production.
     // --------------------------------------------------------
+    const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const checkinUrl = `${FRONTEND_URL}/checkin/${events[0].event_id}`;
+
+    const qrImage = await QRCode.toDataURL(checkinUrl);
+
     return res.status(200).json({
       success: true,
       event_id: Number(events[0].event_id),
       event_name: events[0].event_name,
-      qr_data: String(events[0].event_id),
+      qr_data: checkinUrl,
+      qr_image: qrImage,
     });
   } catch (error) {
     console.error('GetEventQR error:', error);
