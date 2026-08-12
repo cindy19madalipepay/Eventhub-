@@ -3,7 +3,7 @@ import api from '../../utils/api';
 import toast from 'react-hot-toast';
 import EvaluationModal from '../../components/EvaluationModal';
 import './Notifications.css';
-import '../student/MyEvents.css'; // reuse attendance-modal + event-banner styles
+import '../student/MyEvents.css'; // keeps attendance-modal + lightbox base styles
 
 const UPLOADS_BASE = api.defaults.baseURL.replace(/\/api\/?$/, '');
 
@@ -125,7 +125,8 @@ const Notifications = () => {
     );
   };
 
-  const dismissNotification = async (id) => {
+  const dismissNotification = async (e, id) => {
+    e.stopPropagation();
     if (!String(id).startsWith('evt-')) {
       try {
         await api.delete(`/notifications/${id}`);
@@ -200,7 +201,6 @@ const Notifications = () => {
       }
     });
 
-    // 1) One card per event (merge with notification if available)
     const eventCards = events.map((event) => {
       const n = notifByEvent.get(event.event_id);
       const status = getStatus(event);
@@ -223,7 +223,6 @@ const Notifications = () => {
       };
     });
 
-    // 2) System notifications without an event (announcements, etc.)
     const systemCards = notifications
       .filter((n) => !n.event_id)
       .map((n) => ({ ...n, event: null, status: null, ticket: null, isSynthetic: false }));
@@ -398,7 +397,8 @@ const Notifications = () => {
   };
 
   // ─── Action dispatcher ──────────────────────────────────────────────────
-  const handleAction = (n) => {
+  const handleAction = (e, n) => {
+    e.stopPropagation();
     if (!n.is_read && !readIds.has(n.notification_id)) markAsRead(n.notification_id);
     if (!n.event || !n.status || n.status === 'completed') return;
 
@@ -430,22 +430,21 @@ const Notifications = () => {
         <span className="myevents-count">{filtered.length} updates</span>
       </div>
 
-      <div className="filter-tabs">
-        <button className={`filter-tab ${filter === 'all' ? 'active' : ''}`} onClick={() => setFilter('all')}>
+      <div className="notif-filter-tabs">
+        <button className={`notif-tab ${filter === 'all' ? 'active' : ''}`} onClick={() => setFilter('all')}>
           All{unreadCount > 0 ? ` (${unreadCount} unread)` : ''}
         </button>
-        <button className={`filter-tab ${filter === 'unread' ? 'active' : ''}`} onClick={() => setFilter('unread')}>Unread</button>
-        <button className={`filter-tab ${filter === 'payment' ? 'active' : ''}`} onClick={() => setFilter('payment')}>Payment Required</button>
+        <button className={`notif-tab ${filter === 'unread' ? 'active' : ''}`} onClick={() => setFilter('unread')}>Unread</button>
+        <button className={`notif-tab ${filter === 'payment' ? 'active' : ''}`} onClick={() => setFilter('payment')}>Payment Required</button>
       </div>
 
-      <div className="events-grid">
-        {filtered.length === 0 ? (
-          <div className="no-events">
-            <p>No notifications found.</p>
-            <p className="no-events-sub">Check back later for upcoming events!</p>
-          </div>
-        ) : (
-          filtered.map((n) => {
+      {filtered.length === 0 ? (
+        <div className="card">
+          <p style={{ color: '#aaa', textAlign: 'center', padding: 32 }}>No notifications found.</p>
+        </div>
+      ) : (
+        <div className="notif-grid">
+          {filtered.map((n) => {
             const cfg = n.status ? STATUS_CONFIG[n.status] : null;
             const isBusy = busyId === n.event?.event_id || busyId === n.ticket?.ticket_id;
             const evalReady = n.status === 'pending_evaluation' && n.event && hasEventEnded(n.event);
@@ -458,18 +457,27 @@ const Notifications = () => {
             return (
               <div
                 key={n.notification_id}
-                className={`event-card theme-${cfg?.theme || 'gray'} ${!isRead ? 'unread' : ''}`}
+                className={`notif-card theme-${cfg?.theme || 'gray'} ${!isRead ? 'unread' : ''}`}
+                onClick={() => {
+                  if (!isRead && !dismissedIds.has(n.notification_id)) {
+                    markAsRead(n.notification_id);
+                  }
+                }}
               >
-                <div className="event-card-header">
-                  <span className="event-sender">SSC (ADMIN)</span>
+                <div className="notif-card-top">
+                  <span className="notif-sender">SSC (ADMIN)</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    {cfg && <span className={`status-badge badge-${cfg.theme}`}>{cfg.label}</span>}
+                    {!isRead && (
+                      <span
+                        className="unread-dot"
+                        style={{ position: 'static', marginRight: 4, flexShrink: 0 }}
+                        title="Unread"
+                      />
+                    )}
+                    {cfg && <span className={`notif-badge badge-${cfg.theme}`}>{cfg.label}</span>}
                     <button
                       className="notif-dismiss-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        dismissNotification(n.notification_id);
-                      }}
+                      onClick={(e) => dismissNotification(e, n.notification_id)}
                       aria-label="Dismiss notification"
                       title="Dismiss"
                     >
@@ -478,34 +486,34 @@ const Notifications = () => {
                   </div>
                 </div>
 
-                <h3 className="event-name">{n.event_name || n.title}</h3>
-                {n.event?.description && <p className="event-description">{n.event.description}</p>}
-                {!n.event?.description && <p className="event-description">{n.message}</p>}
+                <h3 className="notif-event-name">{n.event_name || n.title}</h3>
+                {n.event?.description && <p className="notif-event-desc">{n.event.description}</p>}
+                {!n.event?.description && <p className="notif-event-desc">{n.message}</p>}
 
                 {n.event && (
-                  <div className="event-info-grid">
-                    <div className="event-info-item">
-                      <span className="event-info-label"> DATE</span>
-                      <span className="event-info-value">{formatDate(n.event.date_start)}</span>
+                  <div className="notif-info-grid">
+                    <div className="notif-info-item">
+                      <span className="notif-info-label">DATE</span>
+                      <span className="notif-info-value">{formatDate(n.event.date_start)}</span>
                     </div>
-                    <div className="event-info-item">
-                      <span className="event-info-label">TIME</span>
-                      <span className="event-info-value">{formatTime(n.event.time_start)}</span>
+                    <div className="notif-info-item">
+                      <span className="notif-info-label">TIME</span>
+                      <span className="notif-info-value">{formatTime(n.event.time_start)}</span>
                     </div>
-                    <div className="event-info-item">
-                      <span className="event-info-label"> VENUE</span>
-                      <span className="event-info-value">{n.event.venue || '—'}</span>
+                    <div className="notif-info-item">
+                      <span className="notif-info-label">VENUE</span>
+                      <span className="notif-info-value">{n.event.venue || '—'}</span>
                     </div>
-                    <div className="event-info-item">
-                      <span className="event-info-label">FOR</span>
-                      <span className="event-info-value">{n.event.allowed_departments || 'ALL'}</span>
+                    <div className="notif-info-item">
+                      <span className="notif-info-label">FOR</span>
+                      <span className="notif-info-value">{n.event.allowed_departments || 'ALL'}</span>
                     </div>
                   </div>
                 )}
 
                 {n.event?.requires_payment && n.event?.payment_amount > 0 && (
                   <div className="payment-info">
-                    <span className="payment-amount">₱{n.event.payment_amount}</span>
+                    <span className="payment-amount">Payment: ₱{n.event.payment_amount}</span>
                   </div>
                 )}
 
@@ -534,100 +542,91 @@ const Notifications = () => {
 
                 {/* ── BANNER + RULES — bottom row (72×72) ── */}
                 {(bannerSrc || rulesSrc) && (
-                  <div className="event-media-row">
+                  <div className="notif-media-stack" style={{ marginTop: 8, marginBottom: 8 }}>
                     {bannerSrc && (
-                      <div className="event-banner-group">
-                        <span className="event-banner-label">PROGRAM BANNER</span>
+                      <div className="notif-media-row">
+                        <span className="notif-info-label">PROGRAM BANNER</span>
                         <div
-                          className="event-banner"
+                          className="notif-thumb"
                           onClick={() => setLightbox({ type: 'image', src: bannerSrc })}
                           role="button"
                           tabIndex={0}
                           title="Click to view full size"
-                          style={{ cursor: 'pointer' }}
                         >
                           <img
                             src={bannerSrc}
                             alt=""
-                            onError={(e) => { e.target.closest('.event-banner').style.display = 'none'; }}
+                            onError={(e) => { e.target.closest('.notif-thumb').style.display = 'none'; }}
                           />
                         </div>
                       </div>
                     )}
 
                     {rulesSrc && (
-                      <div className="notif-media-stack">
-                        <div className="notif-media-row">
-                          <span className="notif-info-label">PROGRAM RULES</span>
-                          {rulesIsPdf ? (
-                            <div
-                              className="notif-thumb notif-thumb-pdf"
-                              onClick={() => setLightbox({ type: 'pdf', src: rulesSrc })}
-                              role="button"
-                              tabIndex={0}
-                              title="Click to view PDF"
-                            >
-                              <span className="notif-thumb-pdf-icon">📄</span>
-                            </div>
-                          ) : (
-                            <div
-                              className="notif-thumb"
-                              onClick={() => setLightbox({ type: 'image', src: rulesSrc })}
-                              role="button"
-                              tabIndex={0}
-                              title="Click to view full size"
-                            >
-                              <img
-                                src={rulesSrc}
-                                alt="Program rules"
-                                onError={(e) => { e.target.closest('.notif-thumb').style.display = 'none'; }}
-                              />
-                            </div>
-                          )}
-                        </div>
+                      <div className="notif-media-row">
+                        <span className="notif-info-label">PROGRAM RULES</span>
+                        {rulesIsPdf ? (
+                          <div
+                            className="notif-thumb notif-thumb-pdf"
+                            onClick={() => setLightbox({ type: 'pdf', src: rulesSrc })}
+                            role="button"
+                            tabIndex={0}
+                            title="Click to view PDF"
+                          >
+                            <span className="notif-thumb-pdf-icon">📄</span>
+                          </div>
+                        ) : (
+                          <div
+                            className="notif-thumb"
+                            onClick={() => setLightbox({ type: 'image', src: rulesSrc })}
+                            role="button"
+                            tabIndex={0}
+                            title="Click to view full size"
+                          >
+                            <img
+                              src={rulesSrc}
+                              alt="Program rules"
+                              onError={(e) => { e.target.closest('.notif-thumb').style.display = 'none'; }}
+                            />
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
                 )}
 
-                <div className="event-actions">
-                  {cfg?.button ? (
-                    <button
-                      className={`action-btn btn-${cfg.theme} ${n.status === 'pending_evaluation' && !evalReady ? 'disabled' : ''}`}
-                      onClick={() => handleAction(n)}
-                      disabled={isBusy || (n.status === 'pending_evaluation' && !evalReady)}
-                    >
-                      {isBusy
-                        ? 'Please wait...'
-                        : n.status === 'pending_evaluation' && !evalReady
-                        ? 'Available After Event'
-                        : cfg.button}
-                    </button>
-                  ) : n.status === 'completed' ? (
-                    <div className="completed-msg">All Done!</div>
-                  ) : n.status === 'not_started' ? (
-                    <div className="completed-msg" style={{ background: '#eef2ff', color: '#3949ab' }}>
-                      Opens {formatDate(n.event?.date_start)} at {formatTime(n.event?.time_start)}
-                    </div>
-                  ) : n.status === 'attending' ? (
-                    <div className="completed-msg" style={{ background: '#eef2ff', color: '#3949ab' }}>
-                      Event in progress — checkout unlocks when it ends
-                    </div>
-                  ) : n.status === 'missed' ? (
-                    <div className="completed-msg" style={{ background: '#fdecea', color: '#c0392b' }}>
-                      You missed this event
-                    </div>
-                  ) : (
-                    <button className="action-btn btn-gray" onClick={() => markAsRead(n.notification_id)}>
-                      Mark as Read
-                    </button>
-                  )}
-                </div>
+                {cfg?.button ? (
+                  <button
+                    className={`notif-action-btn btn-${cfg.theme} ${n.status === 'pending_evaluation' && !evalReady ? 'disabled' : ''}`}
+                    onClick={(e) => handleAction(e, n)}
+                    disabled={isBusy || (n.status === 'pending_evaluation' && !evalReady)}
+                  >
+                    {isBusy
+                      ? 'Please wait...'
+                      : n.status === 'pending_evaluation' && !evalReady
+                      ? 'Available After Event'
+                      : cfg.button}
+                  </button>
+                ) : n.status === 'completed' ? (
+                  <div className="notif-completed-msg">All Done!</div>
+                ) : n.status === 'not_started' ? (
+                  <div className="notif-completed-msg" style={{ background: '#eef2ff', color: '#3949ab' }}>
+                    Opens {formatDate(n.event?.date_start)} at {formatTime(n.event?.time_start)}
+                  </div>
+                ) : n.status === 'attending' ? (
+                  <div className="notif-completed-msg" style={{ background: '#eef2ff', color: '#3949ab' }}>
+                    Event in progress — checkout unlocks when it ends
+                  </div>
+                ) : n.status === 'missed' ? (
+                  <div className="notif-completed-msg" style={{ background: '#fdecea', color: '#c0392b' }}>
+                    You missed this event
+                  </div>
+                ) : null}
               </div>
             );
-          })
-        )}
-      </div>
+          })}
+        </div>
+      )}
 
       {attendanceModal && (
         <div className="attendance-modal-overlay" onClick={() => setAttendanceModal(null)}>
@@ -717,6 +716,7 @@ const Notifications = () => {
         onSubmitted={fetchAll}
       />
 
+      {/* Internal lightbox — no external tabs ever */}
       {lightbox && (
         <div className="lightbox-overlay" onClick={() => setLightbox(null)}>
           <button
@@ -734,14 +734,6 @@ const Notifications = () => {
                 type="application/pdf"
                 className="lightbox-pdf"
               />
-              <a
-                href={lightbox.src}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="lightbox-pdf-link"
-              >
-                Open PDF in new tab ↗
-              </a>
             </div>
           ) : (
             <img
