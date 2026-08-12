@@ -3,7 +3,7 @@ import api from '../../utils/api';
 import toast from 'react-hot-toast';
 import EvaluationModal from '../../components/EvaluationModal';
 import './Notifications.css';
-import '../student/MyEvents.css'; // keeps attendance-modal + lightbox base styles
+import '../student/MyEvents.css';
 
 const UPLOADS_BASE = api.defaults.baseURL.replace(/\/api\/?$/, '');
 
@@ -25,7 +25,6 @@ const getRulesSrc = (event) => {
     : `${UPLOADS_BASE}/uploads/${event.rules_file}`;
 };
 
-// Strip query strings / hashes so Cloudinary URLs still match correctly
 const isPdfFile = (path) => {
   if (!path) return false;
   const clean = path.split('?')[0].split('#')[0];
@@ -69,11 +68,9 @@ const Notifications = () => {
   const [dismissedIds, setDismissedIds] = useState(new Set());
   const [readIds, setReadIds] = useState(new Set());
 
-  // File upload plumbing
   const fileInputRef = useRef(null);
   const [pendingUpload, setPendingUpload] = useState(null);
 
-  // Modals
   const [attendanceModal, setAttendanceModal] = useState(null);
   const [attendancePhoto, setAttendancePhoto] = useState(null);
   const [submittingAttendance, setSubmittingAttendance] = useState(false);
@@ -84,6 +81,20 @@ const Notifications = () => {
 
   const [evalEvent, setEvalEvent] = useState(null);
   const [lightbox, setLightbox] = useState(null);
+  const [pdfBlobUrl, setPdfBlobUrl] = useState(null);
+
+  useEffect(() => {
+    if (lightbox?.type === 'pdf') {
+      fetch(lightbox.src)
+        .then((res) => (res.ok ? res.blob() : Promise.reject()))
+        .then((blob) => setPdfBlobUrl(URL.createObjectURL(blob)))
+        .catch(() => setPdfBlobUrl(lightbox.src));
+    } else {
+      if (pdfBlobUrl && pdfBlobUrl.startsWith('blob:')) URL.revokeObjectURL(pdfBlobUrl);
+      setPdfBlobUrl(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lightbox]);
 
   const fetchAll = async () => {
     try {
@@ -192,7 +203,6 @@ const Notifications = () => {
     return isEvaluated(event) ? 'completed' : 'pending_evaluation';
   };
 
-  // ── MERGE: every event gets a card, even if no notification exists yet ──
   const enriched = useMemo(() => {
     const notifByEvent = new Map();
     notifications.forEach((n) => {
@@ -255,7 +265,6 @@ const Notifications = () => {
     return `${displayHour}:${m} ${ampm}`;
   };
 
-  // ─── Register ───────────────────────────────────────────────────────────
   const handleRegister = async (event) => {
     setBusyId(event.event_id);
     try {
@@ -273,7 +282,6 @@ const Notifications = () => {
     }
   };
 
-  // ─── Upload receipt ─────────────────────────────────────────────────────
   const openFilePicker = (type, ticket) => {
     if (!ticket) return;
     setPendingUpload({ type, ticketId: ticket.ticket_id });
@@ -307,7 +315,6 @@ const Notifications = () => {
     }
   };
 
-  // ─── Attendance modal ───────────────────────────────────────────────────
   const openAttendanceModal = (event, ticket = null) => {
     setAttendanceModal({ event, ticket });
     setAttendancePhoto(null);
@@ -357,7 +364,6 @@ const Notifications = () => {
     }
   };
 
-  // ─── Checkout modal ─────────────────────────────────────────────────────
   const openCheckoutModal = (event) => {
     setCheckoutModal({ event });
     setCheckoutPhoto(null);
@@ -387,7 +393,6 @@ const Notifications = () => {
     }
   };
 
-  // ─── Evaluation ─────────────────────────────────────────────────────────
   const openEvalModal = (event) => {
     if (!hasEventEnded(event)) {
       toast('You can evaluate this event after it ends.', { icon: '⏳' });
@@ -396,7 +401,6 @@ const Notifications = () => {
     setEvalEvent(event);
   };
 
-  // ─── Action dispatcher ──────────────────────────────────────────────────
   const handleAction = (e, n) => {
     e.stopPropagation();
     if (!n.is_read && !readIds.has(n.notification_id)) markAsRead(n.notification_id);
@@ -540,7 +544,6 @@ const Notifications = () => {
                   </div>
                 )}
 
-                {/* ── BANNER + RULES — bottom row (72×72) ── */}
                 {(bannerSrc || rulesSrc) && (
                   <div className="notif-media-stack" style={{ marginTop: 8, marginBottom: 8 }}>
                     {bannerSrc && (
@@ -716,7 +719,6 @@ const Notifications = () => {
         onSubmitted={fetchAll}
       />
 
-      {/* Internal lightbox — no external tabs ever */}
       {lightbox && (
         <div className="lightbox-overlay" onClick={() => setLightbox(null)}>
           <button
@@ -729,11 +731,15 @@ const Notifications = () => {
           </button>
           {lightbox.type === 'pdf' ? (
             <div className="lightbox-pdf-wrap" onClick={(e) => e.stopPropagation()}>
-              <embed
-                src={lightbox.src}
-                type="application/pdf"
-                className="lightbox-pdf"
-              />
+              {pdfBlobUrl ? (
+                <iframe
+                  src={`${pdfBlobUrl}#view=FitH&toolbar=1`}
+                  title="Program rules"
+                  className="lightbox-pdf"
+                />
+              ) : (
+                <div className="lightbox-pdf-loading">Loading PDF…</div>
+              )}
             </div>
           ) : (
             <img

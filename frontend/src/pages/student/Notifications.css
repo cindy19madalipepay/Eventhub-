@@ -392,27 +392,33 @@
 }
 
 
-/* ================================================================
-   INTERNAL PDF VIEWER (no external links)
-   ================================================================ */
-
+/* ── Internal PDF viewer ── */
 .lightbox-pdf-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 80vw;
-  max-width: 900px;
-}
-
-.lightbox-pdf-wrap .lightbox-pdf {
-  width: 100%;
+  width: 90vw;
   height: 85vh;
-  border: none;
-  border-radius: 8px;
-  background: #fff;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  max-width: 1000px;
+  background: #525659;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
+.lightbox-pdf {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+  background: #fff;
+}
+
+.lightbox-pdf-loading {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+}
 
 /* ================================================================
    CARD CURSOR + DISABLED BUTTON

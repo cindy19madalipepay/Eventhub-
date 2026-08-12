@@ -83,6 +83,21 @@ const MyEvents = () => {
   const [submittingCheckout, setSubmittingCheckout] = useState(false);
 
   const [lightbox, setLightbox] = useState(null);
+  const [pdfBlobUrl, setPdfBlobUrl] = useState(null);
+
+  // Fetch PDF as blob so it renders inline without embedding blocks
+  useEffect(() => {
+    if (lightbox?.type === 'pdf') {
+      fetch(lightbox.src)
+        .then((res) => (res.ok ? res.blob() : Promise.reject()))
+        .then((blob) => setPdfBlobUrl(URL.createObjectURL(blob)))
+        .catch(() => setPdfBlobUrl(lightbox.src));
+    } else {
+      if (pdfBlobUrl && pdfBlobUrl.startsWith('blob:')) URL.revokeObjectURL(pdfBlobUrl);
+      setPdfBlobUrl(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lightbox]);
 
   useEffect(() => {
     fetchAll();
@@ -173,7 +188,6 @@ const MyEvents = () => {
     ticket: getTicketForEvent(event.event_id),
   }));
 
-  // ── FIX #3: Upcoming = only events that haven't started yet ──
   const filteredEvents = enrichedEvents.filter(({ status }) => {
     if (filter === 'upcoming') return status === 'not_started';
     if (filter === 'completed') return status === 'completed';
@@ -416,7 +430,6 @@ const MyEvents = () => {
                   </div>
                 </div>
 
-                {/* ── FIX #1: Payment label next to price ── */}
                 {event.requires_payment && event.payment_amount > 0 && (
                   <div className="payment-info">
                     <span className="payment-amount">Payment: ₱{event.payment_amount}</span>
@@ -446,7 +459,6 @@ const MyEvents = () => {
                   </div>
                 )}
 
-                {/* ── BANNER + RULES — bottom row (72×72) ── */}
                 {(bannerSrc || rulesSrc) && (
                   <div className="event-media-row">
                     {bannerSrc && (
@@ -638,13 +650,16 @@ const MyEvents = () => {
             ✕
           </button>
           {lightbox.type === 'pdf' ? (
-            // ── FIX #2: PDF stays strictly inside the app ──
             <div className="lightbox-pdf-wrap" onClick={(e) => e.stopPropagation()}>
-              <embed
-                src={lightbox.src}
-                type="application/pdf"
-                className="lightbox-pdf"
-              />
+              {pdfBlobUrl ? (
+                <iframe
+                  src={`${pdfBlobUrl}#view=FitH&toolbar=1`}
+                  title="Program rules"
+                  className="lightbox-pdf"
+                />
+              ) : (
+                <div className="lightbox-pdf-loading">Loading PDF…</div>
+              )}
             </div>
           ) : (
             <img
