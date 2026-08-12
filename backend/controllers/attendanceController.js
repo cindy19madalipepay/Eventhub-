@@ -41,16 +41,13 @@ const getMyAttendance = async (req, res) => {
       [user_id]
     );
 
-    // "Missed" now covers BOTH:
-    //   - events the student registered for (has a ticket) but never
-    //     checked into, and
-    //   - events the student never registered for at all
-    // as long as the 30-minute check-in window has closed. This matches
-    // the exact same rule MyEvents.jsx already uses client-side
-    // (REGISTRATION_GRACE_MINUTES / isPastRegistrationWindow) for its
-    // "MISSED" badge — previously this query only covered the first case
-    // (required an existing ticket), which is why events a student never
-    // registered for never showed up here even after the window closed.
+    // NOTE: this database server's clock runs in UTC (confirmed via
+    // SELECT NOW()), but event date_start/time_start are entered assuming
+    // Philippine local time (UTC+8). Without adjusting for that, NOW()
+    // reads as ~8 hours earlier than it actually is locally, so events
+    // that have clearly already started/ended still look "in the future"
+    // to this comparison. DATE_ADD(NOW(), INTERVAL 8 HOUR) converts the
+    // DB's UTC clock to PH local time before comparing.
     const [missed] = await pool.query(
       `SELECT 
          e.event_id,
@@ -65,7 +62,7 @@ const getMyAttendance = async (req, res) => {
          AND TIMESTAMPADD(
                MINUTE, 30,
                CONCAT(e.date_start, ' ', COALESCE(e.time_start, '00:00:00'))
-             ) < NOW()
+             ) < DATE_ADD(NOW(), INTERVAL 8 HOUR)
        ORDER BY e.date_start DESC`,
       [user_id]
     );
