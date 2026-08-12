@@ -1,19 +1,12 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import api from '../../utils/api';
 import toast from 'react-hot-toast';
 import EvaluationModal from '../../components/EvaluationModal';
 import './Notifications.css';
-import '../student/MyEvents.css'; // reuse attendance-modal + event-banner styles — adjust path if MyEvents.css lives elsewhere
+import '../student/MyEvents.css'; // reuse attendance-modal + event-banner styles
 
-// api.defaults.baseURL is 'http://localhost:5000/api' — strip the /api
-// to get the root the /uploads static folder is served from. Only used
-// as a fallback for any older records saved before the Cloudinary switch.
 const UPLOADS_BASE = api.defaults.baseURL.replace(/\/api\/?$/, '');
 
-// A banner is either an uploaded image (banner_image, now a full Cloudinary
-// URL since the uploadMiddleware Cloudinary migration) or a pasted external
-// link (banner_url) — whichever the event actually has set. Falls back to
-// the old local-path style for any records saved before the switch.
 const getBannerSrc = (event) => {
   if (!event) return null;
   if (event.banner_image) {
@@ -25,9 +18,6 @@ const getBannerSrc = (event) => {
   return null;
 };
 
-// rules_file is now a full Cloudinary URL for the same reason — falls
-// back to the old local-path style ("rules/rules-12345.pdf") for any
-// records saved before the switch.
 const getRulesSrc = (event) => {
   if (!event?.rules_file) return null;
   return event.rules_file.startsWith('http')
@@ -35,11 +25,13 @@ const getRulesSrc = (event) => {
     : `${UPLOADS_BASE}/uploads/${event.rules_file}`;
 };
 
-const isPdfFile = (path) => !!path && path.toLowerCase().endsWith('.pdf');
+// Strip query strings / hashes so Cloudinary URLs still match correctly
+const isPdfFile = (path) => {
+  if (!path) return false;
+  const clean = path.split('?')[0].split('#')[0];
+  return clean.toLowerCase().endsWith('.pdf');
+};
 
-// program_flow is stored as a JSON string (or may already come back parsed
-// as an array, depending on the API layer) — a list of steps like:
-// [{ time: "9:00 AM", title: "Opening Program", description: "..." }, ...]
 const getProgramFlow = (event) => {
   if (!event?.program_flow) return [];
   if (Array.isArray(event.program_flow)) return event.program_flow;
@@ -51,11 +43,6 @@ const getProgramFlow = (event) => {
   }
 };
 
-// How long after an event's start time a student can still register/confirm
-// attendance. After this, if they haven't completed check-in, the event is
-// marked as missed and the action is locked out entirely. Matches the
-// backend's 30-minute check-in window (see attendanceController.js) and
-// mirrors the same constant in MyEvents.jsx.
 const REGISTRATION_GRACE_MINUTES = 30;
 
 const STATUS_CONFIG = {
@@ -79,27 +66,23 @@ const Notifications = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [busyId, setBusyId] = useState(null);
+  const [dismissedIds, setDismissedIds] = useState(new Set());
+  const [readIds, setReadIds] = useState(new Set());
 
-  // File upload plumbing — one hidden input reused for the payment receipt
+  // File upload plumbing
   const fileInputRef = useRef(null);
-  const [pendingUpload, setPendingUpload] = useState(null); // { type: 'payment', ticketId }
+  const [pendingUpload, setPendingUpload] = useState(null);
 
-  // Attendance proof modal
-  const [attendanceModal, setAttendanceModal] = useState(null); // { event, ticket }
+  // Modals
+  const [attendanceModal, setAttendanceModal] = useState(null);
   const [attendancePhoto, setAttendancePhoto] = useState(null);
   const [submittingAttendance, setSubmittingAttendance] = useState(false);
 
-  // Checkout (logout) proof modal
-  const [checkoutModal, setCheckoutModal] = useState(null); // { event }
+  const [checkoutModal, setCheckoutModal] = useState(null);
   const [checkoutPhoto, setCheckoutPhoto] = useState(null);
   const [submittingCheckout, setSubmittingCheckout] = useState(false);
 
-  // Evaluation modal (shared rubric component)
   const [evalEvent, setEvalEvent] = useState(null);
-
-  // Full-size viewer — shared by the banner and program-rules thumbnails.
-  // { type: 'image' | 'pdf', src } — both render inside the same in-app
-  // overlay, so nothing ever opens in a new browser tab.
   const [lightbox, setLightbox] = useState(null);
 
   const fetchAll = async () => {
@@ -129,24 +112,31 @@ const Notifications = () => {
   }, []);
 
   const markAsRead = async (id) => {
-    try {
-      await api.put(`/notifications/${id}/read`);
-      setNotifications((prev) =>
-        prev.map((n) => (n.notification_id === id ? { ...n, is_read: 1 } : n))
-      );
-    } catch (e) {
-      console.error(e);
+    if (!String(id).startsWith('evt-')) {
+      try {
+        await api.put(`/notifications/${id}/read`);
+      } catch (e) {
+        console.error(e);
+      }
     }
+    setReadIds((prev) => new Set(prev).add(id));
+    setNotifications((prev) =>
+      prev.map((n) => (n.notification_id === id ? { ...n, is_read: 1 } : n))
+    );
   };
 
   const dismissNotification = async (id) => {
-    try {
-      await api.delete(`/notifications/${id}`);
-      setNotifications((prev) => prev.filter((n) => n.notification_id !== id));
-    } catch (e) {
-      console.error(e);
-      toast.error('Failed to dismiss notification.');
+    if (!String(id).startsWith('evt-')) {
+      try {
+        await api.delete(`/notifications/${id}`);
+      } catch (e) {
+        console.error(e);
+        toast.error('Failed to dismiss notification.');
+        return;
+      }
     }
+    setDismissedIds((prev) => new Set(prev).add(id));
+    setNotifications((prev) => prev.filter((n) => n.notification_id !== id));
   };
 
   const getTicketForEvent = (event_id) => tickets.find((t) => t.event_id === event_id);
@@ -155,14 +145,6 @@ const Notifications = () => {
   const isEvaluated = (event) =>
     evaluations.some((e) => e.event_name === event.event_name && e.date_start === event.date_start);
 
-  // event.date_start may come back as a plain "2026-08-12" string, or as a
-  // full ISO timestamp like "2026-08-12T00:00:00.000Z" depending on how the
-  // backend/DB driver serializes date columns. Always take just the date
-  // portion before appending time_start — otherwise concatenating produces
-  // a malformed string (e.g. "...000ZT11:00") that parses as Invalid Date,
-  // and any comparison against Invalid Date silently evaluates to false —
-  // which kept events stuck on "NOT YET OPEN" forever, even after their
-  // actual start time had passed. Same fix as MyEvents.jsx.
   const getEventStart = (event) => {
     const datePart = String(event.date_start).split('T')[0];
     return new Date(`${datePart}T${event.time_start || '00:00'}`);
@@ -170,9 +152,6 @@ const Notifications = () => {
 
   const hasEventStarted = (event) => new Date() >= getEventStart(event);
 
-  // True once the 30-minute check-in window from the event's start time has
-  // fully elapsed — after this, registering/confirming attendance is locked
-  // out for good and the event counts as missed.
   const isPastRegistrationWindow = (event) => {
     const deadline = new Date(getEventStart(event).getTime() + REGISTRATION_GRACE_MINUTES * 60000);
     return new Date() > deadline;
@@ -201,15 +180,10 @@ const Notifications = () => {
     }
 
     if (ticket.status !== 'used') {
-      // Registered (e.g. paid) but never confirmed attendance before the
-      // window closed — counts as missed, same as never registering at all.
       if (isPastRegistrationWindow(event)) return 'missed';
       return 'register_attendance';
     }
 
-    // Checked in but not checked out yet. Checkout only becomes available
-    // once the event has ended — while it's still ongoing there's nothing
-    // to do but attend.
     if (attendance && !attendance.checkout_at) {
       return hasEventEnded(event) ? 'checkout' : 'attending';
     }
@@ -217,21 +191,58 @@ const Notifications = () => {
     return isEvaluated(event) ? 'completed' : 'pending_evaluation';
   };
 
-  // Attach the matching full event + computed status to each notification
-  const enriched = notifications.map((n) => {
-    const event = n.event_id ? events.find((e) => e.event_id === n.event_id) : null;
-    const status = getStatus(event);
-    const ticket = event ? getTicketForEvent(event.event_id) : null;
-    return { ...n, event, status, ticket };
-  });
+  // ── MERGE: every event gets a card, even if no notification exists yet ──
+  const enriched = useMemo(() => {
+    const notifByEvent = new Map();
+    notifications.forEach((n) => {
+      if (n.event_id && !notifByEvent.has(n.event_id)) {
+        notifByEvent.set(n.event_id, n);
+      }
+    });
+
+    // 1) One card per event (merge with notification if available)
+    const eventCards = events.map((event) => {
+      const n = notifByEvent.get(event.event_id);
+      const status = getStatus(event);
+      const ticket = getTicketForEvent(event.event_id);
+      if (n) {
+        return { ...n, event, status, ticket, isSynthetic: false };
+      }
+      return {
+        notification_id: `evt-${event.event_id}`,
+        event_id: event.event_id,
+        event_name: event.event_name,
+        title: event.event_name,
+        message: event.description || 'A new event has been posted. Check it out!',
+        is_read: 0,
+        created_at: event.created_at,
+        event,
+        status,
+        ticket,
+        isSynthetic: true,
+      };
+    });
+
+    // 2) System notifications without an event (announcements, etc.)
+    const systemCards = notifications
+      .filter((n) => !n.event_id)
+      .map((n) => ({ ...n, event: null, status: null, ticket: null, isSynthetic: false }));
+
+    return [...eventCards, ...systemCards];
+  }, [events, notifications, tickets, attendanceRecords, evaluations]);
 
   const filtered = enriched.filter((n) => {
-    if (filter === 'unread') return !n.is_read;
+    if (dismissedIds.has(n.notification_id)) return false;
+    const isRead = n.is_read || readIds.has(n.notification_id);
+    if (filter === 'unread') return !isRead;
     if (filter === 'payment') return n.event?.requires_payment;
     return true;
   });
 
-  const unreadCount = notifications.filter((n) => !n.is_read).length;
+  const unreadCount = enriched.filter((n) => {
+    const isRead = n.is_read || readIds.has(n.notification_id);
+    return !isRead && !dismissedIds.has(n.notification_id);
+  }).length;
 
   const formatDate = (dateStr) =>
     dateStr ? new Date(dateStr).toLocaleDateString('en-CA') : '—';
@@ -245,7 +256,7 @@ const Notifications = () => {
     return `${displayHour}:${m} ${ampm}`;
   };
 
-  // ─── Register (create ticket) ──────────────────────────────────────────
+  // ─── Register ───────────────────────────────────────────────────────────
   const handleRegister = async (event) => {
     setBusyId(event.event_id);
     try {
@@ -263,7 +274,7 @@ const Notifications = () => {
     }
   };
 
-  // ─── Upload receipt (payment) ───────────────────────────────────────────
+  // ─── Upload receipt ─────────────────────────────────────────────────────
   const openFilePicker = (type, ticket) => {
     if (!ticket) return;
     setPendingUpload({ type, ticketId: ticket.ticket_id });
@@ -272,7 +283,7 @@ const Notifications = () => {
 
   const handleFileSelected = async (e) => {
     const file = e.target.files[0];
-    e.target.value = ''; // allow re-selecting the same file later
+    e.target.value = '';
     if (!file || !pendingUpload) return;
 
     const { type, ticketId } = pendingUpload;
@@ -297,9 +308,7 @@ const Notifications = () => {
     }
   };
 
-  // ─── Attendance proof modal ─────────────────────────────────────────────
-  // ticket === null means this is a brand-new registration (no ticket yet);
-  // the ticket gets created at submit time, right before the photo upload.
+  // ─── Attendance modal ───────────────────────────────────────────────────
   const openAttendanceModal = (event, ticket = null) => {
     setAttendanceModal({ event, ticket });
     setAttendancePhoto(null);
@@ -315,13 +324,11 @@ const Notifications = () => {
     try {
       let ticketId = attendanceModal.ticket?.ticket_id;
 
-      // New registration flow: create the ticket first, then upload the photo
       if (!ticketId) {
         try {
           const ticketRes = await api.post('/tickets', { event_id: attendanceModal.event.event_id });
           ticketId = ticketRes.data.ticket_id;
         } catch (ticketErr) {
-          // 409 = a ticket already exists for this event — look it up instead of failing
           if (ticketErr.response?.status === 409) {
             const existing = await api.get('/tickets/my');
             const match = (existing.data.tickets || []).find(
@@ -351,7 +358,7 @@ const Notifications = () => {
     }
   };
 
-  // ─── Checkout (logout) proof modal ──────────────────────────────────────
+  // ─── Checkout modal ─────────────────────────────────────────────────────
   const openCheckoutModal = (event) => {
     setCheckoutModal({ event });
     setCheckoutPhoto(null);
@@ -381,9 +388,18 @@ const Notifications = () => {
     }
   };
 
-  // ─── Action button dispatcher ────────────────────────────────────────────
+  // ─── Evaluation ─────────────────────────────────────────────────────────
+  const openEvalModal = (event) => {
+    if (!hasEventEnded(event)) {
+      toast('You can evaluate this event after it ends.', { icon: '⏳' });
+      return;
+    }
+    setEvalEvent(event);
+  };
+
+  // ─── Action dispatcher ──────────────────────────────────────────────────
   const handleAction = (n) => {
-    if (!n.is_read) markAsRead(n.notification_id);
+    if (!n.is_read && !readIds.has(n.notification_id)) markAsRead(n.notification_id);
     if (!n.event || !n.status || n.status === 'completed') return;
 
     const { event, status, ticket } = n;
@@ -394,17 +410,13 @@ const Notifications = () => {
     if (status === 'upload_receipt') return openFilePicker('payment', ticket);
     if (status === 'register_attendance') return openAttendanceModal(event, ticket);
     if (status === 'checkout') return openCheckoutModal(event);
-    if (status === 'pending_evaluation') {
-      if (!hasEventEnded(event)) {
-        toast('You can evaluate this event after it ends.', { icon: '⏳' });
-        return;
-      }
-      return setEvalEvent(event);
-    }
+    if (status === 'pending_evaluation') return openEvalModal(event);
   };
 
+  if (loading) return <div className="myevents-loading">Loading notifications...</div>;
+
   return (
-    <>
+    <div className="myevents-page">
       <input
         type="file"
         accept="image/*"
@@ -413,135 +425,87 @@ const Notifications = () => {
         onChange={handleFileSelected}
       />
 
-      <div className="page-header">
-        <h2>Event Notifications</h2>
-        <p>Updates from SSC (Admin) about events you can join.</p>
+      <div className="myevents-header">
+        <h2 className="myevents-title">Event Notifications</h2>
+        <span className="myevents-count">{filtered.length} updates</span>
       </div>
 
-      <div className="notif-filter-tabs">
-        {[
-          { key: 'all', label: `All${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}` },
-          { key: 'unread', label: 'Unread' },
-          { key: 'payment', label: 'Payment Required' },
-        ].map((f) => (
-          <button
-            key={f.key}
-            className={`notif-tab ${filter === f.key ? 'active' : ''}`}
-            onClick={() => setFilter(f.key)}
-          >
-            {f.label}
-          </button>
-        ))}
+      <div className="filter-tabs">
+        <button className={`filter-tab ${filter === 'all' ? 'active' : ''}`} onClick={() => setFilter('all')}>
+          All{unreadCount > 0 ? ` (${unreadCount} unread)` : ''}
+        </button>
+        <button className={`filter-tab ${filter === 'unread' ? 'active' : ''}`} onClick={() => setFilter('unread')}>Unread</button>
+        <button className={`filter-tab ${filter === 'payment' ? 'active' : ''}`} onClick={() => setFilter('payment')}>Payment Required</button>
       </div>
 
-      {loading ? (
-        <p>Loading...</p>
-      ) : filtered.length === 0 ? (
-        <div className="card">
-          <p style={{ color: '#aaa', textAlign: 'center', padding: 32 }}>No notifications found.</p>
-        </div>
-      ) : (
-        <div className="notif-grid">
-          {filtered.map((n) => {
+      <div className="events-grid">
+        {filtered.length === 0 ? (
+          <div className="no-events">
+            <p>No notifications found.</p>
+            <p className="no-events-sub">Check back later for upcoming events!</p>
+          </div>
+        ) : (
+          filtered.map((n) => {
             const cfg = n.status ? STATUS_CONFIG[n.status] : null;
             const isBusy = busyId === n.event?.event_id || busyId === n.ticket?.ticket_id;
             const evalReady = n.status === 'pending_evaluation' && n.event && hasEventEnded(n.event);
             const bannerSrc = getBannerSrc(n.event);
             const rulesSrc = getRulesSrc(n.event);
-            const rulesIsPdf = isPdfFile(n.event?.rules_file);
+            const rulesIsPdf = isPdfFile(rulesSrc);
             const programFlow = getProgramFlow(n.event);
+            const isRead = n.is_read || readIds.has(n.notification_id);
 
             return (
               <div
                 key={n.notification_id}
-                className={`notif-card theme-${cfg?.theme || 'gray'} ${!n.is_read ? 'unread' : ''}`}
+                className={`event-card theme-${cfg?.theme || 'gray'} ${!isRead ? 'unread' : ''}`}
               >
-                {/* Hero banner — same markup/class as MyEvents so both pages
-                    render banners at the same size and position. */}
-                {bannerSrc && (
-                  <div
-                    className="event-banner"
-                    onClick={() => setLightbox({ type: 'image', src: bannerSrc })}
-                    role="button"
-                    tabIndex={0}
-                    title="Click to view full size"
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <img
-                      src={bannerSrc}
-                      alt=""
-                      onError={(e) => { e.target.closest('.event-banner').style.display = 'none'; }}
-                    />
+                <div className="event-card-header">
+                  <span className="event-sender">SSC (ADMIN)</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {cfg && <span className={`status-badge badge-${cfg.theme}`}>{cfg.label}</span>}
+                    <button
+                      className="notif-dismiss-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        dismissNotification(n.notification_id);
+                      }}
+                      aria-label="Dismiss notification"
+                      title="Dismiss"
+                    >
+                      ✕
+                    </button>
                   </div>
-                )}
-
-                <div className="notif-card-top">
-                  <span className="notif-sender">SSC (ADMIN)</span>
-                  {cfg && <span className={`notif-badge badge-${cfg.theme}`}>{cfg.icon} {cfg.label}</span>}
-                  <button
-                    className="notif-dismiss-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      dismissNotification(n.notification_id);
-                    }}
-                    aria-label="Dismiss notification"
-                    title="Dismiss"
-                  >
-                    ✕
-                  </button>
                 </div>
 
-                <h3 className="notif-event-name">{n.event_name || n.title}</h3>
-                {n.event?.description && <p className="notif-event-desc">{n.event.description}</p>}
-                {!n.event?.description && <p className="notif-event-desc">{n.message}</p>}
+                <h3 className="event-name">{n.event_name || n.title}</h3>
+                {n.event?.description && <p className="event-description">{n.event.description}</p>}
+                {!n.event?.description && <p className="event-description">{n.message}</p>}
 
                 {n.event && (
-                  <div className="notif-info-grid">
-                    <div className="notif-info-item">
-                      <span className="notif-info-label">DATE</span>
-                      <span className="notif-info-value">{formatDate(n.event.date_start)}</span>
+                  <div className="event-info-grid">
+                    <div className="event-info-item">
+                      <span className="event-info-label"> DATE</span>
+                      <span className="event-info-value">{formatDate(n.event.date_start)}</span>
                     </div>
-                    <div className="notif-info-item">
-                      <span className="notif-info-label">TIME</span>
-                      <span className="notif-info-value">{formatTime(n.event.time_start)}</span>
+                    <div className="event-info-item">
+                      <span className="event-info-label">TIME</span>
+                      <span className="event-info-value">{formatTime(n.event.time_start)}</span>
                     </div>
-                    <div className="notif-info-item">
-                      <span className="notif-info-label"> VENUE</span>
-                      <span className="notif-info-value">{n.event.venue || '—'}</span>
+                    <div className="event-info-item">
+                      <span className="event-info-label"> VENUE</span>
+                      <span className="event-info-value">{n.event.venue || '—'}</span>
                     </div>
-                    <div className="notif-info-item">
-                      <span className="notif-info-label"> FOR</span>
-                      <span className="notif-info-value">{n.event.allowed_departments || 'ALL'}</span>
+                    <div className="event-info-item">
+                      <span className="event-info-label">FOR</span>
+                      <span className="event-info-value">{n.event.allowed_departments || 'ALL'}</span>
                     </div>
                   </div>
                 )}
 
-                {rulesSrc && (
-                  <div className="notif-media-stack">
-                    <div className="notif-media-row">
-                      <span className="notif-info-label">PROGRAM RULES</span>
-                      {rulesIsPdf ? (
-                        <div
-                          className="notif-thumb notif-thumb-pdf"
-                          onClick={() => setLightbox({ type: 'pdf', src: rulesSrc })}
-                          role="button"
-                          tabIndex={0}
-                          title="Click to view"
-                        >
-                          <span className="notif-thumb-pdf-icon">📄</span>
-                        </div>
-                      ) : (
-                        <div
-                          className="notif-thumb"
-                          onClick={() => setLightbox({ type: 'image', src: rulesSrc })}
-                          role="button"
-                          tabIndex={0}
-                          title="Click to view full size"
-                        >
-                          <img src={rulesSrc} alt="Program rules" />
-                        </div>
-                      )}
-                    </div>
+                {n.event?.requires_payment && n.event?.payment_amount > 0 && (
+                  <div className="payment-info">
+                    <span className="payment-amount">₱{n.event.payment_amount}</span>
                   </div>
                 )}
 
@@ -568,48 +532,108 @@ const Notifications = () => {
                   </div>
                 )}
 
-                {cfg?.button ? (
-                  <button
-                    className={`notif-action-btn btn-${cfg.theme} ${n.status === 'pending_evaluation' && !evalReady ? 'disabled' : ''}`}
-                    onClick={() => handleAction(n)}
-                    disabled={isBusy || (n.status === 'pending_evaluation' && !evalReady)}
-                  >
-                    {isBusy
-                      ? 'Please wait...'
-                      : n.status === 'pending_evaluation' && !evalReady
-                      ? 'Available After Event'
-                      : cfg.button}
-                  </button>
-                ) : n.status === 'completed' ? (
-                  <div className="notif-completed-msg">All Done!</div>
-                ) : n.status === 'not_started' ? (
-                  <div className="notif-completed-msg" style={{ background: '#eef2ff', color: '#3949ab' }}>
-                    Opens {formatDate(n.event?.date_start)} at {formatTime(n.event?.time_start)}
+                {/* ── BANNER + RULES — bottom row (72×72) ── */}
+                {(bannerSrc || rulesSrc) && (
+                  <div className="event-media-row">
+                    {bannerSrc && (
+                      <div className="event-banner-group">
+                        <span className="event-banner-label">PROGRAM BANNER</span>
+                        <div
+                          className="event-banner"
+                          onClick={() => setLightbox({ type: 'image', src: bannerSrc })}
+                          role="button"
+                          tabIndex={0}
+                          title="Click to view full size"
+                          style={{ cursor: 'pointer' }}
+                        >
+                          <img
+                            src={bannerSrc}
+                            alt=""
+                            onError={(e) => { e.target.closest('.event-banner').style.display = 'none'; }}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {rulesSrc && (
+                      <div className="notif-media-stack">
+                        <div className="notif-media-row">
+                          <span className="notif-info-label">PROGRAM RULES</span>
+                          {rulesIsPdf ? (
+                            <div
+                              className="notif-thumb notif-thumb-pdf"
+                              onClick={() => setLightbox({ type: 'pdf', src: rulesSrc })}
+                              role="button"
+                              tabIndex={0}
+                              title="Click to view PDF"
+                            >
+                              <span className="notif-thumb-pdf-icon">📄</span>
+                            </div>
+                          ) : (
+                            <div
+                              className="notif-thumb"
+                              onClick={() => setLightbox({ type: 'image', src: rulesSrc })}
+                              role="button"
+                              tabIndex={0}
+                              title="Click to view full size"
+                            >
+                              <img
+                                src={rulesSrc}
+                                alt="Program rules"
+                                onError={(e) => { e.target.closest('.notif-thumb').style.display = 'none'; }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                ) : n.status === 'attending' ? (
-                  <div className="notif-completed-msg" style={{ background: '#eef2ff', color: '#3949ab' }}>
-                    Event in progress — checkout unlocks when it ends
-                  </div>
-                ) : n.status === 'missed' ? (
-                  <div className="notif-completed-msg" style={{ background: '#fdecea', color: '#c0392b' }}>
-                    You missed this event
-                  </div>
-                ) : (
-                  <button className="notif-action-btn btn-gray" onClick={() => markAsRead(n.notification_id)}>
-                    Mark as Read
-                  </button>
                 )}
+
+                <div className="event-actions">
+                  {cfg?.button ? (
+                    <button
+                      className={`action-btn btn-${cfg.theme} ${n.status === 'pending_evaluation' && !evalReady ? 'disabled' : ''}`}
+                      onClick={() => handleAction(n)}
+                      disabled={isBusy || (n.status === 'pending_evaluation' && !evalReady)}
+                    >
+                      {isBusy
+                        ? 'Please wait...'
+                        : n.status === 'pending_evaluation' && !evalReady
+                        ? 'Available After Event'
+                        : cfg.button}
+                    </button>
+                  ) : n.status === 'completed' ? (
+                    <div className="completed-msg">All Done!</div>
+                  ) : n.status === 'not_started' ? (
+                    <div className="completed-msg" style={{ background: '#eef2ff', color: '#3949ab' }}>
+                      Opens {formatDate(n.event?.date_start)} at {formatTime(n.event?.time_start)}
+                    </div>
+                  ) : n.status === 'attending' ? (
+                    <div className="completed-msg" style={{ background: '#eef2ff', color: '#3949ab' }}>
+                      Event in progress — checkout unlocks when it ends
+                    </div>
+                  ) : n.status === 'missed' ? (
+                    <div className="completed-msg" style={{ background: '#fdecea', color: '#c0392b' }}>
+                      You missed this event
+                    </div>
+                  ) : (
+                    <button className="action-btn btn-gray" onClick={() => markAsRead(n.notification_id)}>
+                      Mark as Read
+                    </button>
+                  )}
+                </div>
               </div>
             );
-          })}
-        </div>
-      )}
+          })
+        )}
+      </div>
 
       {attendanceModal && (
         <div className="attendance-modal-overlay" onClick={() => setAttendanceModal(null)}>
           <div className="attendance-modal" onClick={(e) => e.stopPropagation()}>
             <div className="attendance-modal-header">
-              <h3>Event Attendance - {attendanceModal.event.event_name}</h3>
+              <h3>Event Check-In - {attendanceModal.event.event_name}</h3>
               <button className="attendance-modal-close" onClick={() => setAttendanceModal(null)}>✕</button>
             </div>
 
@@ -693,8 +717,6 @@ const Notifications = () => {
         onSubmitted={fetchAll}
       />
 
-      {/* Full-size viewer — shared by the banner and program-rules thumbnails.
-          PDFs render in an inline iframe so nothing leaves the app. */}
       {lightbox && (
         <div className="lightbox-overlay" onClick={() => setLightbox(null)}>
           <button
@@ -706,12 +728,21 @@ const Notifications = () => {
             ✕
           </button>
           {lightbox.type === 'pdf' ? (
-            <iframe
-              src={lightbox.src}
-              title="Program rules"
-              className="lightbox-pdf"
-              onClick={(e) => e.stopPropagation()}
-            />
+            <div className="lightbox-pdf-wrap" onClick={(e) => e.stopPropagation()}>
+              <embed
+                src={lightbox.src}
+                type="application/pdf"
+                className="lightbox-pdf"
+              />
+              <a
+                href={lightbox.src}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="lightbox-pdf-link"
+              >
+                Open PDF in new tab ↗
+              </a>
+            </div>
           ) : (
             <img
               src={lightbox.src}
@@ -722,7 +753,7 @@ const Notifications = () => {
           )}
         </div>
       )}
-    </>
+    </div>
   );
 };
 
