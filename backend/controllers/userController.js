@@ -129,14 +129,83 @@ const updateUser = async (req, res) => {
 // multer-storage-cloudinary uploads the file directly to Cloudinary and
 // gives us back its permanent hosted URL, so that's what we store in the
 // profile_picture column now instead of a filename.
+const { pool } = require('../config/db');
+
+// Helper: upload buffer to Cloudinary
+const uploadToCloudinary = (buffer, mimetype, folder) => {
+  return new Promise((resolve, reject) => {
+    const cloudinary = require('../config/cloudinary');
+    const stream = cloudinary.uploader.upload_stream(
+      { folder, resource_type: 'image' },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      }
+    );
+    stream.end(buffer);
+  });
+};
+
 const updateOwnProfile = async (req, res) => {
   try {
-    const userId = req.user.user_id;
-    const { first_name, last_name } = req.body;
-
-    if (!first_name || !last_name) {
-      return res.status(400).json({ success: false, message: 'First name and last name are required.' });
+    const user_id = req.user?.user_id;
+    if (!user_id) {
+      return res.status(401).json({ success: false, message: 'Unauthorized.' });
     }
+
+    const { first_name, last_name } = req.body;
+    const updates = [];
+    const values = [];
+
+    if (first_name !== undefined) {
+      updates.push('first_name = ?');
+      values.push(first_name.trim());
+    }
+    if (last_name !== undefined) {
+      updates.push('last_name = ?');
+      values.push(last_name.trim());
+    }
+
+    let profile_picture = null;
+    if (req.file) {
+      const result = await uploadToCloudinary(req.file.buffer, req.file.mimetype, 'eventhub/avatars');
+      profile_picture = result.secure_url;
+      updates.push('profile_picture = ?');
+      values.push(profile_picture);
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ success: false, message: 'No fields to update.' });
+    }
+
+    values.push(user_id);
+    await pool.query(`UPDATE users SET ${updates.join(', ')} WHERE user_id = ?`, values);
+
+    const [rows] = await pool.query(
+      'SELECT user_id, first_name, last_name, email, role, profile_picture, department_id FROM users WHERE user_id = ?',
+      [user_id]
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: 'Profile updated successfully.',
+      user: rows[0],
+    });
+  } catch (error) {
+    console.error('UpdateOwnProfile error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Unable to update profile.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+    });
+  }
+};
+
+// Export other functions too...
+module.exports = {
+  updateOwnProfile,
+  // ... your other exports
+};
 
     // req.file is populated by the uploadProfilePhoto multer middleware
     // when the request included an "avatar" file field
