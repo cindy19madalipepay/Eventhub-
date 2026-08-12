@@ -155,7 +155,18 @@ const Notifications = () => {
   const isEvaluated = (event) =>
     evaluations.some((e) => e.event_name === event.event_name && e.date_start === event.date_start);
 
-  const getEventStart = (event) => new Date(`${event.date_start}T${event.time_start || '00:00'}`);
+  // event.date_start may come back as a plain "2026-08-12" string, or as a
+  // full ISO timestamp like "2026-08-12T00:00:00.000Z" depending on how the
+  // backend/DB driver serializes date columns. Always take just the date
+  // portion before appending time_start — otherwise concatenating produces
+  // a malformed string (e.g. "...000ZT11:00") that parses as Invalid Date,
+  // and any comparison against Invalid Date silently evaluates to false —
+  // which kept events stuck on "NOT YET OPEN" forever, even after their
+  // actual start time had passed. Same fix as MyEvents.jsx.
+  const getEventStart = (event) => {
+    const datePart = String(event.date_start).split('T')[0];
+    return new Date(`${datePart}T${event.time_start || '00:00'}`);
+  };
 
   const hasEventStarted = (event) => new Date() >= getEventStart(event);
 
@@ -168,7 +179,7 @@ const Notifications = () => {
   };
 
   const hasEventEnded = (event) => {
-    const endDateStr = event.date_end || event.date_start;
+    const endDateStr = String(event.date_end || event.date_start).split('T')[0];
     const endTime = event.time_end || event.time_start || '23:59';
     const eventEnd = new Date(`${endDateStr}T${endTime}`);
     return new Date() > eventEnd;
