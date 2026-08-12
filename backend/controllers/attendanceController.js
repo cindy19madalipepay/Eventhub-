@@ -41,6 +41,16 @@ const getMyAttendance = async (req, res) => {
       [user_id]
     );
 
+    // "Missed" now covers BOTH:
+    //   - events the student registered for (has a ticket) but never
+    //     checked into, and
+    //   - events the student never registered for at all
+    // as long as the 30-minute check-in window has closed. This matches
+    // the exact same rule MyEvents.jsx already uses client-side
+    // (REGISTRATION_GRACE_MINUTES / isPastRegistrationWindow) for its
+    // "MISSED" badge — previously this query only covered the first case
+    // (required an existing ticket), which is why events a student never
+    // registered for never showed up here even after the window closed.
     const [missed] = await pool.query(
       `SELECT 
          e.event_id,
@@ -48,12 +58,14 @@ const getMyAttendance = async (req, res) => {
          e.date_start,
          e.time_start,
          e.venue
-       FROM tickets t
-       JOIN events e ON t.event_id = e.event_id
-       LEFT JOIN attendance a ON t.ticket_id = a.ticket_id
-       WHERE t.user_id = ?
-         AND a.attendance_id IS NULL
-         AND CONCAT(COALESCE(e.date_end, e.date_start), ' ', COALESCE(e.time_end, e.time_start, '23:59:00')) < NOW()
+       FROM events e
+       LEFT JOIN tickets t ON t.event_id = e.event_id AND t.user_id = ?
+       LEFT JOIN attendance a ON a.ticket_id = t.ticket_id
+       WHERE a.attendance_id IS NULL
+         AND TIMESTAMPADD(
+               MINUTE, 30,
+               CONCAT(e.date_start, ' ', COALESCE(e.time_start, '00:00:00'))
+             ) < NOW()
        ORDER BY e.date_start DESC`,
       [user_id]
     );
