@@ -27,16 +27,32 @@ const uploadPaymentProof = async (req, res) => {
       return res.status(409).json({ success: false, message: 'Payment already validated.' });
     }
 
+    // req.file.path holds the actual hosted Cloudinary URL (set by
+    // multer-storage-cloudinary) — NOT req.file.filename, which is just
+    // Cloudinary's internal public_id, not a usable URL. Previously this
+    // saved req.file.filename directly, which also assumed a local disk
+    // path — but Vercel's serverless functions have no persistent local
+    // storage, so that was never a valid path in production regardless.
+    const proofUrl = req.file.path || req.file.secure_url || req.file.url || null;
+
+    if (!proofUrl) {
+      console.error('Cloudinary payment proof file information:', req.file);
+      return res.status(500).json({
+        success: false,
+        message: 'Cloudinary did not return a valid image URL.',
+      });
+    }
+
     // Save file path and set status to pending
     await pool.query(
       "UPDATE tickets SET payment_proof = ?, payment_status = 'pending' WHERE ticket_id = ?",
-      [req.file.filename, ticket_id]
+      [proofUrl, ticket_id]
     );
 
     return res.status(200).json({
       success:  true,
       message:  'Payment proof uploaded. Waiting for admin validation.',
-      filename: req.file.filename,
+      proof_url: proofUrl,
     });
 
   } catch (error) {
@@ -172,9 +188,17 @@ const getMyPayments = async (req, res) => {
       [req.user.user_id]
     );
 
+    // payment_proof is now a full Cloudinary URL (saved that way since the
+    // uploadPaymentProof fix) — pass it through directly. Only fall back to
+    // reconstructing the old local-path style for any records saved before
+    // that switch (when only a bare filename was stored).
     const paymentsWithProofUrl = payments.map((p) => ({
       ...p,
-      proof_url: p.payment_proof ? `/uploads/payments/${p.payment_proof}` : null,
+      proof_url: p.payment_proof
+        ? (p.payment_proof.startsWith('http')
+            ? p.payment_proof
+            : `/uploads/payments/${p.payment_proof}`)
+        : null,
     }));
 
     return res.status(200).json({ success: true, payments: paymentsWithProofUrl });

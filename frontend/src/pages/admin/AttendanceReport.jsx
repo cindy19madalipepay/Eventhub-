@@ -5,6 +5,19 @@ import api from '../../utils/api';
 import toast from 'react-hot-toast';
 import './AttendanceReport.css';
 
+// api.defaults.baseURL is 'http://localhost:5000/api' — strip the /api to
+// get the root the old local /uploads folder was served from. Attendance
+// photos are now full Cloudinary URLs (https://...) since the Cloudinary
+// migration; this only matters as a fallback for records saved before that.
+const UPLOADS_BASE = api.defaults.baseURL.replace(/\/api\/?$/, '');
+
+const resolvePhotoSrc = (photo) => {
+  if (!photo) return null;
+  return photo.startsWith('http')
+    ? photo
+    : `${UPLOADS_BASE}/uploads/attendance/${photo}`;
+};
+
 const DEPARTMENTS = [
   { id: 'BSIT', name: 'BSIT', icon: '🏛️' },
   { id: 'BSBA', name: 'BSBA', icon: '🏛️' },
@@ -97,7 +110,7 @@ const AttendanceReport = () => {
 
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
-  const [viewingPhoto, setViewingPhoto] = useState(null); // photo filename currently shown in the modal, or null
+  const [viewingPhoto, setViewingPhoto] = useState(null); // Cloudinary URL (or legacy local filename) currently shown in the modal, or null
   const [showAllSummary, setShowAllSummary] = useState(false); // collapses the event summary list when it's long
 
   // Admins see every department's overview (for the picker + student counts).
@@ -708,10 +721,10 @@ const AttendanceReport = () => {
                             </td>
                             <td>{formatDate(a.scanned_at)}</td>
                             <td>
-                              {a.photo ? (
+                              {a.checkin_photo ? (
                                 <button
                                   type="button"
-                                  onClick={() => setViewingPhoto(a.photo)}
+                                  onClick={() => setViewingPhoto(a.checkin_photo)}
                                   className="method-badge"
                                   style={{ border: 'none', cursor: 'pointer' }}
                                 >
@@ -788,7 +801,7 @@ const AttendanceReport = () => {
               ✕
             </button>
             <img
-              src={`http://localhost:5000/uploads/attendance/${viewingPhoto}`}
+              src={resolvePhotoSrc(viewingPhoto)}
               alt="Attendance proof"
               style={{ maxWidth: '100%', maxHeight: '80vh', borderRadius: 10, display: 'block' }}
             />

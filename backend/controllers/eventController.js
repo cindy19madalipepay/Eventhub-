@@ -50,6 +50,7 @@ const createEvent = async (req, res) => {
       });
     }
 
+    // Convert department IDs to numbers and remove duplicates
     departmentIds = [
       ...new Set(
         departmentIds
@@ -93,6 +94,8 @@ const createEvent = async (req, res) => {
 
     // --------------------------------------------------------
     // Banner URL
+    // Only used when user chooses "Paste Link".
+    // Uploaded banner is handled separately after event creation.
     // --------------------------------------------------------
     const bannerImage =
       banner_url && String(banner_url).trim()
@@ -101,6 +104,9 @@ const createEvent = async (req, res) => {
 
     // --------------------------------------------------------
     // Creator
+    // The `events.created_by` column is required (NOT NULL, no default)
+    // and comes from the logged-in admin's token, set by authMiddleware
+    // as req.user.user_id — not from the request body.
     // --------------------------------------------------------
     const createdBy = req.user?.user_id;
 
@@ -113,18 +119,23 @@ const createEvent = async (req, res) => {
 
     // --------------------------------------------------------
     // QR code data
+    // The `events.qr_code_data` column is also required (NOT NULL, no
+    // default). It needs to be unique per event, so it's generated here
+    // rather than left for the database to fill in.
     // --------------------------------------------------------
     const qrCodeData = crypto.randomUUID();
 
     // --------------------------------------------------------
-    // STEP 1 — Create event + departments (atomic transaction)
+    // Start transaction
     // --------------------------------------------------------
-    let eventId;
     const connection = await pool.getConnection();
 
     try {
       await connection.beginTransaction();
 
+      // ------------------------------------------------------
+      // Create event
+      // ------------------------------------------------------
       const [result] = await connection.query(
         `
         INSERT INTO events (
@@ -139,9 +150,10 @@ const createEvent = async (req, res) => {
           payment_amount,
           banner_image,
           created_by,
-          qr_code_data
+          qr_code_data,
+          status
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `,
         [
           event_name.trim(),
@@ -156,11 +168,15 @@ const createEvent = async (req, res) => {
           bannerImage,
           createdBy,
           qrCodeData,
+          'published',
         ]
       );
 
-      eventId = result.insertId;
+      const eventId = result.insertId;
 
+      // ------------------------------------------------------
+      // Add departments
+      // ------------------------------------------------------
       for (const departmentId of departmentIds) {
         await connection.query(
           `
@@ -174,84 +190,63 @@ const createEvent = async (req, res) => {
         );
       }
 
+      // ------------------------------------------------------
+      // Create the notification students see on their
+      // Notifications page. Without this, nothing ever tells
+      // students a new event exists — the page would only ever
+      // show whatever unrelated notification rows already
+      // happened to be sitting in the table.
+      // ------------------------------------------------------
+      await connection.query(
+        `
+        INSERT INTO notifications (
+          event_id,
+          title,
+          message,
+          type,
+          target_role,
+          sent_at
+        )
+        VALUES (?, ?, ?, ?, ?, NOW())
+        `,
+        [
+          eventId,
+          event_name.trim(),
+          `A new event "${event_name.trim()}" has been posted. Check it out!`,
+          'new_event',
+          'student',
+        ]
+      );
+
       await connection.commit();
+
+      return res.status(201).json({
+        success: true,
+        message: 'Event created successfully.',
+        event_id: Number(eventId),
+        event: {
+          event_id: Number(eventId),
+          event_name: event_name.trim(),
+          description: description || null,
+          date_start: date_start,
+          date_end: eventDateEnd,
+          time_start: time_start,
+          time_end: eventTimeEnd,
+          venue: venue || null,
+          requires_payment: requiresPayment,
+          payment_amount: paymentAmount,
+          banner_image: bannerImage,
+          department_ids: departmentIds,
+          created_by: createdBy,
+          qr_code_data: qrCodeData,
+        },
+      });
     } catch (error) {
       await connection.rollback();
       throw error;
     } finally {
       connection.release();
     }
-
-    // --------------------------------------------------------
-    // STEP 2 — Create notifications (best effort, non-blocking)
-    // If this fails, the event is already saved and the user
-    // still gets a success response.
-    //
-    // IMPORTANT: If your notifications table uses a different
-    // column name than 'user_id' (e.g. 'student_id'), change
-    // 'user_id' in the two queries below to match your schema.
-    // Or run: ALTER TABLE notifications ADD COLUMN user_id INT NOT NULL;
-    // --------------------------------------------------------
-    try {
-      const [eligibleUsers] = await pool.query(
-        `
-        SELECT user_id
-        FROM users
-        WHERE department_id IN (?)
-          AND role IN ('student', 'student_leader', 'alumni', 'stakeholder')
-        `,
-        [departmentIds]
-      );
-
-      if (eligibleUsers.length > 0) {
-        const notificationTitle = `New Event: ${event_name.trim()}`;
-        const notificationMessage = `A new event "${event_name.trim()}" has been posted. Check the details and register.`;
-
-        const notificationValues = eligibleUsers.map((u) => [
-          u.user_id,
-          eventId,
-          notificationTitle,
-          notificationMessage,
-          0,
-        ]);
-
-        await pool.query(
-          `
-          INSERT INTO notifications
-            (user_id, event_id, title, message, is_read)
-          VALUES ?
-          `,
-          [notificationValues]
-        );
-      }
-    } catch (notifError) {
-      console.error('Notification creation failed (event was still created):', notifError.message);
-    }
-
-    // --------------------------------------------------------
-    // SUCCESS
-    // --------------------------------------------------------
-    return res.status(201).json({
-      success: true,
-      message: 'Event created successfully.',
-      event_id: Number(eventId),
-      event: {
-        event_id: Number(eventId),
-        event_name: event_name.trim(),
-        description: description || null,
-        date_start: date_start,
-        date_end: eventDateEnd,
-        time_start: time_start,
-        time_end: eventTimeEnd,
-        venue: venue || null,
-        requires_payment: requiresPayment,
-        payment_amount: paymentAmount,
-        banner_image: bannerImage,
-        department_ids: departmentIds,
-        created_by: createdBy,
-        qr_code_data: qrCodeData,
-      },
-    });
   } catch (error) {
     console.error('CreateEvent error:', error);
 
@@ -273,6 +268,9 @@ const uploadEventBanner = async (req, res) => {
   try {
     const { id } = req.params;
 
+    // --------------------------------------------------------
+    // Validate Event ID
+    // --------------------------------------------------------
     if (!id) {
       return res.status(400).json({
         success: false,
@@ -280,6 +278,9 @@ const uploadEventBanner = async (req, res) => {
       });
     }
 
+    // --------------------------------------------------------
+    // Validate uploaded file
+    // --------------------------------------------------------
     if (!req.file) {
       return res.status(400).json({
         success: false,
@@ -287,9 +288,15 @@ const uploadEventBanner = async (req, res) => {
       });
     }
 
+    // --------------------------------------------------------
+    // Check event
+    // --------------------------------------------------------
     const [events] = await pool.query(
       `
-      SELECT event_id, event_name, banner_image
+      SELECT
+        event_id,
+        event_name,
+        banner_image
       FROM events
       WHERE event_id = ?
       `,
@@ -303,6 +310,9 @@ const uploadEventBanner = async (req, res) => {
       });
     }
 
+    // --------------------------------------------------------
+    // Cloudinary URL
+    // --------------------------------------------------------
     const bannerUrl =
       req.file.path ||
       req.file.secure_url ||
@@ -310,13 +320,21 @@ const uploadEventBanner = async (req, res) => {
       null;
 
     if (!bannerUrl) {
-      console.error('Cloudinary banner file information:', req.file);
+      console.error(
+        'Cloudinary banner file information:',
+        req.file
+      );
+
       return res.status(500).json({
         success: false,
-        message: 'Cloudinary did not return a valid image URL.',
+        message:
+          'Cloudinary did not return a valid image URL.',
       });
     }
 
+    // --------------------------------------------------------
+    // Save URL
+    // --------------------------------------------------------
     await pool.query(
       `
       UPDATE events
@@ -335,6 +353,7 @@ const uploadEventBanner = async (req, res) => {
     });
   } catch (error) {
     console.error('UploadEventBanner error:', error);
+
     return res.status(500).json({
       success: false,
       message: 'Unable to upload event banner.',
@@ -353,6 +372,9 @@ const uploadEventRules = async (req, res) => {
   try {
     const { id } = req.params;
 
+    // --------------------------------------------------------
+    // Validate Event ID
+    // --------------------------------------------------------
     if (!id) {
       return res.status(400).json({
         success: false,
@@ -360,6 +382,9 @@ const uploadEventRules = async (req, res) => {
       });
     }
 
+    // --------------------------------------------------------
+    // Validate file
+    // --------------------------------------------------------
     if (!req.file) {
       return res.status(400).json({
         success: false,
@@ -367,9 +392,14 @@ const uploadEventRules = async (req, res) => {
       });
     }
 
+    // --------------------------------------------------------
+    // Check event
+    // --------------------------------------------------------
     const [events] = await pool.query(
       `
-      SELECT event_id, event_name
+      SELECT
+        event_id,
+        event_name
       FROM events
       WHERE event_id = ?
       `,
@@ -383,6 +413,9 @@ const uploadEventRules = async (req, res) => {
       });
     }
 
+    // --------------------------------------------------------
+    // Cloudinary URL
+    // --------------------------------------------------------
     const rulesUrl =
       req.file.path ||
       req.file.secure_url ||
@@ -390,13 +423,21 @@ const uploadEventRules = async (req, res) => {
       null;
 
     if (!rulesUrl) {
-      console.error('Cloudinary rules file information:', req.file);
+      console.error(
+        'Cloudinary rules file information:',
+        req.file
+      );
+
       return res.status(500).json({
         success: false,
-        message: 'Cloudinary did not return a valid rules file URL.',
+        message:
+          'Cloudinary did not return a valid rules file URL.',
       });
     }
 
+    // --------------------------------------------------------
+    // Save URL
+    // --------------------------------------------------------
     await pool.query(
       `
       UPDATE events
@@ -415,6 +456,7 @@ const uploadEventRules = async (req, res) => {
     });
   } catch (error) {
     console.error('UploadEventRules error:', error);
+
     return res.status(500).json({
       success: false,
       message: 'Unable to upload event rules.',
@@ -451,10 +493,14 @@ const getEvents = async (req, res) => {
     const formattedEvents = events.map((event) => ({
       ...event,
       event_id: Number(event.event_id),
-      requires_payment: Boolean(event.requires_payment),
-      payment_amount: Number(event.payment_amount || 0),
+      requires_payment:
+        Boolean(event.requires_payment),
+      payment_amount:
+        Number(event.payment_amount || 0),
       department_ids: event.department_ids
-        ? event.department_ids.split(',').map((id) => Number(id))
+        ? event.department_ids
+            .split(',')
+            .map((id) => Number(id))
         : [],
     }));
 
@@ -464,6 +510,7 @@ const getEvents = async (req, res) => {
     });
   } catch (error) {
     console.error('GetEvents error:', error);
+
     return res.status(500).json({
       success: false,
       message: 'Unable to retrieve events.',
@@ -491,7 +538,8 @@ const getEventById = async (req, res) => {
 
     const [events] = await pool.query(
       `
-      SELECT e.*
+      SELECT
+        e.*
       FROM events e
       WHERE e.event_id = ?
       `,
@@ -509,7 +557,8 @@ const getEventById = async (req, res) => {
 
     const [departments] = await pool.query(
       `
-      SELECT ed.department_id
+      SELECT
+        ed.department_id
       FROM event_departments ed
       WHERE ed.event_id = ?
       ORDER BY ed.department_id
@@ -520,9 +569,13 @@ const getEventById = async (req, res) => {
     const formattedEvent = {
       ...event,
       event_id: Number(event.event_id),
-      requires_payment: Boolean(event.requires_payment),
-      payment_amount: Number(event.payment_amount || 0),
-      department_ids: departments.map((d) => Number(d.department_id)),
+      requires_payment:
+        Boolean(event.requires_payment),
+      payment_amount:
+        Number(event.payment_amount || 0),
+      department_ids: departments.map((d) =>
+        Number(d.department_id)
+      ),
     };
 
     return res.status(200).json({
@@ -531,6 +584,7 @@ const getEventById = async (req, res) => {
     });
   } catch (error) {
     console.error('GetEventById error:', error);
+
     return res.status(500).json({
       success: false,
       message: 'Unable to retrieve event.',
@@ -556,6 +610,9 @@ const updateEvent = async (req, res) => {
       });
     }
 
+    // --------------------------------------------------------
+    // Check event
+    // --------------------------------------------------------
     const [existingEvents] = await pool.query(
       `
       SELECT event_id
@@ -586,6 +643,9 @@ const updateEvent = async (req, res) => {
       banner_url,
     } = req.body;
 
+    // --------------------------------------------------------
+    // Build update dynamically
+    // --------------------------------------------------------
     const fields = [];
     const values = [];
 
@@ -635,7 +695,11 @@ const updateEvent = async (req, res) => {
       values.push(requiresPayment ? 1 : 0);
 
       fields.push('payment_amount = ?');
-      const amount = requiresPayment ? Number(payment_amount || 0) : 0;
+
+      const amount = requiresPayment
+        ? Number(payment_amount || 0)
+        : 0;
+
       values.push(amount);
     } else if (payment_amount !== undefined) {
       fields.push('payment_amount = ?');
@@ -647,8 +711,12 @@ const updateEvent = async (req, res) => {
       values.push(banner_url || null);
     }
 
+    // --------------------------------------------------------
+    // Update event
+    // --------------------------------------------------------
     if (fields.length > 0) {
       values.push(id);
+
       await pool.query(
         `
         UPDATE events
@@ -659,6 +727,9 @@ const updateEvent = async (req, res) => {
       );
     }
 
+    // --------------------------------------------------------
+    // Update departments if provided
+    // --------------------------------------------------------
     if (department_ids !== undefined) {
       let departmentIds = department_ids;
 
@@ -683,7 +754,8 @@ const updateEvent = async (req, res) => {
             .map((departmentId) => Number(departmentId))
             .filter(
               (departmentId) =>
-                Number.isInteger(departmentId) && departmentId > 0
+                Number.isInteger(departmentId) &&
+                departmentId > 0
             )
         ),
       ];
@@ -737,6 +809,7 @@ const updateEvent = async (req, res) => {
     });
   } catch (error) {
     console.error('UpdateEvent error:', error);
+
     return res.status(500).json({
       success: false,
       message: 'Unable to update event.',
@@ -783,6 +856,9 @@ const deleteEvent = async (req, res) => {
     try {
       await connection.beginTransaction();
 
+      // ------------------------------------------------------
+      // Remove event departments first
+      // ------------------------------------------------------
       await connection.query(
         `
         DELETE FROM event_departments
@@ -791,6 +867,9 @@ const deleteEvent = async (req, res) => {
         [id]
       );
 
+      // ------------------------------------------------------
+      // Delete event
+      // ------------------------------------------------------
       await connection.query(
         `
         DELETE FROM events
@@ -814,6 +893,7 @@ const deleteEvent = async (req, res) => {
     });
   } catch (error) {
     console.error('DeleteEvent error:', error);
+
     return res.status(500).json({
       success: false,
       message: 'Unable to delete event.',
@@ -843,7 +923,9 @@ const getEventQR = async (req, res) => {
 
     const [events] = await pool.query(
       `
-      SELECT event_id, event_name
+      SELECT
+        event_id,
+        event_name
       FROM events
       WHERE event_id = ?
       `,
@@ -857,8 +939,16 @@ const getEventQR = async (req, res) => {
       });
     }
 
+    // --------------------------------------------------------
+    // Generate an actual QR code image (as a base64 data URL)
+    // encoding the link to the public check-in page, which
+    // decides where to route the scanner (login vs. My Events).
+    // FRONTEND_URL must be set as an env var on the backend host
+    // to your live Vercel frontend domain in production.
+    // --------------------------------------------------------
     const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
     const checkinUrl = `${FRONTEND_URL}/checkin/${events[0].event_id}`;
+
     const qrImage = await QRCode.toDataURL(checkinUrl);
 
     return res.status(200).json({
@@ -870,6 +960,7 @@ const getEventQR = async (req, res) => {
     });
   } catch (error) {
     console.error('GetEventQR error:', error);
+
     return res.status(500).json({
       success: false,
       message: 'Unable to retrieve event QR information.',
