@@ -503,6 +503,15 @@ const getMyAttendance = async (req, res) => {
         : null,
     }));
 
+    // MISSED EVENTS
+    // Was previously scoped to `FROM tickets t JOIN events e`, which only
+    // caught students who registered (has a ticket) but never checked in.
+    // It silently excluded events the student never registered for at all —
+    // even though MyEvents.jsx treats those exactly the same way ("missed"
+    // once the 30-minute window closes with no ticket). Switched to
+    // `FROM events e LEFT JOIN tickets t` so events with NO ticket row are
+    // included too, matched to this student via the ON clause instead of
+    // WHERE, so a missing ticket doesn't drop the event from the results.
     const [missed] = await pool.query(
       `SELECT
           e.event_id,
@@ -510,16 +519,17 @@ const getMyAttendance = async (req, res) => {
           e.date_start,
           e.time_start,
           e.venue
-       FROM tickets t
-       JOIN events e
+       FROM events e
+       LEFT JOIN tickets t
          ON t.event_id = e.event_id
-       WHERE t.user_id = ?
-         AND t.status != 'used'
+        AND t.user_id = ?
+       WHERE (t.ticket_id IS NULL OR t.status != 'used')
          AND TIMESTAMPDIFF(
            MINUTE,
            TIMESTAMP(e.date_start, e.time_start),
            ${PH_NOW}
-         ) > 30`,
+         ) > 30
+       ORDER BY e.date_start DESC`,
       [req.user.user_id]
     );
 
