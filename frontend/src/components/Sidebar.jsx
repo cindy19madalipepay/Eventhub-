@@ -7,17 +7,17 @@ import './Sidebar.css';
 
 const menuItems = {
   admin: [
-    { path: '/admin/dashboard',       label: 'Overview' },
-    { path: '/admin/create-event',    label: 'Create Event' },
-    { path: '/admin/attendance',      label: 'Departments' },
-    { path: '/admin/receipts',        label: 'Receipts' },
-    { path: '/admin/evaluation',      label: 'Evaluation Results' },
+    { path: '/admin/dashboard',    label: 'Overview' },
+    { path: '/admin/create-event', label: 'Create Event' },
+    { path: '/admin/attendance',   label: 'Departments' },
+    { path: '/admin/receipts',     label: 'Receipts' },
+    { path: '/admin/evaluation',   label: 'Evaluation Results' },
   ],
   department_head: [
-    { path: '/dept/dashboard',    label: 'Dashboard' },
-    { path: '/dept/attendance',   label: 'Attendance' },
-    { path: '/dept/reports',      label: 'Reports' },
-    { path: '/dept/evaluation',   label: 'Evaluation Results' },
+    { path: '/dept/dashboard',  label: 'Dashboard' },
+    { path: '/dept/attendance', label: 'Attendance' },
+    { path: '/dept/reports',    label: 'Reports' },
+    { path: '/dept/evaluation', label: 'Evaluation Results' },
   ],
   student: [
     { path: '/student/notifications', label: 'Notifications' },
@@ -41,50 +41,37 @@ const menuItems = {
   ],
 };
 
-// Renders the user's photo if they have one, otherwise falls back to initials.
-// profile_picture is now a full Cloudinary URL (stored that way since the
-// switch away from local disk uploads), so we use it directly — no more
-// building the URL from a base path + filename.
 const Avatar = ({ user, size = 'md', src }) => {
   const initials = `${user?.first_name?.[0] || ''}${user?.last_name?.[0] || ''}`;
   const className = `user-avatar ${size === 'lg' ? 'user-avatar-lg' : ''}`;
-
   const photoUrl = src || user?.profile_picture || null;
 
   if (photoUrl) {
-    return <div className={className}><img src={photoUrl} alt="" className="user-avatar-img" /></div>;
+    return (
+      <div className={className}>
+        <img src={photoUrl} alt="" className="user-avatar-img" />
+      </div>
+    );
   }
   return <div className={className}>{initials}</div>;
 };
 
 const Sidebar = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, updateUser } = useAuth();
   const navigate = useNavigate();
-  const [unreadCount, setUnreadCount] = useState(0);
 
-  // ─── Profile popover state ────────────────────────────────
+  const [unreadCount, setUnreadCount] = useState(0);
   const [profileOpen, setProfileOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [localUser, setLocalUser] = useState(user);
   const [form, setForm] = useState({ first_name: '', last_name: '' });
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
+
   const popoverRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  useEffect(() => {
-    setLocalUser(user);
-  }, [user]);
-
-  // Clean up the object URL we create for the preview so it doesn't leak
-  useEffect(() => {
-    return () => {
-      if (avatarPreview) URL.revokeObjectURL(avatarPreview);
-    };
-  }, [avatarPreview]);
-
-  // Close popover when clicking outside it
+  // Close popover on outside click
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (popoverRef.current && !popoverRef.current.contains(e.target)) {
@@ -96,6 +83,7 @@ const Sidebar = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Poll unread notifications
   useEffect(() => {
     const studentLikeRoles = ['student', 'student_leader', 'alumni', 'stakeholder'];
     if (!studentLikeRoles.includes(user?.role)) return;
@@ -128,8 +116,8 @@ const Sidebar = () => {
 
   const startEditing = () => {
     setForm({
-      first_name: localUser?.first_name || '',
-      last_name: localUser?.last_name || '',
+      first_name: user?.first_name || '',
+      last_name: user?.last_name || '',
     });
     setAvatarFile(null);
     setAvatarPreview(null);
@@ -174,7 +162,9 @@ const Sidebar = () => {
 
       const updatedUser = res.data?.user || res.data || {};
 
-      setLocalUser((prev) => ({ ...prev, ...form, ...updatedUser }));
+      // Persist globally + localStorage
+      updateUser(updatedUser);
+
       toast.success('Profile updated.');
       setEditing(false);
       setAvatarFile(null);
@@ -189,10 +179,8 @@ const Sidebar = () => {
   const items = menuItems[user?.role] || [];
 
   const getRoleDisplay = (role) => {
-  if (!role) return '';
-  return role
-    .replace(/_/g, ' ')
-    .replace(/\b\w/g, (char) => char.toUpperCase());
+    if (!role) return '';
+    return role.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
   };
 
   return (
@@ -204,10 +192,10 @@ const Sidebar = () => {
 
       <div className="sidebar-user-wrapper" ref={popoverRef}>
         <button className="sidebar-user" onClick={openProfile}>
-          <Avatar user={localUser} />
+          <Avatar user={user} />
           <div className="user-info">
-            <p className="user-name">{localUser?.first_name} {localUser?.last_name}</p>
-            <p className="user-role">{getRoleDisplay(localUser?.role)}</p>
+            <p className="user-name">{user?.first_name} {user?.last_name}</p>
+            <p className="user-role">{getRoleDisplay(user?.role)}</p>
           </div>
           <span className={`user-caret ${profileOpen ? 'open' : ''}`}>▾</span>
         </button>
@@ -217,14 +205,14 @@ const Sidebar = () => {
             {!editing ? (
               <>
                 <div className="profile-popover-header">
-                  <Avatar user={localUser} size="lg" />
+                  <Avatar user={user} size="lg" />
                   <div>
-                    <p className="profile-popover-name">{localUser?.first_name} {localUser?.last_name}</p>
-                    <p className="profile-popover-role">{getRoleDisplay(localUser?.role)}</p>
+                    <p className="profile-popover-name">{user?.first_name} {user?.last_name}</p>
+                    <p className="profile-popover-role">{getRoleDisplay(user?.role)}</p>
                   </div>
                 </div>
-                {localUser?.email && (
-                  <p className="profile-popover-email">{localUser.email}</p>
+                {user?.email && (
+                  <p className="profile-popover-email">{user.email}</p>
                 )}
                 <button className="profile-popover-btn" onClick={startEditing}>
                   Edit Profile
@@ -233,7 +221,7 @@ const Sidebar = () => {
             ) : (
               <form className="profile-popover-form" onSubmit={handleSave}>
                 <div className="avatar-edit-row">
-                  <Avatar user={localUser} size="lg" src={avatarPreview} />
+                  <Avatar user={user} size="lg" src={avatarPreview} />
                   <div className="avatar-edit-actions">
                     <button
                       type="button"

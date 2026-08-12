@@ -12,7 +12,11 @@ export const AuthProvider = ({ children }) => {
     const savedUser  = localStorage.getItem('eventhub_user');
     if (savedToken && savedUser) {
       setToken(savedToken);
-      setUser(JSON.parse(savedUser));
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch {
+        localStorage.removeItem('eventhub_user');
+      }
     }
     setLoading(false);
   }, []);
@@ -21,7 +25,7 @@ export const AuthProvider = ({ children }) => {
     setUser(userData);
     setToken(tokenData);
     localStorage.setItem('eventhub_token', tokenData);
-    localStorage.setItem('eventhub_user',  JSON.stringify(userData));
+    localStorage.setItem('eventhub_user', JSON.stringify(userData));
   };
 
   const logout = () => {
@@ -31,8 +35,18 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('eventhub_user');
   };
 
+  // NEW: Update user globally so changes persist after logout/login
+  const updateUser = (updatedFields) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const merged = { ...prev, ...updatedFields };
+      localStorage.setItem('eventhub_user', JSON.stringify(merged));
+      return merged;
+    });
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, token, login, logout, updateUser, loading }}>
       {children}
     </AuthContext.Provider>
   );
