@@ -1,10 +1,8 @@
 const { pool } = require('../config/db');
 const multer = require('multer');
 
-// Memory storage — REQUIRED for Vercel (no local disk writes)
 const upload = multer({ storage: multer.memoryStorage() });
 
-// Helper: stream buffer to Cloudinary
 const uploadToCloudinary = (buffer, mimetype, folder) => {
   return new Promise((resolve, reject) => {
     const cloudinary = require('../config/cloudinary');
@@ -19,14 +17,23 @@ const uploadToCloudinary = (buffer, mimetype, folder) => {
   });
 };
 
-// ─── GET MY ATTENDANCE ─────────────────────────────────────
 const getMyAttendance = async (req, res) => {
   try {
     const user_id = req.user?.user_id;
     if (!user_id) return res.status(401).json({ success: false, message: 'Unauthorized.' });
 
-    const [rows] = await pool.query(
-      `SELECT a.*, e.event_name, e.date_start, e.time_start, e.venue
+    const [attended] = await pool.query(
+      `SELECT 
+         a.attendance_id,
+         a.ticket_id,
+         a.event_id,
+         a.checkin_photo AS photo_url,
+         a.checked_in_at,
+         a.checkout_at,
+         e.event_name,
+         e.date_start,
+         e.time_start,
+         e.venue
        FROM attendance a
        JOIN events e ON a.event_id = e.event_id
        WHERE a.user_id = ?
@@ -34,30 +41,39 @@ const getMyAttendance = async (req, res) => {
       [user_id]
     );
 
-    return res.status(200).json({ success: true, attended: rows });
+    const [missed] = await pool.query(
+      `SELECT 
+         e.event_id,
+         e.event_name,
+         e.date_start,
+         e.time_start,
+         e.venue
+       FROM tickets t
+       JOIN events e ON t.event_id = e.event_id
+       LEFT JOIN attendance a ON t.ticket_id = a.ticket_id
+       WHERE t.user_id = ?
+         AND a.attendance_id IS NULL
+         AND CONCAT(COALESCE(e.date_end, e.date_start), ' ', COALESCE(e.time_end, e.time_start, '23:59:00')) < NOW()
+       ORDER BY e.date_start DESC`,
+      [user_id]
+    );
+
+    return res.status(200).json({ success: true, attended, missed });
   } catch (error) {
     console.error('GetMyAttendance error:', error);
     return res.status(500).json({ success: false, message: 'Server error.' });
   }
 };
 
-// ─── REGISTER ATTENDANCE (CHECK-IN) ────────────────────────
 const registerAttendance = async (req, res) => {
   try {
     const { ticket_id } = req.body;
     const user_id = req.user?.user_id;
 
-    if (!user_id) {
-      return res.status(401).json({ success: false, message: 'Unauthorized.' });
-    }
-    if (!ticket_id) {
-      return res.status(400).json({ success: false, message: 'Ticket ID is required.' });
-    }
-    if (!req.file) {
-      return res.status(400).json({ success: false, message: 'Attendance photo is required.' });
-    }
+    if (!user_id) return res.status(401).json({ success: false, message: 'Unauthorized.' });
+    if (!ticket_id) return res.status(400).json({ success: false, message: 'Ticket ID is required.' });
+    if (!req.file) return res.status(400).json({ success: false, message: 'Attendance photo is required.' });
 
-    // Verify ticket exists and belongs to user
     const [tickets] = await pool.query(
       'SELECT * FROM tickets WHERE ticket_id = ? AND (user_id = ? OR ? IS NULL)',
       [ticket_id, user_id, user_id]
@@ -68,7 +84,6 @@ const registerAttendance = async (req, res) => {
 
     const ticket = tickets[0];
 
-    // Prevent duplicate check-in
     const [existing] = await pool.query(
       'SELECT attendance_id FROM attendance WHERE ticket_id = ? AND checkout_at IS NULL',
       [ticket_id]
@@ -77,17 +92,14 @@ const registerAttendance = async (req, res) => {
       return res.status(409).json({ success: false, message: 'You are already checked in.' });
     }
 
-    // Upload to Cloudinary
     const result = await uploadToCloudinary(req.file.buffer, req.file.mimetype, 'eventhub/attendance');
 
-    // Save record
     const [insertResult] = await pool.query(
       `INSERT INTO attendance (ticket_id, event_id, user_id, checkin_photo, checked_in_at)
        VALUES (?, ?, ?, ?, NOW())`,
       [ticket_id, ticket.event_id, user_id, result.secure_url]
     );
 
-    // Mark ticket used
     await pool.query("UPDATE tickets SET status = 'used' WHERE ticket_id = ?", [ticket_id]);
 
     return res.status(201).json({
@@ -106,23 +118,15 @@ const registerAttendance = async (req, res) => {
   }
 };
 
-// ─── CHECKOUT ──────────────────────────────────────────────
 const registerCheckout = async (req, res) => {
   try {
     const { event_id } = req.body;
     const user_id = req.user?.user_id;
 
-    if (!user_id) {
-      return res.status(401).json({ success: false, message: 'Unauthorized.' });
-    }
-    if (!event_id) {
-      return res.status(400).json({ success: false, message: 'Event ID is required.' });
-    }
-    if (!req.file) {
-      return res.status(400).json({ success: false, message: 'Checkout photo is required.' });
-    }
+    if (!user_id) return res.status(401).json({ success: false, message: 'Unauthorized.' });
+    if (!event_id) return res.status(400).json({ success: false, message: 'Event ID is required.' });
+    if (!req.file) return res.status(400).json({ success: false, message: 'Checkout photo is required.' });
 
-    // Find active check-in (no checkout yet)
     const [records] = await pool.query(
       `SELECT attendance_id FROM attendance
        WHERE event_id = ? AND user_id = ? AND checkout_at IS NULL
@@ -133,7 +137,6 @@ const registerCheckout = async (req, res) => {
       return res.status(404).json({ success: false, message: 'No active check-in found for this event.' });
     }
 
-    // Upload checkout photo to Cloudinary
     const result = await uploadToCloudinary(req.file.buffer, req.file.mimetype, 'eventhub/checkout');
 
     await pool.query(
@@ -156,13 +159,12 @@ const registerCheckout = async (req, res) => {
   }
 };
 
-// ─── SCAN QR (ADMIN) ───────────────────────────────────────
 const scanAttendance = async (req, res) => {
   try {
     const { ticket_code } = req.body;
-    if (!ticket_code) {
-      return res.status(400).json({ success: false, message: 'Ticket code is required.' });
-    }
+    const admin_id = req.user?.user_id;
+
+    if (!ticket_code) return res.status(400).json({ success: false, message: 'Ticket code is required.' });
 
     const [tickets] = await pool.query(
       `SELECT t.*, e.event_name, e.date_start, e.time_start
@@ -176,12 +178,10 @@ const scanAttendance = async (req, res) => {
     }
 
     const ticket = tickets[0];
-
     if (ticket.status === 'blocked') {
       return res.status(403).json({ success: false, message: 'This ticket has been blocked.' });
     }
 
-    // Check if already checked in
     const [existing] = await pool.query(
       'SELECT attendance_id FROM attendance WHERE ticket_id = ? AND checkout_at IS NULL',
       [ticket.ticket_id]
@@ -191,24 +191,19 @@ const scanAttendance = async (req, res) => {
     }
 
     await pool.query(
-      `INSERT INTO attendance (ticket_id, event_id, user_id, checked_in_at)
-       VALUES (?, ?, ?, NOW())`,
-      [ticket.ticket_id, ticket.event_id, ticket.user_id]
+      `INSERT INTO attendance (ticket_id, event_id, user_id, scanned_by, checked_in_at)
+       VALUES (?, ?, ?, ?, NOW())`,
+      [ticket.ticket_id, ticket.event_id, ticket.user_id, admin_id]
     );
     await pool.query("UPDATE tickets SET status = 'used' WHERE ticket_id = ?", [ticket.ticket_id]);
 
-    return res.status(200).json({
-      success: true,
-      message: 'Attendance verified successfully.',
-      ticket,
-    });
+    return res.status(200).json({ success: true, message: 'Attendance verified successfully.', ticket });
   } catch (error) {
     console.error('ScanAttendance error:', error);
     return res.status(500).json({ success: false, message: 'Server error.' });
   }
 };
 
-// ─── GET ATTENDANCE BY EVENT ───────────────────────────────
 const getAttendanceByEvent = async (req, res) => {
   try {
     const { id } = req.params;
@@ -220,13 +215,11 @@ const getAttendanceByEvent = async (req, res) => {
       WHERE a.event_id = ?
     `;
     const params = [id];
-
     if (req.user?.role === 'department_head') {
       query += ' AND u.department_id = ?';
       params.push(req.user.department_id);
     }
     query += ' ORDER BY a.checked_in_at DESC';
-
     const [rows] = await pool.query(query, params);
     return res.status(200).json({ success: true, count: rows.length, attendance: rows });
   } catch (error) {
@@ -235,7 +228,6 @@ const getAttendanceByEvent = async (req, res) => {
   }
 };
 
-// ─── ATTENDANCE REPORT ─────────────────────────────────────
 const getAttendanceReport = async (req, res) => {
   try {
     const { event_id, department_id } = req.query;
@@ -255,7 +247,6 @@ const getAttendanceReport = async (req, res) => {
       params.push(req.user.department_id);
     }
     query += ' ORDER BY a.checked_in_at DESC';
-
     const [rows] = await pool.query(query, params);
     return res.status(200).json({ success: true, report: rows });
   } catch (error) {
@@ -264,7 +255,6 @@ const getAttendanceReport = async (req, res) => {
   }
 };
 
-// ─── DEPARTMENTS OVERVIEW ──────────────────────────────────
 const getDepartmentsOverview = async (req, res) => {
   try {
     const [rows] = await pool.query(`
@@ -283,13 +273,11 @@ const getDepartmentsOverview = async (req, res) => {
   }
 };
 
-// ─── DEPARTMENT SUMMARY ────────────────────────────────────
 const getDepartmentSummary = async (req, res) => {
   try {
     const { deptId } = req.params;
     const [rows] = await pool.query(`
-      SELECT e.event_id, e.event_name,
-             COUNT(a.attendance_id) AS attendance_count
+      SELECT e.event_id, e.event_name, COUNT(a.attendance_id) AS attendance_count
       FROM events e
       LEFT JOIN attendance a ON e.event_id = a.event_id
       LEFT JOIN users u ON a.user_id = u.user_id AND u.department_id = ?
@@ -303,7 +291,6 @@ const getDepartmentSummary = async (req, res) => {
   }
 };
 
-// ─── YEAR + BLOCK STATS ────────────────────────────────────
 const getYearBlockStats = async (req, res) => {
   try {
     const { deptId } = req.params;
@@ -324,7 +311,6 @@ const getYearBlockStats = async (req, res) => {
   }
 };
 
-// ─── ORGANIZATION BREAKDOWN ────────────────────────────────
 const getOrgBreakdown = async (req, res) => {
   try {
     const { deptId } = req.params;
@@ -344,7 +330,6 @@ const getOrgBreakdown = async (req, res) => {
   }
 };
 
-// ─── BLOCK REPORT ──────────────────────────────────────────
 const getBlockReport = async (req, res) => {
   try {
     const { event_id, year_level, block } = req.query;
@@ -364,7 +349,6 @@ const getBlockReport = async (req, res) => {
       params.push(req.user.department_id);
     }
     query += ' ORDER BY a.checked_in_at DESC';
-
     const [rows] = await pool.query(query, params);
     return res.status(200).json({ success: true, report: rows });
   } catch (error) {
@@ -374,10 +358,10 @@ const getBlockReport = async (req, res) => {
 };
 
 module.exports = {
-  upload,               // memoryStorage multer for routes
+  upload,
   getMyAttendance,
   registerAttendance,
-  registerCheckout,     // ← renamed from checkout to match routes
+  registerCheckout,
   scanAttendance,
   getAttendanceByEvent,
   getAttendanceReport,

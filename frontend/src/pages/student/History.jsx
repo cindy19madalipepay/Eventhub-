@@ -3,13 +3,8 @@ import api from '../../utils/api';
 import toast from 'react-hot-toast';
 import './History.css';
 
-// api.defaults.baseURL is 'http://localhost:5000/api' — strip the /api
-// to get the root the /uploads static folder is served from.
 const UPLOADS_BASE = api.defaults.baseURL.replace(/\/api\/?$/, '');
 
-// Cloudinary already returns a full URL (https://res.cloudinary.com/...).
-// Only prepend UPLOADS_BASE for legacy relative paths (e.g. "/uploads/xyz.jpg")
-// that were saved before the migration to Cloudinary.
 const resolveImageUrl = (url) => {
   if (!url) return null;
   return /^https?:\/\//i.test(url) ? url : `${UPLOADS_BASE}${url}`;
@@ -28,7 +23,6 @@ const History = () => {
   const [showAllEvaluations, setShowAllEvaluations] = useState(false);
 
   const VISIBLE_LIMIT = 3;
-
   const attendanceRef = useRef(null);
   const paymentsRef = useRef(null);
   const evaluationsRef = useRef(null);
@@ -90,37 +84,19 @@ const History = () => {
   return (
     <div className="history-page">
       <div className="history-header">
-        <h2 className="history-title">
-          My Activity History
-        </h2>
+        <h2 className="history-title">My Activity History</h2>
       </div>
 
-      {/* ── STAT CARDS ───────────────────────────────────────── */}
       <div className="stats-row">
-        <div
-          className="stat-card clickable"
-          onClick={() => scrollToSection(attendanceRef)}
-          role="button"
-          tabIndex={0}
-        >
+        <div className="stat-card clickable" onClick={() => scrollToSection(attendanceRef)} role="button" tabIndex={0}>
           <div className="stat-number">{attendance.length}</div>
           <div className="stat-label">Events Attended</div>
         </div>
-        <div
-          className="stat-card clickable"
-          onClick={() => scrollToSection(evaluationsRef)}
-          role="button"
-          tabIndex={0}
-        >
+        <div className="stat-card clickable" onClick={() => scrollToSection(evaluationsRef)} role="button" tabIndex={0}>
           <div className="stat-number">{evaluations.length}</div>
           <div className="stat-label">Evaluations Given</div>
         </div>
-        <div
-          className="stat-card clickable"
-          onClick={() => scrollToSection(paymentsRef)}
-          role="button"
-          tabIndex={0}
-        >
+        <div className="stat-card clickable" onClick={() => scrollToSection(paymentsRef)} role="button" tabIndex={0}>
           <div className="stat-number">{paymentsValidatedCount}</div>
           <div className="stat-label">Payments Validated</div>
         </div>
@@ -137,7 +113,7 @@ const History = () => {
               <div key={record.attendance_id} className="history-row">
                 <div className="row-body">
                   <h4 className="row-title">{record.event_name}</h4>
-                  <span className="row-meta">{formatDate(record.scanned_at)}</span>
+                  <span className="row-meta">{formatDate(record.checked_in_at)}</span>
                 </div>
                 {record.photo_url && (
                   <button
@@ -150,10 +126,7 @@ const History = () => {
               </div>
             ))}
             {attendance.length > VISIBLE_LIMIT && (
-              <button
-                className="show-toggle-btn"
-                onClick={() => setShowAllAttendance((prev) => !prev)}
-              >
+              <button className="show-toggle-btn" onClick={() => setShowAllAttendance((prev) => !prev)}>
                 {showAllAttendance ? 'Show Less' : `Show More (${attendance.length - VISIBLE_LIMIT})`}
               </button>
             )}
@@ -162,12 +135,14 @@ const History = () => {
       </div>
 
       {/* ── MISSED EVENTS ─────────────────────────────────────── */}
-      {missedEvents.length > 0 && (
-        <>
-          <h3 className="section-title">Missed Events</h3>
-          <div className="history-section">
+      <h3 className="section-title">Missed Events</h3>
+      <div className="history-section">
+        {missedEvents.length === 0 ? (
+          <div className="empty-state">No missed events.</div>
+        ) : (
+          <>
             {(showAllMissed ? missedEvents : missedEvents.slice(0, VISIBLE_LIMIT)).map((event, idx) => (
-              <div key={`${event.event_name}-${idx}`} className="history-row missed-row">
+              <div key={`${event.event_id}-${idx}`} className="history-row missed-row">
                 <div className="row-body">
                   <h4 className="row-title">{event.event_name}</h4>
                   <span className="row-meta">
@@ -178,16 +153,13 @@ const History = () => {
               </div>
             ))}
             {missedEvents.length > VISIBLE_LIMIT && (
-              <button
-                className="show-toggle-btn"
-                onClick={() => setShowAllMissed((prev) => !prev)}
-              >
+              <button className="show-toggle-btn" onClick={() => setShowAllMissed((prev) => !prev)}>
                 {showAllMissed ? 'Show Less' : `Show More (${missedEvents.length - VISIBLE_LIMIT})`}
               </button>
             )}
-          </div>
-        </>
-      )}
+          </>
+        )}
+      </div>
 
       {/* ── PAYMENT RECEIPTS ─────────────────────────────────── */}
       <h3 className="section-title" ref={paymentsRef}>Payment Receipts</h3>
@@ -219,10 +191,7 @@ const History = () => {
               </div>
             ))}
             {payments.length > VISIBLE_LIMIT && (
-              <button
-                className="show-toggle-btn"
-                onClick={() => setShowAllPayments((prev) => !prev)}
-              >
+              <button className="show-toggle-btn" onClick={() => setShowAllPayments((prev) => !prev)}>
                 {showAllPayments ? 'Show Less' : `Show More (${payments.length - VISIBLE_LIMIT})`}
               </button>
             )}
@@ -248,10 +217,7 @@ const History = () => {
               </div>
             ))}
             {evaluations.length > VISIBLE_LIMIT && (
-              <button
-                className="show-toggle-btn"
-                onClick={() => setShowAllEvaluations((prev) => !prev)}
-              >
+              <button className="show-toggle-btn" onClick={() => setShowAllEvaluations((prev) => !prev)}>
                 {showAllEvaluations ? 'Show Less' : `Show More (${evaluations.length - VISIBLE_LIMIT})`}
               </button>
             )}
@@ -259,7 +225,7 @@ const History = () => {
         )}
       </div>
 
-      {/* ── PHOTO / RECEIPT PREVIEW MODAL ────────────────────── */}
+      {/* ── PHOTO PREVIEW MODAL ──────────────────────────────── */}
       {previewImage && (
         <div className="preview-overlay" onClick={() => setPreviewImage(null)}>
           <div className="preview-box" onClick={(e) => e.stopPropagation()}>

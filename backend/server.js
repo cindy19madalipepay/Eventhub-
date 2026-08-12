@@ -6,9 +6,6 @@ require('dotenv').config();
 
 const { testConnection } = require('./config/db');
 
-/* ============================================================
-   ROUTES
-============================================================ */
 const authRoutes = require('./routes/authRoutes');
 const eventRoutes = require('./routes/eventRoutes');
 const ticketRoutes = require('./routes/ticketRoutes');
@@ -18,16 +15,10 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const evaluationRoutes = require('./routes/evaluationRoutes');
 const userRoutes = require('./routes/userRoutes');
 
-/* ============================================================
-   APP
-============================================================ */
 const app = express();
 const PORT = Number(process.env.PORT || 5000);
 const HOST = '0.0.0.0';
 
-/* ============================================================
-   CORS
-============================================================ */
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
@@ -54,24 +45,13 @@ app.use(
   })
 );
 
-/* ============================================================
-   BODY PARSERS
-============================================================ */
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-/* ============================================================
-   STATIC FILES  —  ONLY ON LOCAL DEV
-   Vercel filesystem is read-only/ephemeral. Do NOT rely on
-   local disk for images. Use Cloudinary URLs in your DB.
-============================================================ */
 if (!process.env.VERCEL) {
   app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 }
 
-/* ============================================================
-   API ROUTES
-============================================================ */
 app.use('/api/auth', authRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/tickets', ticketRoutes);
@@ -81,9 +61,6 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/evaluations', evaluationRoutes);
 app.use('/api/users', userRoutes);
 
-/* ============================================================
-   HEALTH CHECK
-============================================================ */
 app.get('/api/health', (req, res) => {
   res.status(200).json({
     success: true,
@@ -92,9 +69,6 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-/* ============================================================
-   404
-============================================================ */
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -102,9 +76,6 @@ app.use((req, res) => {
   });
 });
 
-/* ============================================================
-   ERROR HANDLER
-============================================================ */
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err.stack || err);
   res.status(err.status || 500).json({
@@ -113,9 +84,6 @@ app.use((err, req, res, next) => {
   });
 });
 
-/* ============================================================
-   LOCAL SERVER
-============================================================ */
 if (!process.env.VERCEL) {
   const startServer = async () => {
     try {
