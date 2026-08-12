@@ -26,7 +26,6 @@ const getRulesSrc = (event) => {
     : `${UPLOADS_BASE}/uploads/${event.rules_file}`;
 };
 
-// Strip query strings / hashes so Cloudinary URLs still match correctly
 const isPdfFile = (path) => {
   if (!path) return false;
   const clean = path.split('?')[0].split('#')[0];
@@ -174,8 +173,9 @@ const MyEvents = () => {
     ticket: getTicketForEvent(event.event_id),
   }));
 
+  // ── FIX #3: Upcoming = only events that haven't started yet ──
   const filteredEvents = enrichedEvents.filter(({ status }) => {
-    if (filter === 'upcoming') return status !== 'completed';
+    if (filter === 'upcoming') return status === 'not_started';
     if (filter === 'completed') return status === 'completed';
     return true;
   });
@@ -374,7 +374,7 @@ const MyEvents = () => {
             const evalReady = status === 'pending_evaluation' && hasEventEnded(event);
             const bannerSrc = getBannerSrc(event);
             const rulesSrc = getRulesSrc(event);
-            const rulesIsPdf = isPdfFile(rulesSrc); // check resolved URL, not raw DB value
+            const rulesIsPdf = isPdfFile(rulesSrc);
             const programFlow = getProgramFlow(event);
             const isHighlighted = highlightedEventId != null && String(event.event_id) === String(highlightedEventId);
 
@@ -416,9 +416,10 @@ const MyEvents = () => {
                   </div>
                 </div>
 
+                {/* ── FIX #1: Payment label next to price ── */}
                 {event.requires_payment && event.payment_amount > 0 && (
                   <div className="payment-info">
-                    <span className="payment-amount">₱{event.payment_amount}</span>
+                    <span className="payment-amount">Payment: ₱{event.payment_amount}</span>
                   </div>
                 )}
 
@@ -445,7 +446,7 @@ const MyEvents = () => {
                   </div>
                 )}
 
-                {/* ── BANNER + RULES — bottom row (72×72, unchanged size) ── */}
+                {/* ── BANNER + RULES — bottom row (72×72) ── */}
                 {(bannerSrc || rulesSrc) && (
                   <div className="event-media-row">
                     {bannerSrc && (
@@ -637,20 +638,13 @@ const MyEvents = () => {
             ✕
           </button>
           {lightbox.type === 'pdf' ? (
+            // ── FIX #2: PDF stays strictly inside the app ──
             <div className="lightbox-pdf-wrap" onClick={(e) => e.stopPropagation()}>
               <embed
                 src={lightbox.src}
                 type="application/pdf"
                 className="lightbox-pdf"
               />
-              <a
-                href={lightbox.src}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="lightbox-pdf-link"
-              >
-                Open PDF in new tab ↗
-              </a>
             </div>
           ) : (
             <img
