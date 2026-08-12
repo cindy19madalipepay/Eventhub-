@@ -7,6 +7,14 @@ import './History.css';
 // to get the root the /uploads static folder is served from.
 const UPLOADS_BASE = api.defaults.baseURL.replace(/\/api\/?$/, '');
 
+// Cloudinary already returns a full URL (https://res.cloudinary.com/...).
+// Only prepend UPLOADS_BASE for legacy relative paths (e.g. "/uploads/xyz.jpg")
+// that were saved before the migration to Cloudinary.
+const resolveImageUrl = (url) => {
+  if (!url) return null;
+  return /^https?:\/\//i.test(url) ? url : `${UPLOADS_BASE}${url}`;
+};
+
 const History = () => {
   const [attendance, setAttendance] = useState([]);
   const [missedEvents, setMissedEvents] = useState([]);
@@ -134,7 +142,7 @@ const History = () => {
                 {record.photo_url && (
                   <button
                     className="view-btn"
-                    onClick={() => setPreviewImage(`${UPLOADS_BASE}${record.photo_url}`)}
+                    onClick={() => setPreviewImage(resolveImageUrl(record.photo_url))}
                   >
                     View Photo
                   </button>
@@ -203,7 +211,7 @@ const History = () => {
                 {payment.proof_url && (
                   <button
                     className="view-btn"
-                    onClick={() => setPreviewImage(`${UPLOADS_BASE}${payment.proof_url}`)}
+                    onClick={() => setPreviewImage(resolveImageUrl(payment.proof_url))}
                   >
                     View Receipt
                   </button>
