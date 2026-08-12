@@ -362,6 +362,8 @@ const CreateEvent = () => {
 
       // ========================================================
       // STEP 2 — UPLOAD BANNER
+      // Path and field name must match backend/routes/eventRoutes.js:
+      //   router.post('/:id/banner', authenticate, uploadBanner.single('banner'), uploadEventBanner)
       // ========================================================
 
       if (
@@ -372,18 +374,20 @@ const CreateEvent = () => {
           new FormData();
 
         bannerFormData.append(
-          'banner_image',
+          'banner',
           bannerFile
         );
 
         await api.post(
-          `/events/${eventId}/banner-image`,
+          `/events/${eventId}/banner`,
           bannerFormData
         );
       }
 
       // ========================================================
       // STEP 3 — UPLOAD RULES
+      // Path and field name must match backend/routes/eventRoutes.js:
+      //   router.post('/:id/rules', authenticate, uploadRules.single('rules'), uploadEventRules)
       // ========================================================
 
       if (rulesFile) {
@@ -391,12 +395,12 @@ const CreateEvent = () => {
           new FormData();
 
         rulesFormData.append(
-          'rules_file',
+          'rules',
           rulesFile
         );
 
         await api.post(
-          `/events/${eventId}/rules-file`,
+          `/events/${eventId}/rules`,
           rulesFormData
         );
       }
