@@ -23,6 +23,7 @@ const History = () => {
   const [showAllEvaluations, setShowAllEvaluations] = useState(false);
 
   const VISIBLE_LIMIT = 3;
+
   const attendanceRef = useRef(null);
   const paymentsRef = useRef(null);
   const evaluationsRef = useRef(null);
@@ -135,12 +136,10 @@ const History = () => {
       </div>
 
       {/* ── MISSED EVENTS ─────────────────────────────────────── */}
-      <h3 className="section-title">Missed Events</h3>
-      <div className="history-section">
-        {missedEvents.length === 0 ? (
-          <div className="empty-state">No missed events.</div>
-        ) : (
-          <>
+      {missedEvents.length > 0 && (
+        <>
+          <h3 className="section-title">Missed Events</h3>
+          <div className="history-section">
             {(showAllMissed ? missedEvents : missedEvents.slice(0, VISIBLE_LIMIT)).map((event, idx) => (
               <div key={`${event.event_id}-${idx}`} className="history-row missed-row">
                 <div className="row-body">
@@ -157,9 +156,9 @@ const History = () => {
                 {showAllMissed ? 'Show Less' : `Show More (${missedEvents.length - VISIBLE_LIMIT})`}
               </button>
             )}
-          </>
-        )}
-      </div>
+          </div>
+        </>
+      )}
 
       {/* ── PAYMENT RECEIPTS ─────────────────────────────────── */}
       <h3 className="section-title" ref={paymentsRef}>Payment Receipts</h3>

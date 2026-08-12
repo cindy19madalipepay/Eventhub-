@@ -1,240 +1,373 @@
-import { useState, useEffect, useRef } from 'react';
-import api from '../../utils/api';
-import toast from 'react-hot-toast';
-import './History.css';
+const { pool } = require('../config/db');
+const multer = require('multer');
 
-const UPLOADS_BASE = api.defaults.baseURL.replace(/\/api\/?$/, '');
+const upload = multer({ storage: multer.memoryStorage() });
 
-const resolveImageUrl = (url) => {
-  if (!url) return null;
-  return /^https?:\/\//i.test(url) ? url : `${UPLOADS_BASE}${url}`;
-};
-
-const History = () => {
-  const [attendance, setAttendance] = useState([]);
-  const [missedEvents, setMissedEvents] = useState([]);
-  const [payments, setPayments] = useState([]);
-  const [evaluations, setEvaluations] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [previewImage, setPreviewImage] = useState(null);
-  const [showAllAttendance, setShowAllAttendance] = useState(false);
-  const [showAllMissed, setShowAllMissed] = useState(false);
-  const [showAllPayments, setShowAllPayments] = useState(false);
-  const [showAllEvaluations, setShowAllEvaluations] = useState(false);
-
-  const VISIBLE_LIMIT = 3;
-
-  const attendanceRef = useRef(null);
-  const paymentsRef = useRef(null);
-  const evaluationsRef = useRef(null);
-
-  const scrollToSection = (ref) => {
-    ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-
-  useEffect(() => {
-    fetchHistory();
-  }, []);
-
-  const fetchHistory = async () => {
-    try {
-      const [attRes, payRes, evalRes] = await Promise.all([
-        api.get('/attendance/my'),
-        api.get('/payments/my'),
-        api.get('/evaluations/my'),
-      ]);
-
-      setAttendance(attRes.data.attended || []);
-      setMissedEvents(attRes.data.missed || []);
-      setPayments(payRes.data.payments || []);
-      setEvaluations(evalRes.data.evaluations || []);
-    } catch (e) {
-      toast.error('Failed to load history');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const formatDate = (dateStr) => {
-    if (!dateStr) return 'N/A';
-    return new Date(dateStr).toLocaleString('en-US', {
-      month: 'numeric',
-      day: 'numeric',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    });
-  };
-
-  const renderStars = (rating) => {
-    if (!rating) return null;
-    return (
-      <div className="star-rating">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <span key={star} className={`star ${star <= rating ? 'filled' : ''}`}>★</span>
-        ))}
-      </div>
+const uploadToCloudinary = (buffer, mimetype, folder) => {
+  return new Promise((resolve, reject) => {
+    const cloudinary = require('../config/cloudinary');
+    const stream = cloudinary.uploader.upload_stream(
+      { folder, resource_type: 'image' },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      }
     );
-  };
-
-  const paymentsValidatedCount = payments.filter((p) => p.payment_status === 'validated').length;
-
-  if (loading) return <div className="history-loading">Loading history...</div>;
-
-  return (
-    <div className="history-page">
-      <div className="history-header">
-        <h2 className="history-title">My Activity History</h2>
-      </div>
-
-      <div className="stats-row">
-        <div className="stat-card clickable" onClick={() => scrollToSection(attendanceRef)} role="button" tabIndex={0}>
-          <div className="stat-number">{attendance.length}</div>
-          <div className="stat-label">Events Attended</div>
-        </div>
-        <div className="stat-card clickable" onClick={() => scrollToSection(evaluationsRef)} role="button" tabIndex={0}>
-          <div className="stat-number">{evaluations.length}</div>
-          <div className="stat-label">Evaluations Given</div>
-        </div>
-        <div className="stat-card clickable" onClick={() => scrollToSection(paymentsRef)} role="button" tabIndex={0}>
-          <div className="stat-number">{paymentsValidatedCount}</div>
-          <div className="stat-label">Payments Validated</div>
-        </div>
-      </div>
-
-      {/* ── ATTENDANCE HISTORY ───────────────────────────────── */}
-      <h3 className="section-title" ref={attendanceRef}>Attendance History</h3>
-      <div className="history-section">
-        {attendance.length === 0 ? (
-          <div className="empty-state">No attendance records yet.</div>
-        ) : (
-          <>
-            {(showAllAttendance ? attendance : attendance.slice(0, VISIBLE_LIMIT)).map((record) => (
-              <div key={record.attendance_id} className="history-row">
-                <div className="row-body">
-                  <h4 className="row-title">{record.event_name}</h4>
-                  <span className="row-meta">{formatDate(record.checked_in_at)}</span>
-                </div>
-                {record.photo_url && (
-                  <button
-                    className="view-btn"
-                    onClick={() => setPreviewImage(resolveImageUrl(record.photo_url))}
-                  >
-                    View Photo
-                  </button>
-                )}
-              </div>
-            ))}
-            {attendance.length > VISIBLE_LIMIT && (
-              <button className="show-toggle-btn" onClick={() => setShowAllAttendance((prev) => !prev)}>
-                {showAllAttendance ? 'Show Less' : `Show More (${attendance.length - VISIBLE_LIMIT})`}
-              </button>
-            )}
-          </>
-        )}
-      </div>
-
-      {/* ── MISSED EVENTS ─────────────────────────────────────── */}
-      {missedEvents.length > 0 && (
-        <>
-          <h3 className="section-title">Missed Events</h3>
-          <div className="history-section">
-            {(showAllMissed ? missedEvents : missedEvents.slice(0, VISIBLE_LIMIT)).map((event, idx) => (
-              <div key={`${event.event_id}-${idx}`} className="history-row missed-row">
-                <div className="row-body">
-                  <h4 className="row-title">{event.event_name}</h4>
-                  <span className="row-meta">
-                    {formatDate(event.date_start)}{event.venue ? ` · ${event.venue}` : ''}
-                  </span>
-                </div>
-                <span className="missed-badge">MISSED</span>
-              </div>
-            ))}
-            {missedEvents.length > VISIBLE_LIMIT && (
-              <button className="show-toggle-btn" onClick={() => setShowAllMissed((prev) => !prev)}>
-                {showAllMissed ? 'Show Less' : `Show More (${missedEvents.length - VISIBLE_LIMIT})`}
-              </button>
-            )}
-          </div>
-        </>
-      )}
-
-      {/* ── PAYMENT RECEIPTS ─────────────────────────────────── */}
-      <h3 className="section-title" ref={paymentsRef}>Payment Receipts</h3>
-      <div className="history-section">
-        {payments.length === 0 ? (
-          <div className="empty-state">No receipt uploads yet</div>
-        ) : (
-          <>
-            {(showAllPayments ? payments : payments.slice(0, VISIBLE_LIMIT)).map((payment) => (
-              <div key={payment.ticket_id} className="history-row">
-                <div className="row-body">
-                  <h4 className="row-title">{payment.event_name}</h4>
-                  <span className="row-meta">{formatDate(payment.submitted_at)}</span>
-                  <div className="payment-details">
-                    <span className="payment-amount">₱{payment.payment_amount}</span>
-                    <span className={`payment-status-badge ${payment.payment_status}`}>
-                      {payment.payment_status?.toUpperCase() || 'PENDING'}
-                    </span>
-                  </div>
-                </div>
-                {payment.proof_url && (
-                  <button
-                    className="view-btn"
-                    onClick={() => setPreviewImage(resolveImageUrl(payment.proof_url))}
-                  >
-                    View Receipt
-                  </button>
-                )}
-              </div>
-            ))}
-            {payments.length > VISIBLE_LIMIT && (
-              <button className="show-toggle-btn" onClick={() => setShowAllPayments((prev) => !prev)}>
-                {showAllPayments ? 'Show Less' : `Show More (${payments.length - VISIBLE_LIMIT})`}
-              </button>
-            )}
-          </>
-        )}
-      </div>
-
-      {/* ── EVALUATIONS ──────────────────────────────────────── */}
-      <h3 className="section-title" ref={evaluationsRef}>Evaluations Given</h3>
-      <div className="history-section">
-        {evaluations.length === 0 ? (
-          <div className="empty-state">No evaluations given yet.</div>
-        ) : (
-          <>
-            {(showAllEvaluations ? evaluations : evaluations.slice(0, VISIBLE_LIMIT)).map((evaluation) => (
-              <div key={evaluation.evaluation_id} className="history-row evaluation-row">
-                <div className="row-body">
-                  <h4 className="row-title">{evaluation.event_name}</h4>
-                  <span className="row-meta">{formatDate(evaluation.submitted_at)}</span>
-                  {renderStars(evaluation.rating)}
-                  {evaluation.feedback && <p className="feedback-text">"{evaluation.feedback}"</p>}
-                </div>
-              </div>
-            ))}
-            {evaluations.length > VISIBLE_LIMIT && (
-              <button className="show-toggle-btn" onClick={() => setShowAllEvaluations((prev) => !prev)}>
-                {showAllEvaluations ? 'Show Less' : `Show More (${evaluations.length - VISIBLE_LIMIT})`}
-              </button>
-            )}
-          </>
-        )}
-      </div>
-
-      {/* ── PHOTO PREVIEW MODAL ──────────────────────────────── */}
-      {previewImage && (
-        <div className="preview-overlay" onClick={() => setPreviewImage(null)}>
-          <div className="preview-box" onClick={(e) => e.stopPropagation()}>
-            <button className="preview-close" onClick={() => setPreviewImage(null)}>✕</button>
-            <img src={previewImage} alt="Preview" />
-          </div>
-        </div>
-      )}
-    </div>
-  );
+    stream.end(buffer);
+  });
 };
 
-export default History;
+const getMyAttendance = async (req, res) => {
+  try {
+    const user_id = req.user?.user_id;
+    if (!user_id) return res.status(401).json({ success: false, message: 'Unauthorized.' });
+
+    const [attended] = await pool.query(
+      `SELECT 
+         a.attendance_id,
+         a.ticket_id,
+         a.event_id,
+         a.checkin_photo AS photo_url,
+         a.checked_in_at,
+         a.checkout_at,
+         e.event_name,
+         e.date_start,
+         e.time_start,
+         e.venue
+       FROM attendance a
+       JOIN events e ON a.event_id = e.event_id
+       WHERE a.user_id = ?
+       ORDER BY a.checked_in_at DESC`,
+      [user_id]
+    );
+
+    const [missed] = await pool.query(
+      `SELECT 
+         e.event_id,
+         e.event_name,
+         e.date_start,
+         e.time_start,
+         e.venue
+       FROM tickets t
+       JOIN events e ON t.event_id = e.event_id
+       LEFT JOIN attendance a ON t.ticket_id = a.ticket_id
+       WHERE t.user_id = ?
+         AND a.attendance_id IS NULL
+         AND CONCAT(COALESCE(e.date_end, e.date_start), ' ', COALESCE(e.time_end, e.time_start, '23:59:00')) < NOW()
+       ORDER BY e.date_start DESC`,
+      [user_id]
+    );
+
+    return res.status(200).json({ success: true, attended, missed });
+  } catch (error) {
+    console.error('GetMyAttendance error:', error);
+    return res.status(500).json({ success: false, message: 'Server error.' });
+  }
+};
+
+const registerAttendance = async (req, res) => {
+  try {
+    const { ticket_id } = req.body;
+    const user_id = req.user?.user_id;
+
+    if (!user_id) return res.status(401).json({ success: false, message: 'Unauthorized.' });
+    if (!ticket_id) return res.status(400).json({ success: false, message: 'Ticket ID is required.' });
+    if (!req.file) return res.status(400).json({ success: false, message: 'Attendance photo is required.' });
+
+    const [tickets] = await pool.query(
+      'SELECT * FROM tickets WHERE ticket_id = ? AND (user_id = ? OR ? IS NULL)',
+      [ticket_id, user_id, user_id]
+    );
+    if (tickets.length === 0) {
+      return res.status(404).json({ success: false, message: 'Ticket not found.' });
+    }
+
+    const ticket = tickets[0];
+
+    const [existing] = await pool.query(
+      'SELECT attendance_id FROM attendance WHERE ticket_id = ? AND checkout_at IS NULL',
+      [ticket_id]
+    );
+    if (existing.length > 0) {
+      return res.status(409).json({ success: false, message: 'You are already checked in.' });
+    }
+
+    const result = await uploadToCloudinary(req.file.buffer, req.file.mimetype, 'eventhub/attendance');
+
+    const [insertResult] = await pool.query(
+      `INSERT INTO attendance (ticket_id, event_id, user_id, checkin_photo, checked_in_at)
+       VALUES (?, ?, ?, ?, NOW())`,
+      [ticket_id, ticket.event_id, user_id, result.secure_url]
+    );
+
+    await pool.query("UPDATE tickets SET status = 'used' WHERE ticket_id = ?", [ticket_id]);
+
+    return res.status(201).json({
+      success: true,
+      message: 'Attendance recorded successfully.',
+      attendance_id: insertResult.insertId,
+      photo_url: result.secure_url,
+    });
+  } catch (error) {
+    console.error('RegisterAttendance error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Unable to record attendance.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+    });
+  }
+};
+
+const registerCheckout = async (req, res) => {
+  try {
+    const { event_id } = req.body;
+    const user_id = req.user?.user_id;
+
+    if (!user_id) return res.status(401).json({ success: false, message: 'Unauthorized.' });
+    if (!event_id) return res.status(400).json({ success: false, message: 'Event ID is required.' });
+    if (!req.file) return res.status(400).json({ success: false, message: 'Checkout photo is required.' });
+
+    const [records] = await pool.query(
+      `SELECT attendance_id FROM attendance
+       WHERE event_id = ? AND user_id = ? AND checkout_at IS NULL
+       ORDER BY checked_in_at DESC LIMIT 1`,
+      [event_id, user_id]
+    );
+    if (records.length === 0) {
+      return res.status(404).json({ success: false, message: 'No active check-in found for this event.' });
+    }
+
+    const result = await uploadToCloudinary(req.file.buffer, req.file.mimetype, 'eventhub/checkout');
+
+    await pool.query(
+      `UPDATE attendance SET checkout_photo = ?, checkout_at = NOW() WHERE attendance_id = ?`,
+      [result.secure_url, records[0].attendance_id]
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: 'Checked out successfully.',
+      photo_url: result.secure_url,
+    });
+  } catch (error) {
+    console.error('Checkout error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Unable to check out.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+    });
+  }
+};
+
+const scanAttendance = async (req, res) => {
+  try {
+    const { ticket_code } = req.body;
+    const admin_id = req.user?.user_id;
+
+    if (!ticket_code) return res.status(400).json({ success: false, message: 'Ticket code is required.' });
+
+    const [tickets] = await pool.query(
+      `SELECT t.*, e.event_name, e.date_start, e.time_start
+       FROM tickets t
+       JOIN events e ON t.event_id = e.event_id
+       WHERE t.ticket_code = ?`,
+      [ticket_code]
+    );
+    if (tickets.length === 0) {
+      return res.status(404).json({ success: false, message: 'Invalid ticket code.' });
+    }
+
+    const ticket = tickets[0];
+    if (ticket.status === 'blocked') {
+      return res.status(403).json({ success: false, message: 'This ticket has been blocked.' });
+    }
+
+    const [existing] = await pool.query(
+      'SELECT attendance_id FROM attendance WHERE ticket_id = ? AND checkout_at IS NULL',
+      [ticket.ticket_id]
+    );
+    if (existing.length > 0) {
+      return res.status(409).json({ success: false, message: 'Already checked in.' });
+    }
+
+    await pool.query(
+      `INSERT INTO attendance (ticket_id, event_id, user_id, scanned_by, checked_in_at)
+       VALUES (?, ?, ?, ?, NOW())`,
+      [ticket.ticket_id, ticket.event_id, ticket.user_id, admin_id]
+    );
+    await pool.query("UPDATE tickets SET status = 'used' WHERE ticket_id = ?", [ticket.ticket_id]);
+
+    return res.status(200).json({ success: true, message: 'Attendance verified successfully.', ticket });
+  } catch (error) {
+    console.error('ScanAttendance error:', error);
+    return res.status(500).json({ success: false, message: 'Server error.' });
+  }
+};
+
+const getAttendanceByEvent = async (req, res) => {
+  try {
+    const { id } = req.params;
+    let query = `
+      SELECT a.*, u.first_name, u.last_name, u.year_level, u.block, d.department_name
+      FROM attendance a
+      LEFT JOIN users u ON a.user_id = u.user_id
+      LEFT JOIN departments d ON u.department_id = d.department_id
+      WHERE a.event_id = ?
+    `;
+    const params = [id];
+    if (req.user?.role === 'department_head') {
+      query += ' AND u.department_id = ?';
+      params.push(req.user.department_id);
+    }
+    query += ' ORDER BY a.checked_in_at DESC';
+    const [rows] = await pool.query(query, params);
+    return res.status(200).json({ success: true, count: rows.length, attendance: rows });
+  } catch (error) {
+    console.error('GetAttendanceByEvent error:', error);
+    return res.status(500).json({ success: false, message: 'Server error.' });
+  }
+};
+
+const getAttendanceReport = async (req, res) => {
+  try {
+    const { event_id, department_id } = req.query;
+    let query = `
+      SELECT a.*, e.event_name, u.first_name, u.last_name, u.year_level, u.block, d.department_name
+      FROM attendance a
+      JOIN events e ON a.event_id = e.event_id
+      LEFT JOIN users u ON a.user_id = u.user_id
+      LEFT JOIN departments d ON u.department_id = d.department_id
+      WHERE 1=1
+    `;
+    const params = [];
+    if (event_id) { query += ' AND a.event_id = ?'; params.push(event_id); }
+    if (department_id) { query += ' AND u.department_id = ?'; params.push(department_id); }
+    if (req.user?.role === 'department_head') {
+      query += ' AND u.department_id = ?';
+      params.push(req.user.department_id);
+    }
+    query += ' ORDER BY a.checked_in_at DESC';
+    const [rows] = await pool.query(query, params);
+    return res.status(200).json({ success: true, report: rows });
+  } catch (error) {
+    console.error('GetAttendanceReport error:', error);
+    return res.status(500).json({ success: false, message: 'Server error.' });
+  }
+};
+
+const getDepartmentsOverview = async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT d.department_id, d.department_name,
+             COUNT(DISTINCT u.user_id) AS total_students,
+             COUNT(DISTINCT a.user_id) AS attended_count
+      FROM departments d
+      LEFT JOIN users u ON d.department_id = u.department_id AND u.role = 'student'
+      LEFT JOIN attendance a ON u.user_id = a.user_id
+      GROUP BY d.department_id
+    `);
+    return res.status(200).json({ success: true, overview: rows });
+  } catch (error) {
+    console.error('GetDepartmentsOverview error:', error);
+    return res.status(500).json({ success: false, message: 'Server error.' });
+  }
+};
+
+const getDepartmentSummary = async (req, res) => {
+  try {
+    const { deptId } = req.params;
+    const [rows] = await pool.query(`
+      SELECT e.event_id, e.event_name, COUNT(a.attendance_id) AS attendance_count
+      FROM events e
+      LEFT JOIN attendance a ON e.event_id = a.event_id
+      LEFT JOIN users u ON a.user_id = u.user_id AND u.department_id = ?
+      WHERE e.event_id IN (SELECT event_id FROM event_departments WHERE department_id = ?)
+      GROUP BY e.event_id
+    `, [deptId, deptId]);
+    return res.status(200).json({ success: true, summary: rows });
+  } catch (error) {
+    console.error('GetDepartmentSummary error:', error);
+    return res.status(500).json({ success: false, message: 'Server error.' });
+  }
+};
+
+const getYearBlockStats = async (req, res) => {
+  try {
+    const { deptId } = req.params;
+    const [rows] = await pool.query(`
+      SELECT u.year_level, u.block,
+             COUNT(DISTINCT u.user_id) AS total,
+             COUNT(DISTINCT a.user_id) AS attended
+      FROM users u
+      LEFT JOIN attendance a ON u.user_id = a.user_id
+      WHERE u.department_id = ? AND u.role = 'student'
+      GROUP BY u.year_level, u.block
+      ORDER BY u.year_level, u.block
+    `, [deptId]);
+    return res.status(200).json({ success: true, stats: rows });
+  } catch (error) {
+    console.error('GetYearBlockStats error:', error);
+    return res.status(500).json({ success: false, message: 'Server error.' });
+  }
+};
+
+const getOrgBreakdown = async (req, res) => {
+  try {
+    const { deptId } = req.params;
+    const [rows] = await pool.query(`
+      SELECT u.organization,
+             COUNT(DISTINCT u.user_id) AS total,
+             COUNT(DISTINCT a.user_id) AS attended
+      FROM users u
+      LEFT JOIN attendance a ON u.user_id = a.user_id
+      WHERE u.department_id = ? AND u.role = 'student'
+      GROUP BY u.organization
+    `, [deptId]);
+    return res.status(200).json({ success: true, breakdown: rows });
+  } catch (error) {
+    console.error('GetOrgBreakdown error:', error);
+    return res.status(500).json({ success: false, message: 'Server error.' });
+  }
+};
+
+const getBlockReport = async (req, res) => {
+  try {
+    const { event_id, year_level, block } = req.query;
+    let query = `
+      SELECT a.*, u.first_name, u.last_name, u.year_level, u.block, d.department_name
+      FROM attendance a
+      JOIN users u ON a.user_id = u.user_id
+      LEFT JOIN departments d ON u.department_id = d.department_id
+      WHERE u.role = 'student'
+    `;
+    const params = [];
+    if (event_id) { query += ' AND a.event_id = ?'; params.push(event_id); }
+    if (year_level) { query += ' AND u.year_level = ?'; params.push(year_level); }
+    if (block) { query += ' AND u.block = ?'; params.push(block); }
+    if (req.user?.role === 'department_head') {
+      query += ' AND u.department_id = ?';
+      params.push(req.user.department_id);
+    }
+    query += ' ORDER BY a.checked_in_at DESC';
+    const [rows] = await pool.query(query, params);
+    return res.status(200).json({ success: true, report: rows });
+  } catch (error) {
+    console.error('GetBlockReport error:', error);
+    return res.status(500).json({ success: false, message: 'Server error.' });
+  }
+};
+
+module.exports = {
+  upload,
+  getMyAttendance,
+  registerAttendance,
+  registerCheckout,
+  scanAttendance,
+  getAttendanceByEvent,
+  getAttendanceReport,
+  getDepartmentsOverview,
+  getDepartmentSummary,
+  getYearBlockStats,
+  getOrgBreakdown,
+  getBlockReport,
+};
