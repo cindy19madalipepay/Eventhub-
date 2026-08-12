@@ -9,7 +9,6 @@ const { testConnection } = require('./config/db');
 /* ============================================================
    ROUTES
 ============================================================ */
-
 const authRoutes = require('./routes/authRoutes');
 const eventRoutes = require('./routes/eventRoutes');
 const ticketRoutes = require('./routes/ticketRoutes');
@@ -22,67 +21,35 @@ const userRoutes = require('./routes/userRoutes');
 /* ============================================================
    APP
 ============================================================ */
-
 const app = express();
-
 const PORT = Number(process.env.PORT || 5000);
 const HOST = '0.0.0.0';
 
 /* ============================================================
    CORS
 ============================================================ */
-
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
 ];
 
 if (process.env.FRONTEND_URL) {
-  allowedOrigins.push(
-    process.env.FRONTEND_URL.replace(/\/$/, '')
-  );
+  allowedOrigins.push(process.env.FRONTEND_URL.replace(/\/$/, ''));
 }
 
-/*
- * Allow EventHub Vercel deployments.
- *
- * Examples:
- * https://eventhub-8x27.vercel.app
- * https://eventhub-5aznwgy3c-can-i.vercel.app
- * https://eventhub-git-main-can-i.vercel.app
- */
-const vercelPattern =
-  /^https:\/\/eventhub[a-zA-Z0-9-]*\.vercel\.app$/;
+const vercelPattern = /^https:\/\/eventhub[a-zA-Z0-9-]*\.vercel\.app$/;
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Requests without Origin
-      if (!origin) {
-        return callback(null, true);
-      }
-
+      if (!origin) return callback(null, true);
       const cleanOrigin = origin.replace(/\/$/, '');
-
-      const isAllowed =
-        allowedOrigins.includes(cleanOrigin);
-
-      const isVercel =
-        vercelPattern.test(cleanOrigin);
-
-      if (isAllowed || isVercel) {
-        return callback(null, true);
-      }
-
-      console.warn(
-        `❌ CORS blocked origin: ${origin}`
-      );
-
-      return callback(
-        new Error('Not allowed by CORS')
-      );
+      const isAllowed = allowedOrigins.includes(cleanOrigin);
+      const isVercel = vercelPattern.test(cleanOrigin);
+      if (isAllowed || isVercel) return callback(null, true);
+      console.warn(`❌ CORS blocked origin: ${origin}`);
+      return callback(new Error('Not allowed by CORS'));
     },
-
     credentials: true,
   })
 );
@@ -90,56 +57,33 @@ app.use(
 /* ============================================================
    BODY PARSERS
 ============================================================ */
-
 app.use(express.json());
-
-app.use(
-  express.urlencoded({
-    extended: true,
-  })
-);
+app.use(express.urlencoded({ extended: true }));
 
 /* ============================================================
-   LOCAL UPLOADS
+   STATIC FILES  —  ONLY ON LOCAL DEV
+   Vercel filesystem is read-only/ephemeral. Do NOT rely on
+   local disk for images. Use Cloudinary URLs in your DB.
 ============================================================ */
-
-app.use(
-  '/uploads',
-  express.static(
-    path.join(__dirname, 'uploads')
-  )
-);
+if (!process.env.VERCEL) {
+  app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+}
 
 /* ============================================================
    API ROUTES
 ============================================================ */
-
 app.use('/api/auth', authRoutes);
-
 app.use('/api/events', eventRoutes);
-
 app.use('/api/tickets', ticketRoutes);
-
 app.use('/api/attendance', attendanceRoutes);
-
 app.use('/api/payments', paymentRoutes);
-
-app.use(
-  '/api/notifications',
-  notificationRoutes
-);
-
-app.use(
-  '/api/evaluations',
-  evaluationRoutes
-);
-
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/evaluations', evaluationRoutes);
 app.use('/api/users', userRoutes);
 
 /* ============================================================
    HEALTH CHECK
 ============================================================ */
-
 app.get('/api/health', (req, res) => {
   res.status(200).json({
     success: true,
@@ -151,94 +95,49 @@ app.get('/api/health', (req, res) => {
 /* ============================================================
    404
 ============================================================ */
-
 app.use((req, res) => {
   res.status(404).json({
     success: false,
-    message:
-      `Route ${req.originalUrl} not found.`,
+    message: `Route ${req.method} ${req.originalUrl} not found.`,
   });
 });
 
 /* ============================================================
    ERROR HANDLER
 ============================================================ */
-
 app.use((err, req, res, next) => {
-  console.error(
-    'Unhandled error:',
-    err.stack || err
-  );
-
-  res.status(500).json({
+  console.error('Unhandled error:', err.stack || err);
+  res.status(err.status || 500).json({
     success: false,
-    message:
-      err.message ||
-      'Something went wrong on the server.',
+    message: err.message || 'Something went wrong on the server.',
   });
 });
 
 /* ============================================================
    LOCAL SERVER
 ============================================================ */
-
 if (!process.env.VERCEL) {
   const startServer = async () => {
     try {
       await testConnection();
-
-      const server = app.listen(
-        PORT,
-        HOST,
-        () => {
-          console.log(
-            `🚀 EventHub server running on http://localhost:${PORT}`
-          );
-
-          console.log(
-            `📡 API base: http://localhost:${PORT}/api`
-          );
-
-          console.log(
-            `🌍 Environment: ${
-              process.env.NODE_ENV ||
-              'development'
-            }`
-          );
-        }
-      );
-
+      const server = app.listen(PORT, HOST, () => {
+        console.log(`🚀 Server running on http://localhost:${PORT}`);
+        console.log(`📡 API base: http://localhost:${PORT}/api`);
+      });
       server.on('error', (err) => {
         if (err.code === 'EADDRINUSE') {
-          console.error(
-            `❌ Port ${PORT} is already in use.`
-          );
-
+          console.error(`❌ Port ${PORT} is already in use.`);
           process.exit(1);
         }
-
-        console.error(
-          'Server startup error:',
-          err
-        );
-
+        console.error('Server startup error:', err);
         process.exit(1);
       });
     } catch (error) {
-      console.error(
-        '❌ Database connection failed:',
-        error
-      );
-
+      console.error('❌ Database connection failed:', error);
       process.exit(1);
     }
   };
-
   startServer();
 }
-
-/* ============================================================
-   EXPORT
-============================================================ */
 
 module.exports = app;

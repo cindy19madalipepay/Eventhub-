@@ -42,6 +42,12 @@ const getProgramFlow = (event) => {
   }
 };
 
+const getEventDateTime = (event) => {
+  if (!event?.date_start) return new Date(0);
+  const datePart = String(event.date_start).split('T')[0];
+  return new Date(`${datePart}T${event.time_start || '00:00'}`);
+};
+
 const REGISTRATION_GRACE_MINUTES = 30;
 
 const STATUS_CONFIG = {
@@ -105,8 +111,14 @@ const Notifications = () => {
         api.get('/attendance/my'),
         api.get('/evaluations/my'),
       ]);
+
+      // NEWEST FIRST: sort events by date+time descending
+      const sortedEvents = (eventsRes.data.events || []).sort((a, b) => {
+        return getEventDateTime(b) - getEventDateTime(a);
+      });
+
       setNotifications(notifRes.data.notifications || []);
-      setEvents(eventsRes.data.events || []);
+      setEvents(sortedEvents);
       setTickets(ticketsRes.data.tickets || []);
       setAttendanceRecords(attendanceRes.data.attended || []);
       setEvaluations(evalRes.data.evaluations || []);
@@ -157,15 +169,10 @@ const Notifications = () => {
   const isEvaluated = (event) =>
     evaluations.some((e) => e.event_name === event.event_name && e.date_start === event.date_start);
 
-  const getEventStart = (event) => {
-    const datePart = String(event.date_start).split('T')[0];
-    return new Date(`${datePart}T${event.time_start || '00:00'}`);
-  };
-
-  const hasEventStarted = (event) => new Date() >= getEventStart(event);
+  const hasEventStarted = (event) => new Date() >= getEventDateTime(event);
 
   const isPastRegistrationWindow = (event) => {
-    const deadline = new Date(getEventStart(event).getTime() + REGISTRATION_GRACE_MINUTES * 60000);
+    const deadline = new Date(getEventDateTime(event).getTime() + REGISTRATION_GRACE_MINUTES * 60000);
     return new Date() > deadline;
   };
 
