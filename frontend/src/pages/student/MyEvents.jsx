@@ -436,23 +436,6 @@ const MyEvents = () => {
                   boxShadow: '0 0 0 6px rgba(37,99,235,0.15)',
                 } : undefined}
               >
-                {bannerSrc && (
-                  <div
-                    className="event-banner"
-                    onClick={() => setLightbox({ type: 'image', src: bannerSrc })}
-                    role="button"
-                    tabIndex={0}
-                    title="Click to view full size"
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <img
-                      src={bannerSrc}
-                      alt=""
-                      onError={(e) => { e.target.closest('.event-banner').style.display = 'none'; }}
-                    />
-                  </div>
-                )}
-
                 <div className="event-card-header">
                   <span className="event-sender">SSC (ADMIN)</span>
                   <span className={`status-badge badge-${cfg.theme}`}>{cfg.icon} {cfg.label}</span>
@@ -486,35 +469,6 @@ const MyEvents = () => {
                   </div>
                 )}
 
-                {rulesSrc && (
-                  <div className="notif-media-stack">
-                    <div className="notif-media-row">
-                      <span className="notif-info-label">PROGRAM RULES</span>
-                      {rulesIsPdf ? (
-                        <div
-                          className="notif-thumb notif-thumb-pdf"
-                          onClick={() => setLightbox({ type: 'pdf', src: rulesSrc })}
-                          role="button"
-                          tabIndex={0}
-                          title="Click to view"
-                        >
-                          <span className="notif-thumb-pdf-icon">📄</span>
-                        </div>
-                      ) : (
-                        <div
-                          className="notif-thumb"
-                          onClick={() => setLightbox({ type: 'image', src: rulesSrc })}
-                          role="button"
-                          tabIndex={0}
-                          title="Click to view full size"
-                        >
-                          <img src={rulesSrc} alt="Program rules" />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
                 {programFlow.length > 0 && (
                   <div className="program-flow">
                     <span className="notif-info-label">EVENT FLOW</span>
@@ -535,6 +489,60 @@ const MyEvents = () => {
                         </div>
                       ))}
                     </div>
+                  </div>
+                )}
+
+                {/* ── BANNER + RULES — bottom row (72×72, unchanged size) ── */}
+                {(bannerSrc || rulesSrc) && (
+                  <div className="event-media-row">
+                    {bannerSrc && (
+                      <div className="event-banner-group">
+                        <span className="event-banner-label">PROGRAM BANNER</span>
+                        <div
+                          className="event-banner"
+                          onClick={() => setLightbox({ type: 'image', src: bannerSrc })}
+                          role="button"
+                          tabIndex={0}
+                          title="Click to view full size"
+                          style={{ cursor: 'pointer' }}
+                        >
+                          <img
+                            src={bannerSrc}
+                            alt=""
+                            onError={(e) => { e.target.closest('.event-banner').style.display = 'none'; }}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {rulesSrc && (
+                      <div className="notif-media-stack">
+                        <div className="notif-media-row">
+                          <span className="notif-info-label">PROGRAM RULES</span>
+                          {rulesIsPdf ? (
+                            <div
+                              className="notif-thumb notif-thumb-pdf"
+                              onClick={() => setLightbox({ type: 'pdf', src: rulesSrc })}
+                              role="button"
+                              tabIndex={0}
+                              title="Click to view"
+                            >
+                              <span className="notif-thumb-pdf-icon">📄</span>
+                            </div>
+                          ) : (
+                            <div
+                              className="notif-thumb"
+                              onClick={() => setLightbox({ type: 'image', src: rulesSrc })}
+                              role="button"
+                              tabIndex={0}
+                              title="Click to view full size"
+                            >
+                              <img src={rulesSrc} alt="Program rules" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
