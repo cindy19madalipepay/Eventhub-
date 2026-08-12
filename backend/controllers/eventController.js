@@ -188,6 +188,51 @@ const createEvent = async (req, res) => {
         );
       }
 
+      // ------------------------------------------------------
+      // Create notifications
+      // The frontend Notifications page reads from a `notifications`
+      // table joined against `events` (n.event_id), but nothing was ever
+      // inserting into it — so new events never appeared there. This
+      // finds every eligible student in the selected departments and
+      // creates one notification row per student pointing at this event.
+      //
+      // NOTE: column names below (notification_id, user_id, event_id,
+      // title, message, is_read, created_at) are inferred from what
+      // Notifications.jsx actually reads. Confirm these match your real
+      // `notifications` table schema and adjust if any differ.
+      // ------------------------------------------------------
+      const [eligibleUsers] = await connection.query(
+        `
+        SELECT user_id
+        FROM users
+        WHERE department_id IN (?)
+          AND role IN ('student', 'student_leader', 'alumni', 'stakeholder')
+        `,
+        [departmentIds]
+      );
+
+      if (eligibleUsers.length > 0) {
+        const notificationTitle = `New Event: ${event_name.trim()}`;
+        const notificationMessage = `A new event "${event_name.trim()}" has been posted. Check the details and register.`;
+
+        const notificationValues = eligibleUsers.map((u) => [
+          u.user_id,
+          eventId,
+          notificationTitle,
+          notificationMessage,
+          0, // is_read
+        ]);
+
+        await connection.query(
+          `
+          INSERT INTO notifications
+            (user_id, event_id, title, message, is_read)
+          VALUES ?
+          `,
+          [notificationValues]
+        );
+      }
+
       await connection.commit();
 
       return res.status(201).json({
