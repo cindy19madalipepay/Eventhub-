@@ -12,16 +12,31 @@ const createTicket = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Event ID is required.' });
     }
 
-    // Check event exists and is published
-    const [events] = await pool.query(
-      "SELECT * FROM events WHERE event_id = ? AND status IN ('published', 'ongoing')",
+    // Check the event exists first — separately from the status check —
+    // so a genuinely missing event_id and a status mismatch return two
+    // different, more useful error messages instead of the same generic
+    // "not found" for both cases.
+    const [eventRows] = await pool.query(
+      'SELECT * FROM events WHERE event_id = ?',
       [event_id]
     );
-    if (events.length === 0) {
-      return res.status(404).json({ success: false, message: 'Event not found or not available.' });
+
+    if (eventRows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Event not found.' });
     }
 
-    const event = events[0];
+    const event = eventRows[0];
+
+    // Treat the event as available for registration if its status is
+    // explicitly 'published' or 'ongoing', OR if status is unset entirely
+    // (NULL / empty string) — this covers events created before a status
+    // column/default existed, or created through a form that doesn't set
+    // status at all. Only an explicit blocking status (e.g. 'draft',
+    // 'cancelled', 'archived') should actually prevent registration.
+    const blockingStatuses = ['draft', 'cancelled', 'archived', 'unpublished'];
+    if (event.status && blockingStatuses.includes(event.status)) {
+      return res.status(404).json({ success: false, message: 'This event is not open for registration yet.' });
+    }
 
     // Check if student already has a ticket for this event
     if (user_id) {
