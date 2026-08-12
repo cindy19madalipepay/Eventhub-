@@ -1,1136 +1,389 @@
 const { pool } = require('../config/db');
-const cloudinary = require('../config/cloudinary');
+const multer = require('multer');
 
-// ============================================================
-// PHILIPPINE TIME
-// ============================================================
-// Assumes MySQL server clock is UTC.
-// Converts UTC to Philippine time (UTC+8).
-const PH_NOW = "DATE_ADD(UTC_TIMESTAMP(), INTERVAL 8 HOUR)";
+// Memory storage — REQUIRED for Vercel (no local disk writes)
+const upload = multer({ storage: multer.memoryStorage() });
 
-// ============================================================
-// PHOTO URL RESOLUTION
-// ============================================================
-// With multer-storage-cloudinary, req.file.path is already the full
-// secure Cloudinary URL — that's what we now save straight into the
-// `photo` / `checkout_photo` columns (see registerAttendance /
-// registerCheckout below). resolvePhotoUrl() just passes those through.
-//
-// It also repairs OLDER rows that were saved before this fix, back when
-// the code stored req.file.filename (just the Cloudinary public_id,
-// e.g. "attendance-2-1786251643285.jpg") instead of the full URL. Those
-// files were still uploaded to Cloudinary successfully — only the DB
-// value was wrong — so we can reconstruct the correct URL from the
-// public_id using the known folder + cloud name.
-const CLOUD_NAME = cloudinary.config().cloud_name;
-
-const resolvePhotoUrl = (value, folder) => {
-  if (!value) return null;
-
-  // Already a full URL (new rows, saved via req.file.path) — use as-is.
-  if (/^https?:\/\//i.test(value)) return value;
-
-  // Legacy row: value is just the Cloudinary public_id/filename.
-  // Strip any accidental leading slash and rebuild the delivery URL.
-  const cleaned = value.replace(/^\/+/, '');
-  return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${folder}/${cleaned}`;
+// Helper: stream buffer to Cloudinary
+const uploadToCloudinary = (buffer, mimetype, folder) => {
+  return new Promise((resolve, reject) => {
+    const cloudinary = require('../config/cloudinary');
+    const stream = cloudinary.uploader.upload_stream(
+      { folder, resource_type: 'image' },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      }
+    );
+    stream.end(buffer);
+  });
 };
 
-// ============================================================
-// SCAN QR CODE - ADMIN
-// ============================================================
-const scanAttendance = async (req, res) => {
+// ─── GET MY ATTENDANCE ─────────────────────────────────────
+const getMyAttendance = async (req, res) => {
   try {
-    const {
-      qr_code_data,
-      method = 'qr_scan',
-    } = req.body;
+    const user_id = req.user?.user_id;
+    if (!user_id) return res.status(401).json({ success: false, message: 'Unauthorized.' });
 
-    if (!qr_code_data) {
-      return res.status(400).json({
-        success: false,
-        message: 'QR code data is required.',
-      });
-    }
-
-    const [tickets] = await pool.query(
-      `SELECT
-          t.*,
-          e.event_name,
-          e.date_start,
-          e.time_start,
-          e.status AS event_status,
-          u.first_name,
-          u.last_name,
-          u.department_id,
-          u.year_level,
-          u.block
-       FROM tickets t
-       JOIN events e
-         ON t.event_id = e.event_id
-       LEFT JOIN users u
-         ON t.user_id = u.user_id
-       WHERE t.ticket_code = ?`,
-      [qr_code_data]
+    const [rows] = await pool.query(
+      `SELECT a.*, e.event_name, e.date_start, e.time_start, e.venue
+       FROM attendance a
+       JOIN events e ON a.event_id = e.event_id
+       WHERE a.user_id = ?
+       ORDER BY a.checked_in_at DESC`,
+      [user_id]
     );
 
-    if (tickets.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'Invalid QR code. Ticket not found.',
-      });
-    }
-
-    const ticket = tickets[0];
-
-    if (ticket.status === 'blocked') {
-      return res.status(403).json({
-        success: false,
-        message: 'This ticket has been blocked.',
-      });
-    }
-
-    if (ticket.status === 'used') {
-      return res.status(409).json({
-        success: false,
-        message: 'This ticket has already been used.',
-      });
-    }
-
-    if (
-      ticket.payment_status &&
-      ['pending', 'rejected'].includes(ticket.payment_status)
-    ) {
-      return res.status(402).json({
-        success: false,
-        message:
-          ticket.payment_status === 'pending'
-            ? 'Payment not yet validated for this ticket.'
-            : 'Payment for this ticket was rejected.',
-      });
-    }
-
-    const [existing] = await pool.query(
-      `SELECT attendance_id
-       FROM attendance
-       WHERE ticket_id = ?
-         AND event_id = ?`,
-      [
-        ticket.ticket_id,
-        ticket.event_id,
-      ]
-    );
-
-    if (existing.length > 0) {
-      return res.status(409).json({
-        success: false,
-        message: 'Attendance already recorded for this ticket.',
-      });
-    }
-
-    await pool.query(
-      `INSERT INTO attendance
-        (
-          ticket_id,
-          user_id,
-          event_id,
-          scanned_at,
-          scanned_by,
-          method
-        )
-       VALUES (?, ?, ?, ${PH_NOW}, ?, ?)`,
-      [
-        ticket.ticket_id,
-        ticket.user_id,
-        ticket.event_id,
-        req.user.user_id,
-        method,
-      ]
-    );
-
-    await pool.query(
-      `UPDATE tickets
-       SET status = 'used'
-       WHERE ticket_id = ?`,
-      [ticket.ticket_id]
-    );
-
-    return res.status(200).json({
-      success: true,
-      message: 'Attendance recorded successfully!',
-      attendee: {
-        name: `${ticket.first_name || ''} ${ticket.last_name || ''}`.trim(),
-        event_name: ticket.event_name,
-        year_level: ticket.year_level,
-        block: ticket.block,
-        scanned_at: new Date(),
-      },
-    });
+    return res.status(200).json({ success: true, attended: rows });
   } catch (error) {
-    console.error('ScanAttendance error:', error);
-
-    return res.status(500).json({
-      success: false,
-      message: 'Server error.',
-    });
+    console.error('GetMyAttendance error:', error);
+    return res.status(500).json({ success: false, message: 'Server error.' });
   }
 };
 
-// ============================================================
-// STUDENT SELF CHECK-IN
-// ============================================================
+// ─── REGISTER ATTENDANCE (CHECK-IN) ────────────────────────
 const registerAttendance = async (req, res) => {
   try {
     const { ticket_id } = req.body;
+    const user_id = req.user?.user_id;
 
+    if (!user_id) {
+      return res.status(401).json({ success: false, message: 'Unauthorized.' });
+    }
     if (!ticket_id) {
-      return res.status(400).json({
-        success: false,
-        message: 'Ticket ID is required.',
-      });
+      return res.status(400).json({ success: false, message: 'Ticket ID is required.' });
+    }
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'Attendance photo is required.' });
     }
 
+    // Verify ticket exists and belongs to user
+    const [tickets] = await pool.query(
+      'SELECT * FROM tickets WHERE ticket_id = ? AND (user_id = ? OR ? IS NULL)',
+      [ticket_id, user_id, user_id]
+    );
+    if (tickets.length === 0) {
+      return res.status(404).json({ success: false, message: 'Ticket not found.' });
+    }
+
+    const ticket = tickets[0];
+
+    // Prevent duplicate check-in
+    const [existing] = await pool.query(
+      'SELECT attendance_id FROM attendance WHERE ticket_id = ? AND checkout_at IS NULL',
+      [ticket_id]
+    );
+    if (existing.length > 0) {
+      return res.status(409).json({ success: false, message: 'You are already checked in.' });
+    }
+
+    // Upload to Cloudinary
+    const result = await uploadToCloudinary(req.file.buffer, req.file.mimetype, 'eventhub/attendance');
+
+    // Save record
+    const [insertResult] = await pool.query(
+      `INSERT INTO attendance (ticket_id, event_id, user_id, checkin_photo, checked_in_at)
+       VALUES (?, ?, ?, ?, NOW())`,
+      [ticket_id, ticket.event_id, user_id, result.secure_url]
+    );
+
+    // Mark ticket used
+    await pool.query("UPDATE tickets SET status = 'used' WHERE ticket_id = ?", [ticket_id]);
+
+    return res.status(201).json({
+      success: true,
+      message: 'Attendance recorded successfully.',
+      attendance_id: insertResult.insertId,
+      photo_url: result.secure_url,
+    });
+  } catch (error) {
+    console.error('RegisterAttendance error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Unable to record attendance.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+    });
+  }
+};
+
+// ─── CHECKOUT ──────────────────────────────────────────────
+const registerCheckout = async (req, res) => {
+  try {
+    const { event_id } = req.body;
+    const user_id = req.user?.user_id;
+
+    if (!user_id) {
+      return res.status(401).json({ success: false, message: 'Unauthorized.' });
+    }
+    if (!event_id) {
+      return res.status(400).json({ success: false, message: 'Event ID is required.' });
+    }
     if (!req.file) {
-      return res.status(400).json({
-        success: false,
-        message: 'Photo evidence is required.',
-      });
+      return res.status(400).json({ success: false, message: 'Checkout photo is required.' });
+    }
+
+    // Find active check-in (no checkout yet)
+    const [records] = await pool.query(
+      `SELECT attendance_id FROM attendance
+       WHERE event_id = ? AND user_id = ? AND checkout_at IS NULL
+       ORDER BY checked_in_at DESC LIMIT 1`,
+      [event_id, user_id]
+    );
+    if (records.length === 0) {
+      return res.status(404).json({ success: false, message: 'No active check-in found for this event.' });
+    }
+
+    // Upload checkout photo to Cloudinary
+    const result = await uploadToCloudinary(req.file.buffer, req.file.mimetype, 'eventhub/checkout');
+
+    await pool.query(
+      `UPDATE attendance SET checkout_photo = ?, checkout_at = NOW() WHERE attendance_id = ?`,
+      [result.secure_url, records[0].attendance_id]
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: 'Checked out successfully.',
+      photo_url: result.secure_url,
+    });
+  } catch (error) {
+    console.error('Checkout error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Unable to check out.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+    });
+  }
+};
+
+// ─── SCAN QR (ADMIN) ───────────────────────────────────────
+const scanAttendance = async (req, res) => {
+  try {
+    const { ticket_code } = req.body;
+    if (!ticket_code) {
+      return res.status(400).json({ success: false, message: 'Ticket code is required.' });
     }
 
     const [tickets] = await pool.query(
-      `SELECT
-          t.*,
-          e.event_name,
-          e.date_start,
-          e.time_start,
-          e.status AS event_status,
-          TIMESTAMPDIFF(
-            MINUTE,
-            TIMESTAMP(e.date_start, e.time_start),
-            ${PH_NOW}
-          ) AS minutes_since_start
+      `SELECT t.*, e.event_name, e.date_start, e.time_start
        FROM tickets t
-       JOIN events e
-         ON t.event_id = e.event_id
-       WHERE t.ticket_id = ?
-         AND t.user_id = ?`,
-      [
-        ticket_id,
-        req.user.user_id,
-      ]
+       JOIN events e ON t.event_id = e.event_id
+       WHERE t.ticket_code = ?`,
+      [ticket_code]
     );
-
     if (tickets.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'Ticket not found for your account.',
-      });
+      return res.status(404).json({ success: false, message: 'Invalid ticket code.' });
     }
 
     const ticket = tickets[0];
 
     if (ticket.status === 'blocked') {
-      return res.status(403).json({
-        success: false,
-        message: 'This ticket has been blocked.',
-      });
+      return res.status(403).json({ success: false, message: 'This ticket has been blocked.' });
     }
 
-    if (ticket.status === 'used') {
-      return res.status(409).json({
-        success: false,
-        message:
-          'Attendance has already been registered for this ticket.',
-      });
-    }
-
-    if (ticket.payment_status === 'pending') {
-      return res.status(402).json({
-        success: false,
-        message:
-          'Your payment must be validated before you can register attendance.',
-      });
-    }
-
-    if (ticket.payment_status === 'rejected') {
-      return res.status(402).json({
-        success: false,
-        message:
-          'Your payment was rejected. Please upload a new receipt first.',
-      });
-    }
-
-    // Event has not started.
-    if (ticket.minutes_since_start < 0) {
-      return res.status(403).json({
-        success: false,
-        message:
-          `This event hasn't started yet. Check-in opens at ${ticket.time_start}.`,
-      });
-    }
-
-    // More than 30 minutes after start.
-    if (ticket.minutes_since_start > 30) {
-      return res.status(410).json({
-        success: false,
-        message:
-          'The 30-minute check-in window has closed.',
-      });
-    }
-
+    // Check if already checked in
     const [existing] = await pool.query(
-      `SELECT attendance_id
-       FROM attendance
-       WHERE ticket_id = ?
-         AND event_id = ?`,
-      [
-        ticket.ticket_id,
-        ticket.event_id,
-      ]
-    );
-
-    if (existing.length > 0) {
-      return res.status(409).json({
-        success: false,
-        message:
-          'Attendance already recorded for this ticket.',
-      });
-    }
-
-    // req.file.path is the full secure Cloudinary URL (CloudinaryStorage
-    // sets this) — save the URL itself, not req.file.filename (public_id).
-    await pool.query(
-      `INSERT INTO attendance
-        (
-          ticket_id,
-          user_id,
-          event_id,
-          scanned_at,
-          scanned_by,
-          method,
-          photo
-        )
-       VALUES (?, ?, ?, ${PH_NOW}, NULL, 'self_upload', ?)`,
-      [
-        ticket.ticket_id,
-        req.user.user_id,
-        ticket.event_id,
-        req.file.path,
-      ]
-    );
-
-    await pool.query(
-      `UPDATE tickets
-       SET status = 'used'
-       WHERE ticket_id = ?`,
+      'SELECT attendance_id FROM attendance WHERE ticket_id = ? AND checkout_at IS NULL',
       [ticket.ticket_id]
     );
-
-    return res.status(201).json({
-      success: true,
-      message: 'Attendance registered successfully!',
-    });
-  } catch (error) {
-    console.error('RegisterAttendance error:', error);
-
-    return res.status(500).json({
-      success: false,
-      message: 'Server error.',
-    });
-  }
-};
-
-// ============================================================
-// STUDENT CHECKOUT
-// ============================================================
-const registerCheckout = async (req, res) => {
-  try {
-    const { event_id } = req.body;
-
-    if (!event_id) {
-      return res.status(400).json({
-        success: false,
-        message: 'Event ID is required.',
-      });
+    if (existing.length > 0) {
+      return res.status(409).json({ success: false, message: 'Already checked in.' });
     }
 
-    if (!req.file) {
-      return res.status(400).json({
-        success: false,
-        message: 'Checkout photo is required.',
-      });
-    }
-
-    const [rows] = await pool.query(
-      `SELECT attendance_id, checkout_at
-       FROM attendance
-       WHERE user_id = ?
-         AND event_id = ?
-       ORDER BY attendance_id DESC
-       LIMIT 1`,
-      [
-        req.user.user_id,
-        event_id,
-      ]
-    );
-
-    if (rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message:
-          'No check-in record found for this event. You must check in before checking out.',
-      });
-    }
-
-    if (rows[0].checkout_at) {
-      return res.status(409).json({
-        success: false,
-        message:
-          'You have already checked out of this event.',
-      });
-    }
-
-    // Same fix as check-in: save the full Cloudinary URL (req.file.path),
-    // not just the public_id (req.file.filename).
     await pool.query(
-      `UPDATE attendance
-       SET checkout_at = ${PH_NOW},
-           checkout_photo = ?
-       WHERE attendance_id = ?`,
-      [
-        req.file.path,
-        rows[0].attendance_id,
-      ]
+      `INSERT INTO attendance (ticket_id, event_id, user_id, checked_in_at)
+       VALUES (?, ?, ?, NOW())`,
+      [ticket.ticket_id, ticket.event_id, ticket.user_id]
     );
+    await pool.query("UPDATE tickets SET status = 'used' WHERE ticket_id = ?", [ticket.ticket_id]);
 
     return res.status(200).json({
       success: true,
-      message: 'Checked out successfully!',
+      message: 'Attendance verified successfully.',
+      ticket,
     });
   } catch (error) {
-    console.error('RegisterCheckout error:', error);
-
-    return res.status(500).json({
-      success: false,
-      message: 'Server error.',
-    });
+    console.error('ScanAttendance error:', error);
+    return res.status(500).json({ success: false, message: 'Server error.' });
   }
 };
 
-// ============================================================
-// GET ATTENDANCE BY EVENT
-// ============================================================
+// ─── GET ATTENDANCE BY EVENT ───────────────────────────────
 const getAttendanceByEvent = async (req, res) => {
   try {
     const { id } = req.params;
-
-    const {
-      department_id,
-      year_level,
-      block,
-    } = req.query;
-
     let query = `
-      SELECT
-        a.*,
-        u.first_name,
-        u.last_name,
-        u.year_level,
-        u.block,
-        d.department_name,
-        e.event_name
+      SELECT a.*, u.first_name, u.last_name, u.year_level, u.block, d.department_name
       FROM attendance a
-      JOIN events e
-        ON a.event_id = e.event_id
-      LEFT JOIN users u
-        ON a.user_id = u.user_id
-      LEFT JOIN departments d
-        ON u.department_id = d.department_id
+      LEFT JOIN users u ON a.user_id = u.user_id
+      LEFT JOIN departments d ON u.department_id = d.department_id
       WHERE a.event_id = ?
     `;
-
     const params = [id];
 
-    if (req.user.role === 'department_head') {
-      query += ` AND u.department_id = ?`;
+    if (req.user?.role === 'department_head') {
+      query += ' AND u.department_id = ?';
       params.push(req.user.department_id);
-    } else if (department_id) {
-      query += ` AND u.department_id = ?`;
-      params.push(department_id);
     }
+    query += ' ORDER BY a.checked_in_at DESC';
 
-    if (year_level) {
-      query += ` AND u.year_level = ?`;
-      params.push(year_level);
-    }
-
-    if (block) {
-      query += ` AND u.block = ?`;
-      params.push(block);
-    }
-
-    query += ` ORDER BY a.scanned_at DESC`;
-
-    const [attendance] = await pool.query(
-      query,
-      params
-    );
-
-    const formatted = attendance.map((row) => ({
-      ...row,
-      photo_url: resolvePhotoUrl(row.photo, 'eventhub/attendance'),
-      checkout_photo_url: resolvePhotoUrl(row.checkout_photo, 'eventhub/attendance'),
-    }));
-
-    return res.status(200).json({
-      success: true,
-      count: formatted.length,
-      attendance: formatted,
-    });
+    const [rows] = await pool.query(query, params);
+    return res.status(200).json({ success: true, count: rows.length, attendance: rows });
   } catch (error) {
     console.error('GetAttendanceByEvent error:', error);
-
-    return res.status(500).json({
-      success: false,
-      message: 'Server error.',
-    });
+    return res.status(500).json({ success: false, message: 'Server error.' });
   }
 };
 
-// ============================================================
-// GET MY ATTENDANCE
-// ============================================================
-const getMyAttendance = async (req, res) => {
-  try {
-    const [attended] = await pool.query(
-      `SELECT
-          a.attendance_id,
-          a.scanned_at,
-          a.photo,
-          a.checkout_at,
-          a.checkout_photo,
-          e.event_id,
-          e.event_name,
-          e.date_start,
-          e.time_start,
-          e.venue
-       FROM attendance a
-       JOIN events e
-         ON a.event_id = e.event_id
-       WHERE a.user_id = ?
-       ORDER BY a.scanned_at DESC`,
-      [req.user.user_id]
-    );
-
-    const attendedWithPhotoUrl = attended.map((a) => ({
-      ...a,
-      photo_url: resolvePhotoUrl(a.photo, 'eventhub/attendance'),
-      checkout_photo_url: resolvePhotoUrl(a.checkout_photo, 'eventhub/attendance'),
-    }));
-
-    // MISSED EVENTS
-    // Was previously scoped to `FROM tickets t JOIN events e`, which only
-    // caught students who registered (has a ticket) but never checked in.
-    // It silently excluded events the student never registered for at all —
-    // even though MyEvents.jsx treats those exactly the same way ("missed"
-    // once the 30-minute window closes with no ticket). Switched to
-    // `FROM events e LEFT JOIN tickets t` so events with NO ticket row are
-    // included too, matched to this student via the ON clause instead of
-    // WHERE, so a missing ticket doesn't drop the event from the results.
-    const [missed] = await pool.query(
-      `SELECT
-          e.event_id,
-          e.event_name,
-          e.date_start,
-          e.time_start,
-          e.venue
-       FROM events e
-       LEFT JOIN tickets t
-         ON t.event_id = e.event_id
-        AND t.user_id = ?
-       WHERE (t.ticket_id IS NULL OR t.status != 'used')
-         AND TIMESTAMPDIFF(
-           MINUTE,
-           TIMESTAMP(e.date_start, e.time_start),
-           ${PH_NOW}
-         ) > 30
-       ORDER BY e.date_start DESC`,
-      [req.user.user_id]
-    );
-
-    return res.status(200).json({
-      success: true,
-      attended: attendedWithPhotoUrl,
-      missed,
-    });
-  } catch (error) {
-    console.error('GetMyAttendance error:', error);
-
-    return res.status(500).json({
-      success: false,
-      message: 'Server error.',
-    });
-  }
-};
-
-// ============================================================
-// FULL ATTENDANCE REPORT
-// ============================================================
+// ─── ATTENDANCE REPORT ─────────────────────────────────────
 const getAttendanceReport = async (req, res) => {
   try {
-    const {
-      event_id,
-      department_id,
-      year_level,
-      block,
-    } = req.query;
-
+    const { event_id, department_id } = req.query;
     let query = `
-      SELECT
-        a.attendance_id,
-        a.scanned_at,
-        a.method,
-        a.photo,
-        a.checkout_at,
-        a.checkout_photo,
-        u.first_name,
-        u.last_name,
-        u.year_level,
-        u.block,
-        u.role,
-        u.position,
-        d.department_name,
-        e.event_name,
-        e.date_start
+      SELECT a.*, e.event_name, u.first_name, u.last_name, u.year_level, u.block, d.department_name
       FROM attendance a
-      JOIN events e
-        ON a.event_id = e.event_id
-      LEFT JOIN users u
-        ON a.user_id = u.user_id
-      LEFT JOIN departments d
-        ON u.department_id = d.department_id
-      WHERE 1 = 1
+      JOIN events e ON a.event_id = e.event_id
+      LEFT JOIN users u ON a.user_id = u.user_id
+      LEFT JOIN departments d ON u.department_id = d.department_id
+      WHERE 1=1
     `;
-
     const params = [];
-
-    if (event_id) {
-      query += ` AND a.event_id = ?`;
-      params.push(event_id);
-    }
-
-    if (department_id) {
-      query += ` AND u.department_id = ?`;
-      params.push(department_id);
-    }
-
-    if (year_level) {
-      query += ` AND u.year_level = ?`;
-      params.push(year_level);
-    }
-
-    if (block) {
-      query += ` AND u.block = ?`;
-      params.push(block);
-    }
-
-    query += `
-      ORDER BY e.date_start DESC,
-               a.scanned_at DESC
-    `;
-
-    const [report] = await pool.query(
-      query,
-      params
-    );
-
-    const formatted = report.map((row) => ({
-      ...row,
-      photo_url: resolvePhotoUrl(row.photo, 'eventhub/attendance'),
-      checkout_photo_url: resolvePhotoUrl(row.checkout_photo, 'eventhub/attendance'),
-    }));
-
-    return res.status(200).json({
-      success: true,
-      count: formatted.length,
-      report: formatted,
-    });
-  } catch (error) {
-    console.error('GetAttendanceReport error:', error);
-
-    return res.status(500).json({
-      success: false,
-      message: 'Server error.',
-    });
-  }
-};
-
-// ============================================================
-// DEPARTMENTS OVERVIEW
-// ============================================================
-const getDepartmentsOverview = async (req, res) => {
-  try {
-    let query = `
-      SELECT
-        d.department_id,
-        d.department_code,
-        d.department_name,
-
-        COUNT(
-          DISTINCT CASE
-            WHEN u.role IN (
-              'student',
-              'student_leader',
-              'alumni',
-              'stakeholder'
-            )
-            THEN u.user_id
-          END
-        ) AS student_count,
-
-        COUNT(
-          DISTINCT CASE
-            WHEN u.role = 'student_leader'
-            THEN u.user_id
-          END
-        ) AS student_leader_count,
-
-        COUNT(DISTINCT t.ticket_id) AS total_invited,
-
-        COUNT(DISTINCT a.attendance_id) AS attended_count,
-
-        COUNT(DISTINCT a.user_id) AS unique_attendees
-
-      FROM departments d
-
-      LEFT JOIN users u
-        ON u.department_id = d.department_id
-
-      LEFT JOIN tickets t
-        ON t.user_id = u.user_id
-
-      LEFT JOIN attendance a
-        ON a.ticket_id = t.ticket_id
-    `;
-
-    const params = [];
-
-    if (req.user.role === 'department_head') {
-      query += ` WHERE d.department_id = ?`;
+    if (event_id) { query += ' AND a.event_id = ?'; params.push(event_id); }
+    if (department_id) { query += ' AND u.department_id = ?'; params.push(department_id); }
+    if (req.user?.role === 'department_head') {
+      query += ' AND u.department_id = ?';
       params.push(req.user.department_id);
     }
+    query += ' ORDER BY a.checked_in_at DESC';
 
-    query += `
-      GROUP BY
-        d.department_id,
-        d.department_code,
-        d.department_name
-
-      ORDER BY d.department_name
-    `;
-
-    const [departments] = await pool.query(
-      query,
-      params
-    );
-
-    return res.status(200).json({
-      success: true,
-      departments,
-    });
+    const [rows] = await pool.query(query, params);
+    return res.status(200).json({ success: true, report: rows });
   } catch (error) {
-    console.error('GetDepartmentsOverview error:', error);
-
-    return res.status(500).json({
-      success: false,
-      message: 'Server error.',
-    });
+    console.error('GetAttendanceReport error:', error);
+    return res.status(500).json({ success: false, message: 'Server error.' });
   }
 };
 
-// ============================================================
-// DEPARTMENT EVENT SUMMARY
-// ============================================================
+// ─── DEPARTMENTS OVERVIEW ──────────────────────────────────
+const getDepartmentsOverview = async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT d.department_id, d.department_name,
+             COUNT(DISTINCT u.user_id) AS total_students,
+             COUNT(DISTINCT a.user_id) AS attended_count
+      FROM departments d
+      LEFT JOIN users u ON d.department_id = u.department_id AND u.role = 'student'
+      LEFT JOIN attendance a ON u.user_id = a.user_id
+      GROUP BY d.department_id
+    `);
+    return res.status(200).json({ success: true, overview: rows });
+  } catch (error) {
+    console.error('GetDepartmentsOverview error:', error);
+    return res.status(500).json({ success: false, message: 'Server error.' });
+  }
+};
+
+// ─── DEPARTMENT SUMMARY ────────────────────────────────────
 const getDepartmentSummary = async (req, res) => {
   try {
     const { deptId } = req.params;
-
-    const [deptRows] = await pool.query(
-      `SELECT department_id, department_name
-       FROM departments
-       WHERE department_code = ?`,
-      [deptId]
-    );
-
-    if (deptRows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'Department not found.',
-      });
-    }
-
-    const departmentId =
-      deptRows[0].department_id;
-
-    if (
-      req.user.role === 'department_head' &&
-      Number(req.user.department_id) !== Number(departmentId)
-    ) {
-      return res.status(403).json({
-        success: false,
-        message:
-          'Not authorized for this department.',
-      });
-    }
-
-    const [summary] = await pool.query(
-      `SELECT
-          e.event_id,
-          e.event_name,
-          e.date_start,
-          e.time_start,
-
-          COUNT(DISTINCT t.ticket_id)
-            AS total_students,
-
-          COUNT(DISTINCT a.attendance_id)
-            AS attended_count
-
-       FROM events e
-
-       JOIN tickets t
-         ON t.event_id = e.event_id
-
-       JOIN users u
-         ON u.user_id = t.user_id
-        AND u.department_id = ?
-
-       LEFT JOIN attendance a
-         ON a.ticket_id = t.ticket_id
-
-       GROUP BY
-         e.event_id,
-         e.event_name,
-         e.date_start,
-         e.time_start
-
-       ORDER BY e.date_start DESC`,
-      [departmentId]
-    );
-
-    return res.status(200).json({
-      success: true,
-      summary,
-    });
+    const [rows] = await pool.query(`
+      SELECT e.event_id, e.event_name,
+             COUNT(a.attendance_id) AS attendance_count
+      FROM events e
+      LEFT JOIN attendance a ON e.event_id = a.event_id
+      LEFT JOIN users u ON a.user_id = u.user_id AND u.department_id = ?
+      WHERE e.event_id IN (SELECT event_id FROM event_departments WHERE department_id = ?)
+      GROUP BY e.event_id
+    `, [deptId, deptId]);
+    return res.status(200).json({ success: true, summary: rows });
   } catch (error) {
     console.error('GetDepartmentSummary error:', error);
-
-    return res.status(500).json({
-      success: false,
-      message: 'Server error.',
-    });
+    return res.status(500).json({ success: false, message: 'Server error.' });
   }
 };
 
-// ============================================================
-// YEAR + BLOCK STATS
-// ============================================================
+// ─── YEAR + BLOCK STATS ────────────────────────────────────
 const getYearBlockStats = async (req, res) => {
   try {
     const { deptId } = req.params;
-
-    const [deptRows] = await pool.query(
-      `SELECT department_id
-       FROM departments
-       WHERE department_code = ?`,
-      [deptId]
-    );
-
-    if (deptRows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'Department not found.',
-      });
-    }
-
-    const departmentId =
-      deptRows[0].department_id;
-
-    if (
-      req.user.role === 'department_head' &&
-      Number(req.user.department_id) !== Number(departmentId)
-    ) {
-      return res.status(403).json({
-        success: false,
-        message:
-          'Not authorized for this department.',
-      });
-    }
-
-    const [rows] = await pool.query(
-      `SELECT
-          u.year_level,
-          u.block,
-
-          COUNT(DISTINCT t.ticket_id)
-            AS total,
-
-          COUNT(DISTINCT a.attendance_id)
-            AS attended
-
-       FROM tickets t
-
-       JOIN users u
-         ON u.user_id = t.user_id
-
-       LEFT JOIN attendance a
-         ON a.ticket_id = t.ticket_id
-
-       WHERE u.department_id = ?
-
-       GROUP BY
-         u.year_level,
-         u.block
-
-       ORDER BY
-         u.year_level,
-         u.block`,
-      [departmentId]
-    );
-
-    const stats = {};
-
-    rows.forEach((row) => {
-      stats[`${row.year_level}-${row.block}`] = {
-        attended: Number(row.attended),
-        total: Number(row.total),
-      };
-    });
-
-    return res.status(200).json({
-      success: true,
-      stats,
-    });
+    const [rows] = await pool.query(`
+      SELECT u.year_level, u.block,
+             COUNT(DISTINCT u.user_id) AS total,
+             COUNT(DISTINCT a.user_id) AS attended
+      FROM users u
+      LEFT JOIN attendance a ON u.user_id = a.user_id
+      WHERE u.department_id = ? AND u.role = 'student'
+      GROUP BY u.year_level, u.block
+      ORDER BY u.year_level, u.block
+    `, [deptId]);
+    return res.status(200).json({ success: true, stats: rows });
   } catch (error) {
     console.error('GetYearBlockStats error:', error);
-
-    return res.status(500).json({
-      success: false,
-      message: 'Server error.',
-    });
+    return res.status(500).json({ success: false, message: 'Server error.' });
   }
 };
 
-// ============================================================
-// BLOCK REPORT
-// ============================================================
-const getBlockReport = async (req, res) => {
-  try {
-    const {
-      department_id,
-      year_level,
-      block,
-    } = req.query;
-
-    if (
-      !department_id ||
-      !year_level ||
-      !block
-    ) {
-      return res.status(400).json({
-        success: false,
-        message:
-          'department_id, year_level, and block are required.',
-      });
-    }
-
-    if (
-      req.user.role === 'department_head' &&
-      Number(req.user.department_id) !== Number(department_id)
-    ) {
-      return res.status(403).json({
-        success: false,
-        message:
-          'Not authorized for this department.',
-      });
-    }
-
-    const [events] = await pool.query(
-      `SELECT
-          e.event_id,
-          e.event_name,
-          e.date_start,
-          e.time_start,
-          e.venue,
-
-          COUNT(DISTINCT t.ticket_id)
-            AS total_students
-
-       FROM events e
-
-       JOIN tickets t
-         ON t.event_id = e.event_id
-
-       JOIN users u
-         ON u.user_id = t.user_id
-
-       WHERE u.department_id = ?
-         AND u.year_level = ?
-         AND u.block = ?
-
-       GROUP BY
-         e.event_id,
-         e.event_name,
-         e.date_start,
-         e.time_start,
-         e.venue
-
-       ORDER BY e.date_start DESC`,
-      [
-        department_id,
-        year_level,
-        block,
-      ]
-    );
-
-    const [attendanceRows] = await pool.query(
-      `SELECT
-          a.attendance_id,
-          a.event_id,
-          a.scanned_at,
-          a.photo,
-          a.checkout_at,
-          a.checkout_photo,
-          a.method,
-
-          u.first_name,
-          u.last_name,
-          u.year_level,
-          u.block,
-          u.role,
-          u.position
-
-       FROM attendance a
-
-       JOIN users u
-         ON u.user_id = a.user_id
-
-       WHERE u.department_id = ?
-         AND u.year_level = ?
-         AND u.block = ?
-
-       ORDER BY a.scanned_at DESC`,
-      [
-        department_id,
-        year_level,
-        block,
-      ]
-    );
-
-    const attendance = attendanceRows.map((row) => ({
-      ...row,
-      photo_url: resolvePhotoUrl(row.photo, 'eventhub/attendance'),
-      checkout_photo_url: resolvePhotoUrl(row.checkout_photo, 'eventhub/attendance'),
-    }));
-
-    return res.status(200).json({
-      success: true,
-      events,
-      attendance,
-    });
-  } catch (error) {
-    console.error('GetBlockReport error:', error);
-
-    return res.status(500).json({
-      success: false,
-      message: 'Server error.',
-    });
-  }
-};
-
-// ============================================================
-// ORGANIZATION BREAKDOWN
-// ============================================================
+// ─── ORGANIZATION BREAKDOWN ────────────────────────────────
 const getOrgBreakdown = async (req, res) => {
   try {
     const { deptId } = req.params;
-
-    const [deptRows] = await pool.query(
-      `SELECT department_id
-       FROM departments
-       WHERE department_code = ?`,
-      [deptId]
-    );
-
-    if (deptRows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'Department not found.',
-      });
-    }
-
-    const departmentId =
-      deptRows[0].department_id;
-
-    if (
-      req.user.role === 'department_head' &&
-      Number(req.user.department_id) !== Number(departmentId)
-    ) {
-      return res.status(403).json({
-        success: false,
-        message:
-          'Not authorized for this department.',
-      });
-    }
-
-    const [rows] = await pool.query(
-      `SELECT
-          COALESCE(
-            organization,
-            'Unspecified'
-          ) AS organization,
-
-          COUNT(*) AS count
-
-       FROM users
-
-       WHERE department_id = ?
-         AND role = 'student_leader'
-
-       GROUP BY
-         COALESCE(
-           organization,
-           'Unspecified'
-         )
-
-       ORDER BY count DESC`,
-      [departmentId]
-    );
-
-    return res.status(200).json({
-      success: true,
-      organizations: rows,
-    });
+    const [rows] = await pool.query(`
+      SELECT u.organization,
+             COUNT(DISTINCT u.user_id) AS total,
+             COUNT(DISTINCT a.user_id) AS attended
+      FROM users u
+      LEFT JOIN attendance a ON u.user_id = a.user_id
+      WHERE u.department_id = ? AND u.role = 'student'
+      GROUP BY u.organization
+    `, [deptId]);
+    return res.status(200).json({ success: true, breakdown: rows });
   } catch (error) {
     console.error('GetOrgBreakdown error:', error);
+    return res.status(500).json({ success: false, message: 'Server error.' });
+  }
+};
 
-    return res.status(500).json({
-      success: false,
-      message: 'Server error.',
-    });
+// ─── BLOCK REPORT ──────────────────────────────────────────
+const getBlockReport = async (req, res) => {
+  try {
+    const { event_id, year_level, block } = req.query;
+    let query = `
+      SELECT a.*, u.first_name, u.last_name, u.year_level, u.block, d.department_name
+      FROM attendance a
+      JOIN users u ON a.user_id = u.user_id
+      LEFT JOIN departments d ON u.department_id = d.department_id
+      WHERE u.role = 'student'
+    `;
+    const params = [];
+    if (event_id) { query += ' AND a.event_id = ?'; params.push(event_id); }
+    if (year_level) { query += ' AND u.year_level = ?'; params.push(year_level); }
+    if (block) { query += ' AND u.block = ?'; params.push(block); }
+    if (req.user?.role === 'department_head') {
+      query += ' AND u.department_id = ?';
+      params.push(req.user.department_id);
+    }
+    query += ' ORDER BY a.checked_in_at DESC';
+
+    const [rows] = await pool.query(query, params);
+    return res.status(200).json({ success: true, report: rows });
+  } catch (error) {
+    console.error('GetBlockReport error:', error);
+    return res.status(500).json({ success: false, message: 'Server error.' });
   }
 };
 
 module.exports = {
-  scanAttendance,
-  registerAttendance,
-  registerCheckout,
-  getAttendanceByEvent,
+  upload,               // memoryStorage multer for routes
   getMyAttendance,
+  registerAttendance,
+  registerCheckout,     // ← renamed from checkout to match routes
+  scanAttendance,
+  getAttendanceByEvent,
   getAttendanceReport,
   getDepartmentsOverview,
   getDepartmentSummary,
   getYearBlockStats,
-  getBlockReport,
   getOrgBreakdown,
+  getBlockReport,
 };
