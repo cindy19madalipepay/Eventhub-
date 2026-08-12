@@ -74,8 +74,8 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="forgot-password-page">
-      <div className="forgot-password-card">
+    <div className="login-wrapper">
+      <div className="login-card">
 
         {/* =====================================================
             EVENTHUB LOGO
