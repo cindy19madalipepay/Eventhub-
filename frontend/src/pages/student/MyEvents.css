@@ -1,3 +1,7 @@
+/* ================================================================
+   MY EVENTS PAGE
+   ================================================================ */
+
 .myevents-page {
   padding: 24px;
 }
@@ -34,6 +38,11 @@
   font-size: 14px;
 }
 
+
+/* ================================================================
+   FILTER TABS
+   ================================================================ */
+
 .filter-tabs {
   display: flex;
   gap: 8px;
@@ -42,7 +51,7 @@
 
 .filter-tab {
   padding: 8px 16px;
-  border: 1px solid #E8E8E8;
+  border: 1px solid #e8e8e8;
   border-radius: 8px;
   background: #fff;
   cursor: pointer;
@@ -50,11 +59,20 @@
   color: #666;
 }
 
+.filter-tab:hover {
+  border-color: #2f4a3d;
+}
+
 .filter-tab.active {
   background: #2f4a3d;
   border-color: #2f4a3d;
   color: #fff;
 }
+
+
+/* ================================================================
+   EVENTS GRID
+   ================================================================ */
 
 .events-grid {
   display: grid;
@@ -75,17 +93,18 @@
 }
 
 
-/* ─────────────────────────────────────────────
+/* ================================================================
    EVENT CARD
-   ───────────────────────────────────────────── */
+   ================================================================ */
 
 .event-card {
   background: #fff;
   border-radius: 16px;
-  border: 2px solid #E8E8E8;
+  border: 2px solid #e8e8e8;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .event-card.theme-blue {
@@ -101,44 +120,46 @@
 }
 
 
-/* ─────────────────────────────────────────────
-   EVENT BANNER
-   ───────────────────────────────────────────── */
+/* ================================================================
+   SMALL EVENT BANNER
+   Same size as Program Rules
+   ================================================================ */
 
 .event-banner {
-  width: 100%;
-  height: 180px;
+  width: 72px;
+  height: 72px;
+  margin: 14px 20px 4px;
+  border-radius: 10px;
   overflow: hidden;
-  background: #F8F8F8;
-  margin: 0;
-  padding: 0;
+  background: #f8f8f8;
+  border: 1px solid #e8e8e8;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
+  flex-shrink: 0;
 }
 
 .event-banner img {
   width: 100%;
   height: 100%;
-  display: block;
   object-fit: cover;
-  object-position: center;
+  display: block;
 }
 
 
-/* ─────────────────────────────────────────────
+/* ================================================================
    EVENT CARD HEADER
-   ───────────────────────────────────────────── */
+   ================================================================ */
 
 .event-card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 14px 20px;
-  background: #F8F8F8;
-  border-bottom: 1px solid #E8E8E8;
-  margin-top: 0;
+  background: #f8f8f8;
+  border-bottom: 1px solid #e8e8e8;
+  margin-top: 8px;
 }
 
 .event-sender {
@@ -148,9 +169,9 @@
 }
 
 
-/* ─────────────────────────────────────────────
+/* ================================================================
    STATUS BADGES
-   ───────────────────────────────────────────── */
+   ================================================================ */
 
 .status-badge {
   font-size: 11px;
@@ -176,9 +197,9 @@
 }
 
 
-/* ─────────────────────────────────────────────
-   EVENT INFORMATION
-   ───────────────────────────────────────────── */
+/* ================================================================
+   EVENT NAME / DESCRIPTION
+   ================================================================ */
 
 .event-name {
   margin: 18px 20px 4px;
@@ -193,6 +214,11 @@
   color: #666;
 }
 
+
+/* ================================================================
+   EVENT INFORMATION
+   ================================================================ */
+
 .event-info-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -201,7 +227,7 @@
 }
 
 .event-info-item {
-  background: #F8F8F8;
+  background: #f8f8f8;
   border-radius: 10px;
   padding: 10px 14px;
   display: flex;
@@ -219,13 +245,13 @@
 .event-info-value {
   font-size: 14px;
   font-weight: 600;
-  color: #1B0833;
+  color: #1b0833;
 }
 
 
-/* ─────────────────────────────────────────────
+/* ================================================================
    PAYMENT
-   ───────────────────────────────────────────── */
+   ================================================================ */
 
 .payment-info {
   margin: 0 20px 12px;
@@ -238,153 +264,159 @@
 }
 
 
-/* ─────────────────────────────────────────────
+/* ================================================================
    PROGRAM RULES
-   SAME SIZE AS EVENT BANNER
-   ───────────────────────────────────────────── */
+   Same size as banner
+   ================================================================ */
 
 .notif-media-stack {
-  width: 100%;
-  margin: 0 0 16px;
-  padding: 0 20px;
-  box-sizing: border-box;
+  margin: 0 20px 16px;
 }
 
 .notif-media-row {
-  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
 }
 
-.notif-media-row .notif-info-label {
+.notif-info-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #888;
+  letter-spacing: 0.4px;
   display: block;
-  margin-bottom: 8px;
+}
+
+.notif-thumb {
+  width: 72px;
+  height: 72px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #e8e8e8;
+  background: #f8f8f8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.notif-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.notif-thumb-pdf {
+  width: 72px;
+  height: 72px;
+}
+
+.notif-thumb-pdf-icon {
+  font-size: 28px;
+}
+
+
+/* ================================================================
+   PROGRAM FLOW
+   Compact version
+   ================================================================ */
+
+.program-flow {
+  margin: 0 20px 16px;
+  padding: 0;
+}
+
+.program-flow > .notif-info-label {
+  display: block;
+  margin-bottom: 6px;
   font-size: 10px;
   font-weight: 700;
   color: #888;
   letter-spacing: 0.4px;
 }
 
-
-/* Program Rules IMAGE */
-
-.notif-media-row .notif-thumb {
-  width: 100%;
-  height: 180px;
-  overflow: hidden;
-  border-radius: 10px;
-  border: 1px solid #E8E8E8;
-  background: #F8F8F8;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  cursor: pointer;
-}
-
-.notif-media-row .notif-thumb img {
-  width: 100%;
-  height: 100%;
-  display: block;
-  object-fit: cover;
-  object-position: center;
-}
-
-
-/* Program Rules PDF */
-
-.notif-media-row .notif-thumb-pdf {
-  width: 100%;
-  height: 180px;
-  overflow: hidden;
-  border-radius: 10px;
-  border: 1px solid #E8E8E8;
-  background: #F8F8F8;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  cursor: pointer;
-}
-
-.notif-media-row .notif-thumb-pdf-icon {
-  font-size: 48px;
-}
-
-
-/* ─────────────────────────────────────────────
-   EVENT FLOW
-   ───────────────────────────────────────────── */
-
-.program-flow {
-  margin: 0 20px 16px;
-}
-
 .program-flow-timeline {
-  margin-top: 10px;
+  width: 100%;
+  max-height: 150px;
+  overflow-y: auto;
+  background: #f8f8f8;
+  border-radius: 10px;
+  padding: 10px 12px;
+  box-sizing: border-box;
 }
 
 .program-flow-step {
   display: flex;
-  gap: 12px;
-  position: relative;
+  align-items: flex-start;
+  gap: 8px;
+  min-height: 28px;
 }
 
 .program-flow-marker {
-  width: 18px;
-  min-width: 18px;
+  width: 10px;
+  min-width: 10px;
+  position: relative;
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  justify-content: center;
 }
 
 .program-flow-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
+  width: 6px;
+  height: 6px;
   background: #2f4a3d;
+  border-radius: 50%;
   margin-top: 5px;
+  display: block;
 }
 
 .program-flow-line {
-  width: 2px;
-  flex: 1;
-  min-height: 20px;
-  background: #dce5df;
+  position: absolute;
+  top: 11px;
+  width: 1px;
+  height: 20px;
+  background: #d6ddd9;
 }
 
 .program-flow-content {
-  padding-bottom: 12px;
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+  padding-bottom: 6px;
 }
 
 .program-flow-time {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   color: #6a8f78;
+  white-space: nowrap;
+  min-width: 55px;
 }
 
 .program-flow-title {
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 600;
   color: #1f3329;
+  line-height: 1.2;
 }
 
 .program-flow-desc {
-  margin: 0;
-  font-size: 12px;
-  color: #666;
+  display: none;
 }
 
 
-/* ─────────────────────────────────────────────
+/* ================================================================
    EVENT ACTIONS
-   ───────────────────────────────────────────── */
+   ================================================================ */
 
 .event-actions {
   margin: auto 20px 20px;
   padding-top: 12px;
-  border-top: 1px solid #E8E8E8;
+  border-top: 1px solid #e8e8e8;
 }
 
 .action-btn {
@@ -406,6 +438,10 @@
   background: #6a8f78;
 }
 
+.action-btn:hover:not(:disabled) {
+  opacity: 0.92;
+}
+
 .action-btn:disabled,
 .action-btn.disabled {
   background: #d1d5db;
@@ -421,9 +457,58 @@
 }
 
 
-/* ─────────────────────────────────────────────
+/* ================================================================
+   LIGHTBOX
+   Used for banner and program rules preview
+   ================================================================ */
+
+.lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  z-index: 2000;
+}
+
+.lightbox-close {
+  position: fixed;
+  top: 20px;
+  right: 24px;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: #fff;
+  color: #333;
+  font-size: 20px;
+  cursor: pointer;
+  z-index: 2001;
+}
+
+.lightbox-img {
+  max-width: 90vw;
+  max-height: 85vh;
+  object-fit: contain;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.lightbox-pdf {
+  width: 90vw;
+  height: 85vh;
+  max-width: 1000px;
+  border: none;
+  border-radius: 10px;
+  background: #fff;
+}
+
+
+/* ================================================================
    EVALUATION MODAL
-   ───────────────────────────────────────────── */
+   ================================================================ */
 
 .eval-modal-overlay {
   position: fixed;
@@ -476,12 +561,13 @@
 
 .eval-textarea {
   width: 100%;
-  border: 1px solid #E8E8E8;
+  border: 1px solid #e8e8e8;
   border-radius: 8px;
   padding: 10px;
   font-size: 14px;
   font-family: inherit;
   resize: vertical;
+  box-sizing: border-box;
 }
 
 .eval-modal-actions {
@@ -493,7 +579,7 @@
 
 .eval-cancel-btn {
   padding: 10px 16px;
-  border: 1px solid #E8E8E8;
+  border: 1px solid #e8e8e8;
   border-radius: 8px;
   background: #fff;
   cursor: pointer;
@@ -517,9 +603,9 @@
 }
 
 
-/* ─────────────────────────────────────────────
+/* ================================================================
    ATTENDANCE PROOF MODAL
-   ───────────────────────────────────────────── */
+   ================================================================ */
 
 .attendance-modal-overlay {
   position: fixed;
@@ -575,7 +661,7 @@
   display: flex;
   gap: 8px;
   font-size: 14px;
-  color: #1B0833;
+  color: #1b0833;
 }
 
 .attendance-modal-body {
@@ -586,12 +672,12 @@
   display: block;
   font-size: 14px;
   font-weight: 700;
-  color: #1B0833;
+  color: #1b0833;
   margin-bottom: 10px;
 }
 
 .attendance-file-input-wrap {
-  border: 1px solid #E8E8E8;
+  border: 1px solid #e8e8e8;
   border-radius: 8px;
   padding: 10px 14px;
 }
@@ -612,14 +698,14 @@
   justify-content: flex-end;
   gap: 10px;
   padding: 16px 24px;
-  border-top: 1px solid #E8E8E8;
+  border-top: 1px solid #e8e8e8;
 }
 
 .attendance-cancel-btn {
   padding: 12px 20px;
-  border: 1px solid #E8E8E8;
+  border: 1px solid #e8e8e8;
   border-radius: 8px;
-  background: #F8F8F8;
+  background: #f8f8f8;
   cursor: pointer;
   font-weight: 700;
   color: #666;
@@ -641,71 +727,84 @@
 }
 
 
-/* ─────────────────────────────────────────────
+/* ================================================================
    RESPONSIVE
-   ───────────────────────────────────────────── */
+   ================================================================ */
 
 @media (max-width: 768px) {
   .myevents-page {
     padding: 16px;
   }
 
+  .myevents-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
   .events-grid {
     grid-template-columns: 1fr;
   }
 
-  .myevents-header {
-    align-items: flex-start;
-    gap: 10px;
+  .event-card {
+    width: 100%;
   }
 
-  .myevents-count {
-    display: none;
+  .event-info-grid {
+    gap: 8px;
   }
 
   .event-banner {
-    height: 160px;
+    width: 72px;
+    height: 72px;
   }
 
-  .notif-media-row .notif-thumb,
-  .notif-media-row .notif-thumb-pdf {
-    height: 160px;
+  .lightbox-overlay {
+    padding: 15px;
+  }
+
+  .lightbox-img {
+    max-width: 95vw;
+    max-height: 80vh;
+  }
+
+  .lightbox-pdf {
+    width: 95vw;
+    height: 80vh;
   }
 }
 
 @media (max-width: 480px) {
+  .myevents-title {
+    font-size: 20px;
+  }
+
+  .myevents-count {
+    font-size: 12px;
+  }
+
+  .filter-tabs {
+    width: 100%;
+  }
+
+  .filter-tab {
+    flex: 1;
+    padding: 8px 10px;
+  }
+
+  .events-grid {
+    grid-template-columns: 1fr;
+  }
+
   .event-info-grid {
-    gap: 8px;
-    margin-left: 14px;
-    margin-right: 14px;
+    grid-template-columns: 1fr 1fr;
   }
 
   .event-name {
-    margin-left: 14px;
-    margin-right: 14px;
+    font-size: 18px;
   }
 
-  .event-description {
-    margin-left: 14px;
-    margin-right: 14px;
-  }
-
-  .notif-media-stack {
-    padding-left: 14px;
-    padding-right: 14px;
-  }
-
-  .event-actions {
-    margin-left: 14px;
-    margin-right: 14px;
-  }
-
-  .event-banner {
-    height: 140px;
-  }
-
-  .notif-media-row .notif-thumb,
-  .notif-media-row .notif-thumb-pdf {
-    height: 140px;
+  .attendance-modal {
+    width: calc(100% - 24px);
   }
 }
