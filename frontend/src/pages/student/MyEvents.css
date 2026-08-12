@@ -121,9 +121,8 @@
 
 
 /* ================================================================
-   EVENT MEDIA ROW
-   Program Banner (left) + Program Rules (right)
-   Same 72x72 size as before, just repositioned side by side
+   EVENT MEDIA ROW  (BOTTOM)
+   Program Banner + Program Rules side by side
    ================================================================ */
 
 .event-media-row {
@@ -132,13 +131,15 @@
   align-items: flex-end;
   margin: 14px 20px 16px;
   gap: 16px;
+  min-width: 0;
 }
 
 .event-media-row .event-banner-group,
 .event-media-row .notif-media-stack {
   display: flex;
   flex-direction: column;
-  flex: 1;
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 .event-banner-label {
@@ -290,8 +291,7 @@
 
 
 /* ================================================================
-   PROGRAM RULES
-   Same size as banner, now paired inside .event-media-row
+   PROGRAM RULES  (inside bottom row)
    ================================================================ */
 
 .notif-media-stack {
@@ -346,7 +346,6 @@
 
 /* ================================================================
    PROGRAM FLOW
-   Compact version
    ================================================================ */
 
 .program-flow {
@@ -484,7 +483,6 @@
 
 /* ================================================================
    LIGHTBOX
-   Used for banner and program rules preview
    ================================================================ */
 
 .lightbox-overlay {
@@ -521,13 +519,36 @@
   background: #fff;
 }
 
-.lightbox-pdf {
+.lightbox-pdf-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
   width: 90vw;
-  height: 85vh;
   max-width: 1000px;
+}
+
+.lightbox-pdf {
+  width: 100%;
+  height: 85vh;
+  max-height: 85vh;
   border: none;
   border-radius: 10px;
   background: #fff;
+}
+
+.lightbox-pdf-link {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: underline;
+  padding: 6px 12px;
+  background: rgba(0,0,0,0.4);
+  border-radius: 6px;
+}
+
+.lightbox-pdf-link:hover {
+  background: rgba(0,0,0,0.6);
 }
 
 
@@ -794,7 +815,6 @@
   }
 
   .lightbox-pdf {
-    width: 95vw;
     height: 80vh;
   }
 }

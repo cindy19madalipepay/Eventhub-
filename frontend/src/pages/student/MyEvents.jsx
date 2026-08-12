@@ -4,16 +4,10 @@ import api from '../../utils/api';
 import toast from 'react-hot-toast';
 import EvaluationModal from '../../components/EvaluationModal';
 import './MyEvents.css';
-import './Notifications.css'; // reuse lightbox + media-thumb styles for banner/rules viewer
+import './Notifications.css';
 
-// api.defaults.baseURL is 'http://localhost:5000/api' — strip the /api
-// to get the root the /uploads static folder is served from. Only used
-// as a fallback for any older records saved before the Cloudinary switch.
 const UPLOADS_BASE = api.defaults.baseURL.replace(/\/api\/?$/, '');
 
-// banner_image is now a full Cloudinary URL (stored that way since the
-// uploadMiddleware Cloudinary migration) — falls back to the old
-// local-path style for any records saved before that switch.
 const getBannerSrc = (event) => {
   if (!event) return null;
   if (event.banner_image) {
@@ -25,9 +19,6 @@ const getBannerSrc = (event) => {
   return null;
 };
 
-// rules_file is now a full Cloudinary URL for the same reason — falls
-// back to the old local-path style ("rules/rules-12345.pdf") for any
-// records saved before the switch.
 const getRulesSrc = (event) => {
   if (!event?.rules_file) return null;
   return event.rules_file.startsWith('http')
@@ -35,11 +26,13 @@ const getRulesSrc = (event) => {
     : `${UPLOADS_BASE}/uploads/${event.rules_file}`;
 };
 
-const isPdfFile = (path) => !!path && path.toLowerCase().endsWith('.pdf');
+// Strip query strings / hashes so Cloudinary URLs still match correctly
+const isPdfFile = (path) => {
+  if (!path) return false;
+  const clean = path.split('?')[0].split('#')[0];
+  return clean.toLowerCase().endsWith('.pdf');
+};
 
-// program_flow is stored as a JSON string (or may already come back parsed
-// as an array, depending on the API layer) — a list of steps like:
-// [{ time: "9:00 AM", title: "Opening Program", description: "..." }, ...]
 const getProgramFlow = (event) => {
   if (!event?.program_flow) return [];
   if (Array.isArray(event.program_flow)) return event.program_flow;
@@ -51,10 +44,6 @@ const getProgramFlow = (event) => {
   }
 };
 
-// How long after an event's start time a student can still register/confirm
-// attendance. After this, if they haven't completed check-in, the event is
-// marked as missed and the action is locked out entirely. Matches the
-// backend's 30-minute check-in window (see attendanceController.js).
 const REGISTRATION_GRACE_MINUTES = 30;
 
 const STATUS_CONFIG = {
@@ -75,41 +64,31 @@ const MyEvents = () => {
   const [attendanceRecords, setAttendanceRecords] = useState([]);
   const [evaluations, setEvaluations] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('all'); // 'all' | 'upcoming' | 'completed'
+  const [filter, setFilter] = useState('all');
   const [busyEventId, setBusyEventId] = useState(null);
 
-  // Coming from a QR scan (?event=123) — used to scroll to and highlight
-  // that specific event card once the list has loaded.
   const [searchParams] = useSearchParams();
   const highlightedEventId = searchParams.get('event');
 
-  // File upload plumbing — one hidden input reused for payment receipts
   const fileInputRef = useRef(null);
-  const [pendingUpload, setPendingUpload] = useState(null); // { type: 'payment', ticketId }
+  const [pendingUpload, setPendingUpload] = useState(null);
 
-  // Evaluation modal
   const [evalEvent, setEvalEvent] = useState(null);
 
-  // Attendance check-in proof modal
-  const [attendanceModal, setAttendanceModal] = useState(null); // { event, ticket }
+  const [attendanceModal, setAttendanceModal] = useState(null);
   const [attendancePhoto, setAttendancePhoto] = useState(null);
   const [submittingAttendance, setSubmittingAttendance] = useState(false);
 
-  // Checkout (logout) proof modal
-  const [checkoutModal, setCheckoutModal] = useState(null); // { event }
+  const [checkoutModal, setCheckoutModal] = useState(null);
   const [checkoutPhoto, setCheckoutPhoto] = useState(null);
   const [submittingCheckout, setSubmittingCheckout] = useState(false);
 
-  // Full-size viewer — shared by the banner and program-rules thumbnails.
-  const [lightbox, setLightbox] = useState(null); // { type: 'image' | 'pdf', src }
+  const [lightbox, setLightbox] = useState(null);
 
   useEffect(() => {
     fetchAll();
   }, []);
 
-  // Once events have loaded, if we arrived here from a QR scan, scroll to
-  // that event's card so the student sees it immediately instead of having
-  // to hunt for it in the list.
   useEffect(() => {
     if (!highlightedEventId || loading) return;
     const el = document.getElementById(`event-card-${highlightedEventId}`);
@@ -144,14 +123,6 @@ const MyEvents = () => {
   const isEvaluated = (event) =>
     evaluations.some((e) => e.event_name === event.event_name && e.date_start === event.date_start);
 
-  // event.date_start may come back as a plain "2026-08-12" string, or as a
-  // full ISO timestamp like "2026-08-12T00:00:00.000Z" depending on how the
-  // backend/DB driver serializes date columns. Always take just the date
-  // portion before appending time_start — otherwise concatenating produces
-  // a malformed string (e.g. "...000ZT11:00") that parses as Invalid Date,
-  // and any comparison against Invalid Date silently evaluates to false —
-  // which is why events stayed stuck on "NOT YET OPEN" forever even after
-  // their actual start time had passed.
   const getEventStart = (event) => {
     const datePart = String(event.date_start).split('T')[0];
     return new Date(`${datePart}T${event.time_start || '00:00'}`);
@@ -159,9 +130,6 @@ const MyEvents = () => {
 
   const hasEventStarted = (event) => new Date() >= getEventStart(event);
 
-  // True once the 30-minute check-in window from the event's start time has
-  // fully elapsed — after this, registering/confirming attendance is locked
-  // out for good and the event counts as missed.
   const isPastRegistrationWindow = (event) => {
     const deadline = new Date(getEventStart(event).getTime() + REGISTRATION_GRACE_MINUTES * 60000);
     return new Date() > deadline;
@@ -189,15 +157,10 @@ const MyEvents = () => {
     }
 
     if (ticket.status !== 'used') {
-      // Registered (e.g. paid) but never confirmed attendance before the
-      // window closed — counts as missed, same as never registering at all.
       if (isPastRegistrationWindow(event)) return 'missed';
       return 'register_attendance';
     }
 
-    // Checked in but not checked out yet. Checkout only becomes available
-    // once the event has ended — while it's still ongoing there's nothing
-    // to do but attend.
     if (attendance && !attendance.checkout_at) {
       return hasEventEnded(event) ? 'checkout' : 'attending';
     }
@@ -229,7 +192,6 @@ const MyEvents = () => {
     return `${displayHour}:${m} ${ampm}`;
   };
 
-  // ─── Register (create ticket) ──────────────────────────────────────────
   const handleRegister = async (event) => {
     setBusyEventId(event.event_id);
     try {
@@ -247,7 +209,6 @@ const MyEvents = () => {
     }
   };
 
-  // ─── Upload receipt (payment) ───────────────────────────────────────────
   const openFilePicker = (type, ticket) => {
     if (!ticket) return;
     setPendingUpload({ type, ticketId: ticket.ticket_id });
@@ -256,7 +217,7 @@ const MyEvents = () => {
 
   const handleFileSelected = async (e) => {
     const file = e.target.files[0];
-    e.target.value = ''; // allow re-selecting the same file later
+    e.target.value = '';
     if (!file || !pendingUpload) return;
 
     const { type, ticketId } = pendingUpload;
@@ -281,9 +242,6 @@ const MyEvents = () => {
     }
   };
 
-  // ─── Attendance check-in proof modal ────────────────────────────────────
-  // ticket === null means this is a brand-new registration (no ticket yet);
-  // the ticket gets created at submit time, right before the photo upload.
   const openAttendanceModal = (event, ticket = null) => {
     setAttendanceModal({ event, ticket });
     setAttendancePhoto(null);
@@ -333,7 +291,6 @@ const MyEvents = () => {
     }
   };
 
-  // ─── Checkout (logout) proof modal ──────────────────────────────────────
   const openCheckoutModal = (event) => {
     setCheckoutModal({ event });
     setCheckoutPhoto(null);
@@ -363,7 +320,6 @@ const MyEvents = () => {
     }
   };
 
-  // ─── Evaluation modal ───────────────────────────────────────────────────
   const openEvalModal = (event) => {
     if (!hasEventEnded(event)) {
       toast('You can evaluate this event after it ends.', { icon: '⏳' });
@@ -372,7 +328,6 @@ const MyEvents = () => {
     setEvalEvent(event);
   };
 
-  // ─── Action button dispatcher ───────────────────────────────────────────
   const handleAction = ({ event, status, ticket }) => {
     if (status === 'not_registered') {
       return event.requires_payment ? handleRegister(event) : openAttendanceModal(event, null);
@@ -396,9 +351,7 @@ const MyEvents = () => {
       />
 
       <div className="myevents-header">
-        <h2 className="myevents-title">
-          My Events
-        </h2>
+        <h2 className="myevents-title">My Events</h2>
         <span className="myevents-count">{filteredEvents.length} events available</span>
       </div>
 
@@ -421,7 +374,7 @@ const MyEvents = () => {
             const evalReady = status === 'pending_evaluation' && hasEventEnded(event);
             const bannerSrc = getBannerSrc(event);
             const rulesSrc = getRulesSrc(event);
-            const rulesIsPdf = isPdfFile(event.rules_file);
+            const rulesIsPdf = isPdfFile(rulesSrc); // check resolved URL, not raw DB value
             const programFlow = getProgramFlow(event);
             const isHighlighted = highlightedEventId != null && String(event.event_id) === String(highlightedEventId);
 
@@ -438,7 +391,7 @@ const MyEvents = () => {
               >
                 <div className="event-card-header">
                   <span className="event-sender">SSC (ADMIN)</span>
-                  <span className={`status-badge badge-${cfg.theme}`}>{cfg.icon} {cfg.label}</span>
+                  <span className={`status-badge badge-${cfg.theme}`}>{cfg.label}</span>
                 </div>
 
                 <h3 className="event-name">{event.event_name}</h3>
@@ -525,7 +478,7 @@ const MyEvents = () => {
                               onClick={() => setLightbox({ type: 'pdf', src: rulesSrc })}
                               role="button"
                               tabIndex={0}
-                              title="Click to view"
+                              title="Click to view PDF"
                             >
                               <span className="notif-thumb-pdf-icon">📄</span>
                             </div>
@@ -537,7 +490,11 @@ const MyEvents = () => {
                               tabIndex={0}
                               title="Click to view full size"
                             >
-                              <img src={rulesSrc} alt="Program rules" />
+                              <img
+                                src={rulesSrc}
+                                alt="Program rules"
+                                onError={(e) => { e.target.closest('.notif-thumb').style.display = 'none'; }}
+                              />
                             </div>
                           )}
                         </div>
@@ -680,12 +637,21 @@ const MyEvents = () => {
             ✕
           </button>
           {lightbox.type === 'pdf' ? (
-            <iframe
-              src={lightbox.src}
-              title="Program rules"
-              className="lightbox-pdf"
-              onClick={(e) => e.stopPropagation()}
-            />
+            <div className="lightbox-pdf-wrap" onClick={(e) => e.stopPropagation()}>
+              <embed
+                src={lightbox.src}
+                type="application/pdf"
+                className="lightbox-pdf"
+              />
+              <a
+                href={lightbox.src}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="lightbox-pdf-link"
+              >
+                Open PDF in new tab ↗
+              </a>
+            </div>
           ) : (
             <img
               src={lightbox.src}
