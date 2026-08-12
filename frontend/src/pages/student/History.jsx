@@ -136,10 +136,17 @@ const History = () => {
       </div>
 
       {/* ── MISSED EVENTS ─────────────────────────────────────── */}
-      {missedEvents.length > 0 && (
-        <>
-          <h3 className="section-title">Missed Events</h3>
-          <div className="history-section">
+      {/* Always rendered now (previously hidden entirely when the list was
+          empty), matching the pattern of every other section below, so an
+          empty result reads as "No missed events" rather than the whole
+          section silently vanishing — which was indistinguishable from a
+          real bug. */}
+      <h3 className="section-title">Missed Events</h3>
+      <div className="history-section">
+        {missedEvents.length === 0 ? (
+          <div className="empty-state">No missed events.</div>
+        ) : (
+          <>
             {(showAllMissed ? missedEvents : missedEvents.slice(0, VISIBLE_LIMIT)).map((event, idx) => (
               <div key={`${event.event_id}-${idx}`} className="history-row missed-row">
                 <div className="row-body">
@@ -156,9 +163,9 @@ const History = () => {
                 {showAllMissed ? 'Show Less' : `Show More (${missedEvents.length - VISIBLE_LIMIT})`}
               </button>
             )}
-          </div>
-        </>
-      )}
+          </>
+        )}
+      </div>
 
       {/* ── PAYMENT RECEIPTS ─────────────────────────────────── */}
       <h3 className="section-title" ref={paymentsRef}>Payment Receipts</h3>
