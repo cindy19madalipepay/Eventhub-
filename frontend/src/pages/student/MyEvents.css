@@ -1,6 +1,6 @@
-/* =========================================================
+/* ================================================================
    MY EVENTS PAGE
-   ========================================================= */
+   ================================================================ */
 
 .myevents-page {
   padding: 24px;
@@ -11,11 +11,6 @@
   text-align: center;
   color: #888;
 }
-
-
-/* =========================================================
-   HEADER
-   ========================================================= */
 
 .myevents-header {
   display: flex;
@@ -44,9 +39,9 @@
 }
 
 
-/* =========================================================
+/* ================================================================
    FILTER TABS
-   ========================================================= */
+   ================================================================ */
 
 .filter-tabs {
   display: flex;
@@ -65,7 +60,7 @@
 }
 
 .filter-tab:hover {
-  background: #f8f8f8;
+  border-color: #2f4a3d;
 }
 
 .filter-tab.active {
@@ -75,9 +70,9 @@
 }
 
 
-/* =========================================================
+/* ================================================================
    EVENTS GRID
-   ========================================================= */
+   ================================================================ */
 
 .events-grid {
   display: grid;
@@ -98,9 +93,9 @@
 }
 
 
-/* =========================================================
+/* ================================================================
    EVENT CARD
-   ========================================================= */
+   ================================================================ */
 
 .event-card {
   background: #fff;
@@ -125,9 +120,62 @@
 }
 
 
-/* =========================================================
+/* ================================================================
+   EVENT MEDIA ROW
+   Program Banner (left) + Program Rules (right)
+   Same 72x72 size as before, just repositioned side by side
+   ================================================================ */
+
+.event-media-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin: 14px 20px 16px;
+  gap: 16px;
+}
+
+.event-media-row .event-banner-group,
+.event-media-row .notif-media-stack {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.event-banner-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #888;
+  letter-spacing: 0.4px;
+  display: block;
+  margin: 0 0 6px;
+}
+
+.event-banner {
+  width: 72px;
+  height: 72px;
+  margin: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f8f8f8;
+  border: 1px solid #e8e8e8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.event-banner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+
+/* ================================================================
    EVENT CARD HEADER
-   ========================================================= */
+   ================================================================ */
 
 .event-card-header {
   display: flex;
@@ -136,7 +184,7 @@
   padding: 14px 20px;
   background: #f8f8f8;
   border-bottom: 1px solid #e8e8e8;
-  margin-top: 12px;
+  margin-top: 8px;
 }
 
 .event-sender {
@@ -146,9 +194,9 @@
 }
 
 
-/* =========================================================
-   EVENT STATUS
-   ========================================================= */
+/* ================================================================
+   STATUS BADGES
+   ================================================================ */
 
 .status-badge {
   font-size: 11px;
@@ -174,9 +222,9 @@
 }
 
 
-/* =========================================================
+/* ================================================================
    EVENT NAME / DESCRIPTION
-   ========================================================= */
+   ================================================================ */
 
 .event-name {
   margin: 18px 20px 4px;
@@ -192,9 +240,9 @@
 }
 
 
-/* =========================================================
+/* ================================================================
    EVENT INFORMATION
-   ========================================================= */
+   ================================================================ */
 
 .event-info-grid {
   display: grid;
@@ -226,9 +274,9 @@
 }
 
 
-/* =========================================================
+/* ================================================================
    PAYMENT
-   ========================================================= */
+   ================================================================ */
 
 .payment-info {
   margin: 0 20px 12px;
@@ -241,143 +289,42 @@
 }
 
 
-/* =========================================================
-   EVENT BANNER + PROGRAM RULES
-   SAME LINE
-   ========================================================= */
-
-.event-media-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  margin: 2px 20px 18px;
-  padding-top: 2px;
-}
-
-.event-media-item {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
-  min-width: 0;
-}
-
-.event-media-label {
-  display: block;
-  font-size: 10px;
-  font-weight: 700;
-  color: #888;
-  letter-spacing: 0.4px;
-  text-transform: uppercase;
-}
-
-
-/* =========================================================
-   SMALL EVENT BANNER
-   ========================================================= */
-
-.event-banner-thumb {
-  width: 92px;
-  height: 92px;
-  border: 1px solid #e8e8e8;
-  border-radius: 10px;
-  overflow: hidden;
-  background: #f8f8f8;
-  cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.event-banner-thumb:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(31, 51, 41, 0.12);
-}
-
-.event-banner-thumb img {
-  width: 100%;
-  height: 100%;
-  display: block;
-  object-fit: cover;
-}
-
-
-/* =========================================================
-   PROGRAM RULES THUMBNAIL
-   ========================================================= */
-
-.event-rules-thumb {
-  width: 92px;
-  height: 92px;
-  border: 1px solid #e8e8e8;
-  border-radius: 10px;
-  overflow: hidden;
-  background: #f8f8f8;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.event-rules-thumb:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(31, 51, 41, 0.12);
-}
-
-.event-rules-thumb img {
-  width: 100%;
-  height: 100%;
-  display: block;
-  object-fit: cover;
-}
-
-
-/* =========================================================
-   PDF THUMBNAIL
-   ========================================================= */
-
-.event-rules-pdf {
-  background: #f8f8f8;
-}
-
-.event-rules-pdf-icon {
-  font-size: 30px;
-}
-
-
-/* =========================================================
-   OLD MEDIA CLASSES
-   Keep these in case other parts of the system use them
-   ========================================================= */
+/* ================================================================
+   PROGRAM RULES
+   Same size as banner, now paired inside .event-media-row
+   ================================================================ */
 
 .notif-media-stack {
-  margin: 0 20px 18px;
+  margin: 0;
 }
 
 .notif-media-row {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 6px;
 }
 
 .notif-info-label {
-  display: block;
   font-size: 10px;
   font-weight: 700;
   color: #888;
   letter-spacing: 0.4px;
+  display: block;
 }
 
 .notif-thumb {
-  width: 92px;
-  height: 92px;
-  border: 1px solid #e8e8e8;
+  width: 72px;
+  height: 72px;
   border-radius: 10px;
   overflow: hidden;
+  border: 1px solid #e8e8e8;
   background: #f8f8f8;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .notif-thumb img {
@@ -387,90 +334,109 @@
   display: block;
 }
 
+.notif-thumb-pdf {
+  width: 72px;
+  height: 72px;
+}
+
 .notif-thumb-pdf-icon {
-  font-size: 30px;
+  font-size: 28px;
 }
 
 
-/* =========================================================
-   EVENT FLOW
-   ========================================================= */
+/* ================================================================
+   PROGRAM FLOW
+   Compact version
+   ================================================================ */
 
 .program-flow {
-  margin: 0 20px 18px;
+  margin: 0 20px 16px;
+  padding: 0;
 }
 
 .program-flow > .notif-info-label {
-  margin-bottom: 10px;
+  display: block;
+  margin-bottom: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #888;
+  letter-spacing: 0.4px;
 }
 
 .program-flow-timeline {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
+  width: 100%;
+  max-height: 150px;
+  overflow-y: auto;
+  background: #f8f8f8;
+  border-radius: 10px;
+  padding: 10px 12px;
+  box-sizing: border-box;
 }
 
 .program-flow-step {
   display: flex;
   align-items: flex-start;
-  min-height: 48px;
+  gap: 8px;
+  min-height: 28px;
 }
 
 .program-flow-marker {
-  width: 20px;
+  width: 10px;
+  min-width: 10px;
   position: relative;
   display: flex;
   justify-content: center;
-  flex-shrink: 0;
 }
 
 .program-flow-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
+  width: 6px;
+  height: 6px;
   background: #2f4a3d;
+  border-radius: 50%;
   margin-top: 5px;
+  display: block;
 }
 
 .program-flow-line {
   position: absolute;
-  top: 13px;
-  bottom: -4px;
+  top: 11px;
   width: 1px;
-  background: #d8e2dc;
+  height: 20px;
+  background: #d6ddd9;
 }
 
 .program-flow-content {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding-left: 6px;
-  padding-bottom: 10px;
+  align-items: center;
+  gap: 8px;
   min-width: 0;
+  flex: 1;
+  padding-bottom: 6px;
 }
 
 .program-flow-time {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   color: #6a8f78;
+  white-space: nowrap;
+  min-width: 55px;
 }
 
 .program-flow-title {
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 600;
   color: #1f3329;
+  line-height: 1.2;
 }
 
 .program-flow-desc {
-  margin: 0;
-  font-size: 12px;
-  color: #777;
+  display: none;
 }
 
 
-/* =========================================================
+/* ================================================================
    EVENT ACTIONS
-   ========================================================= */
+   ================================================================ */
 
 .event-actions {
   margin: auto 20px 20px;
@@ -516,9 +482,10 @@
 }
 
 
-/* =========================================================
+/* ================================================================
    LIGHTBOX
-   ========================================================= */
+   Used for banner and program rules preview
+   ================================================================ */
 
 .lightbox-overlay {
   position: fixed;
@@ -527,20 +494,20 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2000;
   padding: 30px;
+  z-index: 2000;
 }
 
 .lightbox-close {
-  position: absolute;
-  top: 18px;
-  right: 22px;
+  position: fixed;
+  top: 20px;
+  right: 24px;
   width: 40px;
   height: 40px;
   border: none;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.9);
-  color: #1f3329;
+  background: #fff;
+  color: #333;
   font-size: 20px;
   cursor: pointer;
   z-index: 2001;
@@ -557,15 +524,16 @@
 .lightbox-pdf {
   width: 90vw;
   height: 85vh;
+  max-width: 1000px;
   border: none;
   border-radius: 10px;
   background: #fff;
 }
 
 
-/* =========================================================
+/* ================================================================
    EVALUATION MODAL
-   ========================================================= */
+   ================================================================ */
 
 .eval-modal-overlay {
   position: fixed;
@@ -660,9 +628,9 @@
 }
 
 
-/* =========================================================
+/* ================================================================
    ATTENDANCE PROOF MODAL
-   ========================================================= */
+   ================================================================ */
 
 .attendance-modal-overlay {
   position: fixed;
@@ -784,19 +752,18 @@
 }
 
 
-/* =========================================================
+/* ================================================================
    RESPONSIVE
-   ========================================================= */
+   ================================================================ */
 
-@media (max-width: 600px) {
-
+@media (max-width: 768px) {
   .myevents-page {
     padding: 16px;
   }
 
   .myevents-header {
-    align-items: flex-start;
     flex-direction: column;
+    align-items: flex-start;
     gap: 6px;
   }
 
@@ -804,18 +771,17 @@
     grid-template-columns: 1fr;
   }
 
+  .event-card {
+    width: 100%;
+  }
+
   .event-info-grid {
     gap: 8px;
   }
 
-  .event-media-row {
-    gap: 12px;
-  }
-
-  .event-banner-thumb,
-  .event-rules-thumb {
-    width: 82px;
-    height: 82px;
+  .event-banner {
+    width: 72px;
+    height: 72px;
   }
 
   .lightbox-overlay {
@@ -830,5 +796,44 @@
   .lightbox-pdf {
     width: 95vw;
     height: 80vh;
+  }
+}
+
+@media (max-width: 480px) {
+  .myevents-title {
+    font-size: 20px;
+  }
+
+  .myevents-count {
+    font-size: 12px;
+  }
+
+  .filter-tabs {
+    width: 100%;
+  }
+
+  .filter-tab {
+    flex: 1;
+    padding: 8px 10px;
+  }
+
+  .events-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .event-info-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .event-name {
+    font-size: 18px;
+  }
+
+  .attendance-modal {
+    width: calc(100% - 24px);
+  }
+
+  .event-media-row {
+    gap: 10px;
   }
 }
