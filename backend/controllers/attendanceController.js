@@ -1,4 +1,5 @@
 const { pool } = require('../config/db');
+const cloudinary = require('../config/cloudinary');
 
 // ============================================================
 // PHILIPPINE TIME
@@ -6,6 +7,34 @@ const { pool } = require('../config/db');
 // Assumes MySQL server clock is UTC.
 // Converts UTC to Philippine time (UTC+8).
 const PH_NOW = "DATE_ADD(UTC_TIMESTAMP(), INTERVAL 8 HOUR)";
+
+// ============================================================
+// PHOTO URL RESOLUTION
+// ============================================================
+// With multer-storage-cloudinary, req.file.path is already the full
+// secure Cloudinary URL — that's what we now save straight into the
+// `photo` / `checkout_photo` columns (see registerAttendance /
+// registerCheckout below). resolvePhotoUrl() just passes those through.
+//
+// It also repairs OLDER rows that were saved before this fix, back when
+// the code stored req.file.filename (just the Cloudinary public_id,
+// e.g. "attendance-2-1786251643285.jpg") instead of the full URL. Those
+// files were still uploaded to Cloudinary successfully — only the DB
+// value was wrong — so we can reconstruct the correct URL from the
+// public_id using the known folder + cloud name.
+const CLOUD_NAME = cloudinary.config().cloud_name;
+
+const resolvePhotoUrl = (value, folder) => {
+  if (!value) return null;
+
+  // Already a full URL (new rows, saved via req.file.path) — use as-is.
+  if (/^https?:\/\//i.test(value)) return value;
+
+  // Legacy row: value is just the Cloudinary public_id/filename.
+  // Strip any accidental leading slash and rebuild the delivery URL.
+  const cleaned = value.replace(/^\/+/, '');
+  return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${folder}/${cleaned}`;
+};
 
 // ============================================================
 // SCAN QR CODE - ADMIN
@@ -268,6 +297,8 @@ const registerAttendance = async (req, res) => {
       });
     }
 
+    // req.file.path is the full secure Cloudinary URL (CloudinaryStorage
+    // sets this) — save the URL itself, not req.file.filename (public_id).
     await pool.query(
       `INSERT INTO attendance
         (
@@ -284,7 +315,7 @@ const registerAttendance = async (req, res) => {
         ticket.ticket_id,
         req.user.user_id,
         ticket.event_id,
-        req.file.filename,
+        req.file.path,
       ]
     );
 
@@ -359,13 +390,15 @@ const registerCheckout = async (req, res) => {
       });
     }
 
+    // Same fix as check-in: save the full Cloudinary URL (req.file.path),
+    // not just the public_id (req.file.filename).
     await pool.query(
       `UPDATE attendance
        SET checkout_at = ${PH_NOW},
            checkout_photo = ?
        WHERE attendance_id = ?`,
       [
-        req.file.filename,
+        req.file.path,
         rows[0].attendance_id,
       ]
     );
@@ -445,12 +478,8 @@ const getAttendanceByEvent = async (req, res) => {
 
     const formatted = attendance.map((row) => ({
       ...row,
-      photo_url: row.photo
-        ? `/uploads/attendance/${row.photo}`
-        : null,
-      checkout_photo_url: row.checkout_photo
-        ? `/uploads/attendance/${row.checkout_photo}`
-        : null,
+      photo_url: resolvePhotoUrl(row.photo, 'eventhub/attendance'),
+      checkout_photo_url: resolvePhotoUrl(row.checkout_photo, 'eventhub/attendance'),
     }));
 
     return res.status(200).json({
@@ -495,12 +524,8 @@ const getMyAttendance = async (req, res) => {
 
     const attendedWithPhotoUrl = attended.map((a) => ({
       ...a,
-      photo_url: a.photo
-        ? `/uploads/attendance/${a.photo}`
-        : null,
-      checkout_photo_url: a.checkout_photo
-        ? `/uploads/attendance/${a.checkout_photo}`
-        : null,
+      photo_url: resolvePhotoUrl(a.photo, 'eventhub/attendance'),
+      checkout_photo_url: resolvePhotoUrl(a.checkout_photo, 'eventhub/attendance'),
     }));
 
     // MISSED EVENTS
@@ -619,10 +644,16 @@ const getAttendanceReport = async (req, res) => {
       params
     );
 
+    const formatted = report.map((row) => ({
+      ...row,
+      photo_url: resolvePhotoUrl(row.photo, 'eventhub/attendance'),
+      checkout_photo_url: resolvePhotoUrl(row.checkout_photo, 'eventhub/attendance'),
+    }));
+
     return res.status(200).json({
       success: true,
-      count: report.length,
-      report,
+      count: formatted.length,
+      report: formatted,
     });
   } catch (error) {
     console.error('GetAttendanceReport error:', error);
@@ -962,7 +993,7 @@ const getBlockReport = async (req, res) => {
       ]
     );
 
-    const [attendance] = await pool.query(
+    const [attendanceRows] = await pool.query(
       `SELECT
           a.attendance_id,
           a.event_id,
@@ -995,6 +1026,12 @@ const getBlockReport = async (req, res) => {
         block,
       ]
     );
+
+    const attendance = attendanceRows.map((row) => ({
+      ...row,
+      photo_url: resolvePhotoUrl(row.photo, 'eventhub/attendance'),
+      checkout_photo_url: resolvePhotoUrl(row.checkout_photo, 'eventhub/attendance'),
+    }));
 
     return res.status(200).json({
       success: true,
