@@ -1,9 +1,110 @@
-/* =========================================================
-   EVENT BANNER + PROGRAM RULES
-   SAME SIZE AND SAME POSITION
-   ========================================================= */
+.myevents-page {
+  padding: 24px;
+}
 
-/* Event Banner */
+.myevents-loading {
+  padding: 48px;
+  text-align: center;
+  color: #888;
+}
+
+.myevents-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.myevents-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 22px;
+  font-weight: 700;
+  color: #1f3329;
+  margin: 0;
+}
+
+.myevents-icon {
+  font-size: 20px;
+}
+
+.myevents-count {
+  color: #666;
+  font-size: 14px;
+}
+
+.filter-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.filter-tab {
+  padding: 8px 16px;
+  border: 1px solid #E8E8E8;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  color: #666;
+}
+
+.filter-tab.active {
+  background: #2f4a3d;
+  border-color: #2f4a3d;
+  color: #fff;
+}
+
+.events-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 20px;
+}
+
+.no-events {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 48px;
+  color: #888;
+}
+
+.no-events-sub {
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+
+/* ─────────────────────────────────────────────
+   EVENT CARD
+   ───────────────────────────────────────────── */
+
+.event-card {
+  background: #fff;
+  border-radius: 16px;
+  border: 2px solid #E8E8E8;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.event-card.theme-blue {
+  border-color: #2f4a3d;
+}
+
+.event-card.theme-orange {
+  border-color: #6a8f78;
+}
+
+.event-card.theme-green {
+  border-color: #6a8f78;
+}
+
+
+/* ─────────────────────────────────────────────
+   EVENT BANNER
+   ───────────────────────────────────────────── */
+
 .event-banner {
   width: 100%;
   height: 180px;
@@ -26,7 +127,122 @@
 }
 
 
-/* Program Rules container */
+/* ─────────────────────────────────────────────
+   EVENT CARD HEADER
+   ───────────────────────────────────────────── */
+
+.event-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: #F8F8F8;
+  border-bottom: 1px solid #E8E8E8;
+  margin-top: 0;
+}
+
+.event-sender {
+  font-size: 13px;
+  font-weight: 600;
+  color: #666;
+}
+
+
+/* ─────────────────────────────────────────────
+   STATUS BADGES
+   ───────────────────────────────────────────── */
+
+.status-badge {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  padding: 6px 12px;
+  border-radius: 999px;
+}
+
+.status-badge.badge-blue {
+  background: #e6f0ea;
+  color: #2f4a3d;
+}
+
+.status-badge.badge-orange {
+  background: #e6f0ea;
+  color: #2f4a3d;
+}
+
+.status-badge.badge-green {
+  background: #e6f0ea;
+  color: #6a8f78;
+}
+
+
+/* ─────────────────────────────────────────────
+   EVENT INFORMATION
+   ───────────────────────────────────────────── */
+
+.event-name {
+  margin: 18px 20px 4px;
+  font-size: 19px;
+  font-weight: 700;
+  color: #1f3329;
+}
+
+.event-description {
+  margin: 0 20px 14px;
+  font-size: 13px;
+  color: #666;
+}
+
+.event-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 0 20px 16px;
+}
+
+.event-info-item {
+  background: #F8F8F8;
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.event-info-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #888;
+  letter-spacing: 0.4px;
+}
+
+.event-info-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1B0833;
+}
+
+
+/* ─────────────────────────────────────────────
+   PAYMENT
+   ───────────────────────────────────────────── */
+
+.payment-info {
+  margin: 0 20px 12px;
+}
+
+.payment-amount {
+  font-size: 15px;
+  font-weight: 700;
+  color: #2f4a3d;
+}
+
+
+/* ─────────────────────────────────────────────
+   PROGRAM RULES
+   SAME SIZE AS EVENT BANNER
+   ───────────────────────────────────────────── */
+
 .notif-media-stack {
   width: 100%;
   margin: 0 0 16px;
@@ -38,8 +254,6 @@
   width: 100%;
 }
 
-
-/* Program Rules title */
 .notif-media-row .notif-info-label {
   display: block;
   margin-bottom: 8px;
@@ -50,10 +264,8 @@
 }
 
 
-/* Program Rules image
-   SAME WIDTH as banner
-   SAME HEIGHT as banner
-*/
+/* Program Rules IMAGE */
+
 .notif-media-row .notif-thumb {
   width: 100%;
   height: 180px;
@@ -77,8 +289,8 @@
 }
 
 
-/* Program Rules PDF
-   SAME SIZE as image */
+/* Program Rules PDF */
+
 .notif-media-row .notif-thumb-pdf {
   width: 100%;
   height: 180px;
@@ -95,4 +307,405 @@
 
 .notif-media-row .notif-thumb-pdf-icon {
   font-size: 48px;
+}
+
+
+/* ─────────────────────────────────────────────
+   EVENT FLOW
+   ───────────────────────────────────────────── */
+
+.program-flow {
+  margin: 0 20px 16px;
+}
+
+.program-flow-timeline {
+  margin-top: 10px;
+}
+
+.program-flow-step {
+  display: flex;
+  gap: 12px;
+  position: relative;
+}
+
+.program-flow-marker {
+  width: 18px;
+  min-width: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.program-flow-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #2f4a3d;
+  margin-top: 5px;
+}
+
+.program-flow-line {
+  width: 2px;
+  flex: 1;
+  min-height: 20px;
+  background: #dce5df;
+}
+
+.program-flow-content {
+  padding-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.program-flow-time {
+  font-size: 11px;
+  font-weight: 700;
+  color: #6a8f78;
+}
+
+.program-flow-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1f3329;
+}
+
+.program-flow-desc {
+  margin: 0;
+  font-size: 12px;
+  color: #666;
+}
+
+
+/* ─────────────────────────────────────────────
+   EVENT ACTIONS
+   ───────────────────────────────────────────── */
+
+.event-actions {
+  margin: auto 20px 20px;
+  padding-top: 12px;
+  border-top: 1px solid #E8E8E8;
+}
+
+.action-btn {
+  width: 100%;
+  padding: 13px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  color: #fff;
+}
+
+.action-btn.btn-blue {
+  background: #2f4a3d;
+}
+
+.action-btn.btn-orange {
+  background: #6a8f78;
+}
+
+.action-btn:disabled,
+.action-btn.disabled {
+  background: #d1d5db;
+  color: #666;
+  cursor: not-allowed;
+}
+
+.completed-msg {
+  text-align: center;
+  font-weight: 700;
+  color: #6a8f78;
+  padding: 10px;
+}
+
+
+/* ─────────────────────────────────────────────
+   EVALUATION MODAL
+   ───────────────────────────────────────────── */
+
+.eval-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(31, 51, 41, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.eval-modal {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.eval-modal h3 {
+  margin: 0 0 16px;
+  color: #1f3329;
+}
+
+.eval-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #666;
+  margin: 12px 0 6px;
+}
+
+.eval-stars {
+  display: flex;
+  gap: 6px;
+}
+
+.eval-star {
+  background: none;
+  border: none;
+  font-size: 26px;
+  color: #d1d5db;
+  cursor: pointer;
+  padding: 0;
+}
+
+.eval-star.filled {
+  color: #6a8f78;
+}
+
+.eval-textarea {
+  width: 100%;
+  border: 1px solid #E8E8E8;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.eval-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.eval-cancel-btn {
+  padding: 10px 16px;
+  border: 1px solid #E8E8E8;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  font-weight: 600;
+  color: #666;
+}
+
+.eval-submit-btn {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  background: #2f4a3d;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.eval-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+
+/* ─────────────────────────────────────────────
+   ATTENDANCE PROOF MODAL
+   ───────────────────────────────────────────── */
+
+.attendance-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(31, 51, 41, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.attendance-modal {
+  background: #fff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 480px;
+  overflow: hidden;
+}
+
+.attendance-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 2px solid #2f4a3d;
+}
+
+.attendance-modal-header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #1f3329;
+}
+
+.attendance-modal-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #888;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.attendance-modal-info {
+  background: #e6f0ea;
+  padding: 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.attendance-info-row {
+  display: flex;
+  gap: 8px;
+  font-size: 14px;
+  color: #1B0833;
+}
+
+.attendance-modal-body {
+  padding: 20px 24px;
+}
+
+.attendance-upload-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1B0833;
+  margin-bottom: 10px;
+}
+
+.attendance-file-input-wrap {
+  border: 1px solid #E8E8E8;
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+.attendance-file-input-wrap input[type='file'] {
+  font-size: 13px;
+  width: 100%;
+}
+
+.attendance-upload-hint {
+  font-size: 12px;
+  color: #888;
+  margin: 10px 0 0;
+}
+
+.attendance-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 1px solid #E8E8E8;
+}
+
+.attendance-cancel-btn {
+  padding: 12px 20px;
+  border: 1px solid #E8E8E8;
+  border-radius: 8px;
+  background: #F8F8F8;
+  cursor: pointer;
+  font-weight: 700;
+  color: #666;
+}
+
+.attendance-submit-btn {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  background: #2f4a3d;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.attendance-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+
+/* ─────────────────────────────────────────────
+   RESPONSIVE
+   ───────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .myevents-page {
+    padding: 16px;
+  }
+
+  .events-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .myevents-header {
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .myevents-count {
+    display: none;
+  }
+
+  .event-banner {
+    height: 160px;
+  }
+
+  .notif-media-row .notif-thumb,
+  .notif-media-row .notif-thumb-pdf {
+    height: 160px;
+  }
+}
+
+@media (max-width: 480px) {
+  .event-info-grid {
+    gap: 8px;
+    margin-left: 14px;
+    margin-right: 14px;
+  }
+
+  .event-name {
+    margin-left: 14px;
+    margin-right: 14px;
+  }
+
+  .event-description {
+    margin-left: 14px;
+    margin-right: 14px;
+  }
+
+  .notif-media-stack {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .event-actions {
+    margin-left: 14px;
+    margin-right: 14px;
+  }
+
+  .event-banner {
+    height: 140px;
+  }
+
+  .notif-media-row .notif-thumb,
+  .notif-media-row .notif-thumb-pdf {
+    height: 140px;
+  }
 }
