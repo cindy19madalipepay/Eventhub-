@@ -104,14 +104,13 @@
   padding: 14px 20px;
   background: #F8F8F8;
   border-bottom: 1px solid #E8E8E8;
+  margin-top: 12px;
 }
 
 .event-banner {
   width: 100%;
   aspect-ratio: 16 / 7;
-  border-radius: 10px;
   overflow: hidden;
-  margin-bottom: 12px;
   background: #F8F8F8;
 }
 

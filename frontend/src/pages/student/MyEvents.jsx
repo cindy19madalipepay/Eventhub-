@@ -506,7 +506,7 @@ const MyEvents = () => {
 
                 {programFlow.length > 0 && (
                   <div className="program-flow">
-                    <span className="notif-info-label">PROGRAM FLOW</span>
+                    <span className="notif-info-label">EVENT FLOW</span>
                     <div className="program-flow-timeline">
                       {programFlow.map((step, idx) => (
                         <div className="program-flow-step" key={idx}>
