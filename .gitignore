@@ -1,6 +1,6 @@
 node_modules/
-.envgit status | Select-String "\.env"
+.env
 backend/.env
 backend/uploads/
 frontend/node_modules/
-backend/node_modules/backend/.env
+backend/node_modules/
