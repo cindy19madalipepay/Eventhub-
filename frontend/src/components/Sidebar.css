@@ -1,6 +1,5 @@
 /* =========================================================
    EVENTHUB SIDEBAR
-   DESKTOP + MOBILE
 ========================================================= */
 
 .sidebar {
@@ -11,25 +10,26 @@
   width: 260px;
   height: 100vh;
 
-  background: linear-gradient(
-    180deg,
-    #ffffff 0%,
-    #ffffff 12%,
-    #6a8f78 45%,
-    #2f4a3d 80%,
-    #1f3329 100%
-  );
+  background:
+    linear-gradient(
+      180deg,
+      #ffffff 0%,
+      #ffffff 12%,
+      #6a8f78 45%,
+      #2f4a3d 80%,
+      #1f3329 100%
+    );
 
   color: #fff;
 
   display: flex;
   flex-direction: column;
 
-  z-index: 2000;
+  z-index: 1000;
 
   overflow-y: auto;
 
-  transition: transform 0.25s ease;
+  box-sizing: border-box;
 }
 
 
@@ -40,11 +40,15 @@
 .sidebar-logo {
   display: flex;
   align-items: center;
+
   gap: 12px;
 
   padding: 24px 20px;
 
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  border-bottom:
+    1px solid rgba(0, 0, 0, 0.08);
+
+  flex-shrink: 0;
 }
 
 .sidebar-logo-img {
@@ -65,11 +69,12 @@
 
 
 /* =========================================================
-   USER PROFILE AREA
+   USER
 ========================================================= */
 
 .sidebar-user-wrapper {
   position: relative;
+  flex-shrink: 0;
 }
 
 .sidebar-user {
@@ -83,9 +88,7 @@
   padding: 20px;
 
   background: none;
-
   border: none;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 
   cursor: pointer;
 
@@ -95,18 +98,23 @@
 
   color: inherit;
 
+  border-bottom:
+    1px solid rgba(0, 0, 0, 0.08);
+
   border-radius: 0;
 
-  transition: background 0.15s ease;
+  transition:
+    background 0.15s ease;
 }
 
 .sidebar-user:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background:
+    rgba(255, 255, 255, 0.08);
 }
 
 
 /* =========================================================
-   USER AVATAR
+   AVATAR
 ========================================================= */
 
 .user-avatar {
@@ -153,7 +161,7 @@
 
 
 /* =========================================================
-   USER INFORMATION
+   USER INFO
 ========================================================= */
 
 .user-info {
@@ -173,40 +181,32 @@
 
   margin: 0;
 
-  white-space: nowrap;
-
   overflow: hidden;
-
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .user-role {
   font-size: 12px;
 
-  color: rgba(26, 46, 34, 0.6);
+  color:
+    rgba(26, 46, 34, 0.6);
 
   margin: 0;
 
   white-space: nowrap;
-
-  overflow: hidden;
-
-  text-overflow: ellipsis;
 }
-
-
-/* =========================================================
-   CARET
-========================================================= */
 
 .user-caret {
   margin-left: auto;
 
   font-size: 11px;
 
-  color: rgba(26, 46, 34, 0.6);
+  color:
+    rgba(26, 46, 34, 0.6);
 
-  transition: transform 0.15s ease;
+  transition:
+    transform 0.15s ease;
 }
 
 .user-caret.open {
@@ -226,45 +226,87 @@
   padding: 12px 0;
 
   display: flex;
-
   flex-direction: column;
 
   gap: 2px;
+
+  min-height: 0;
 }
 
 .nav-item {
   display: flex;
-
   align-items: center;
-
   justify-content: space-between;
 
   padding: 12px 20px;
 
   margin: 0 8px;
 
-  color: rgba(255, 255, 255, 0.6);
+  color:
+    rgba(255, 255, 255, 0.65);
 
   text-decoration: none;
 
   font-size: 14px;
-
   font-weight: 500;
+
+  transition:
+    all 0.2s ease;
 
   border-radius: 8px;
 
-  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.nav-left {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  min-width: 0;
+}
+
+.nav-icon {
+  width: 24px;
+  height: 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  font-size: 20px;
+
+  color: #000;
+
+  font-weight: 700;
+}
+
+.nav-label {
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
 }
 
 .nav-item:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background:
+    rgba(255, 255, 255, 0.08);
 
   color: #fff;
 }
 
 .nav-item.active {
-  background: rgba(255, 255, 255, 0.1);
+  background:
+    rgba(255, 255, 255, 0.18);
 
+  color: #000;
+}
+
+.nav-item.active .nav-icon {
   color: #000;
 }
 
@@ -289,6 +331,8 @@
   min-width: 20px;
 
   text-align: center;
+
+  box-sizing: border-box;
 }
 
 
@@ -298,53 +342,48 @@
 
 .sidebar-logout {
   display: flex;
-
   align-items: center;
+
+  gap: 12px;
 
   padding: 14px 20px;
 
   margin: 8px;
 
-  background: rgba(255, 255, 255, 0.05);
+  background:
+    rgba(255, 255, 255, 0.05);
 
   border: none;
 
   border-radius: 8px;
 
-  color: rgba(255, 255, 255, 0.6);
+  color:
+    rgba(255, 255, 255, 0.65);
 
   font-size: 14px;
-
   font-weight: 500;
 
   cursor: pointer;
 
-  transition: all 0.2s ease;
+  transition:
+    all 0.2s ease;
+
+  flex-shrink: 0;
 }
 
 .sidebar-logout:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background:
+    rgba(255, 255, 255, 0.1);
 
   color: #fff;
 }
 
+.logout-icon {
+  font-size: 20px;
 
-/* =========================================================
-   SIDEBAR SCROLLBAR
-========================================================= */
+  color: #000;
 
-.sidebar::-webkit-scrollbar {
-  width: 4px;
-}
-
-.sidebar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.sidebar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-
-  border-radius: 4px;
+  font-weight: 700;
 }
 
 
@@ -358,7 +397,6 @@
   top: calc(100% + 8px);
 
   left: 8px;
-
   right: 8px;
 
   background: #ffffff;
@@ -368,16 +406,18 @@
   border-radius: 12px;
 
   box-shadow:
-    0 12px 32px -8px rgba(0, 0, 0, 0.35);
+    0 12px 32px -8px
+    rgba(0, 0, 0, 0.35);
 
   padding: 16px;
 
-  z-index: 3000;
+  z-index: 1100;
+
+  box-sizing: border-box;
 }
 
 .profile-popover-header {
   display: flex;
-
   align-items: center;
 
   gap: 10px;
@@ -387,7 +427,6 @@
 
 .profile-popover-name {
   font-size: 13.5px;
-
   font-weight: 700;
 
   margin: 0;
@@ -414,11 +453,6 @@
 
   word-break: break-all;
 }
-
-
-/* =========================================================
-   EDIT PROFILE BUTTON
-========================================================= */
 
 .profile-popover-btn {
   width: 100%;
@@ -451,7 +485,6 @@
 
 .profile-popover-form {
   display: flex;
-
   flex-direction: column;
 }
 
@@ -474,11 +507,8 @@
 }
 
 .profile-popover-form input {
-  width: 100%;
-
-  box-sizing: border-box;
-
-  border: 1px solid #e6e9f2;
+  border:
+    1px solid #e6e9f2;
 
   border-radius: 8px;
 
@@ -487,6 +517,10 @@
   font-size: 13px;
 
   font-family: inherit;
+
+  box-sizing: border-box;
+
+  width: 100%;
 }
 
 .profile-popover-form input:focus {
@@ -494,11 +528,6 @@
 
   border-color: #0f3460;
 }
-
-
-/* =========================================================
-   PROFILE ACTION BUTTONS
-========================================================= */
 
 .profile-popover-actions {
   display: flex;
@@ -558,7 +587,6 @@
 
 .avatar-edit-row {
   display: flex;
-
   align-items: center;
 
   gap: 12px;
@@ -568,12 +596,9 @@
 
 .avatar-edit-actions {
   display: flex;
-
   flex-direction: column;
 
   gap: 3px;
-
-  min-width: 0;
 }
 
 .avatar-edit-btn {
@@ -608,36 +633,91 @@
 
 
 /* =========================================================
-   MOBILE SIDEBAR BUTTON
-   HIDDEN ON DESKTOP
+   MOBILE HAMBURGER
+   ONLY THE THREE BLACK LINES
 ========================================================= */
 
 .mobile-sidebar-toggle {
   display: none;
+
+  position: fixed;
+
+  left: 0;
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  width: 54px;
+  height: 70px;
+
+  border: none;
+
+  border-radius:
+    0 12px 12px 0;
+
+  background: #ffffff;
+
+  align-items: center;
+  justify-content: center;
+
+  flex-direction: column;
+
+  gap: 6px;
+
+  cursor: pointer;
+
+  z-index: 2001;
+
+  box-shadow:
+    4px 4px 15px
+    rgba(0, 0, 0, 0.15);
+
+  padding: 0;
+}
+
+.mobile-sidebar-toggle span {
+  display: block;
+
+  width: 30px;
+  height: 4px;
+
+  background: #000000;
+
+  border-radius: 4px;
+}
+
+.mobile-sidebar-toggle:active {
+  transform:
+    translateY(-50%)
+    scale(0.96);
 }
 
 
 /* =========================================================
    MOBILE OVERLAY
-   HIDDEN ON DESKTOP
 ========================================================= */
 
 .mobile-sidebar-overlay {
   display: none;
+
+  position: fixed;
+
+  inset: 0;
+
+  background:
+    rgba(0, 0, 0, 0.45);
+
+  z-index: 999;
 }
 
 
 /* =========================================================
-   PHONE / TABLET
-   <= 768px
+   MOBILE
 ========================================================= */
 
 @media (max-width: 768px) {
 
-  /* -------------------------------------------------------
-     SIDEBAR DRAWER
-  ------------------------------------------------------- */
-
+  /* Sidebar hidden by default */
   .sidebar {
     width: 260px;
 
@@ -648,194 +728,99 @@
     position: fixed;
 
     top: 0;
-
     left: 0;
 
-    /*
-       Sidebar starts outside the screen
-    */
+    transform:
+      translateX(-105%);
 
-    transform: translateX(-105%);
-
-    transition: transform 0.25s ease;
+    transition:
+      transform 0.25s ease;
 
     z-index: 2000;
 
     box-shadow:
-      8px 0 25px rgba(0, 0, 0, 0.25);
+      8px 0 25px
+      rgba(0, 0, 0, 0.25);
+
+    overflow-y: auto;
   }
 
 
-  /* -------------------------------------------------------
-     OPEN SIDEBAR
-  ------------------------------------------------------- */
+  /* Sidebar opened */
 
   .sidebar.mobile-open {
-    transform: translateX(0);
+    transform:
+      translateX(0);
   }
 
 
-  /* =======================================================
-     BLACK 3-LINE BUTTON
-     LEFT SIDE OF PHONE
-  ======================================================= */
+  /* SHOW ONLY HAMBURGER */
 
   .mobile-sidebar-toggle {
     display: flex;
-
-    position: fixed;
-
-    top: 50%;
-
-    left: 0;
-
-    transform: translateY(-50%);
-
-    width: 42px;
-
-    height: 52px;
-
-    align-items: center;
-
-    justify-content: center;
-
-    flex-direction: column;
-
-    background: #ffffff;
-
-    color: #000000;
-
-    border: 1px solid #d1d5db;
-
-    border-left: none;
-
-    border-radius: 0 10px 10px 0;
-
-    cursor: pointer;
-
-    z-index: 3000;
-
-    box-shadow:
-      2px 4px 12px rgba(0, 0, 0, 0.18);
-
-    padding: 0;
-
-    transition:
-      background 0.2s ease,
-      transform 0.2s ease;
   }
 
 
-  /* -------------------------------------------------------
-     THREE BLACK LINES
-  ------------------------------------------------------- */
-
-  .mobile-sidebar-toggle span {
-    display: block;
-
-    width: 22px;
-
-    height: 3px;
-
-    background: #000000;
-
-    border-radius: 3px;
-
-    margin: 2.5px 0;
-  }
-
-
-  /* -------------------------------------------------------
-     BUTTON HOVER
-  ------------------------------------------------------- */
-
-  .mobile-sidebar-toggle:hover {
-    background: #f3f4f6;
-  }
-
-
-  /* -------------------------------------------------------
-     BUTTON PRESS
-  ------------------------------------------------------- */
-
-  .mobile-sidebar-toggle:active {
-    transform: translateY(-50%) scale(0.95);
-  }
-
-
-  /* =======================================================
-     DARK OVERLAY
-  ======================================================= */
+  /* SHOW DARK BACKGROUND */
 
   .mobile-sidebar-overlay {
     display: block;
-
-    position: fixed;
-
-    inset: 0;
-
-    background: rgba(0, 0, 0, 0.45);
-
-    z-index: 1900;
   }
 
 
-  /* =======================================================
-     MOBILE LOGO
-  ======================================================= */
+  /* Mobile logo */
 
   .sidebar-logo {
-    padding: 20px 18px;
+    padding:
+      20px 18px;
   }
 
 
-  /* =======================================================
-     MOBILE USER
-  ======================================================= */
+  /* Mobile user */
 
   .sidebar-user {
-    padding: 18px;
+    padding:
+      18px;
   }
 
 
-  /* =======================================================
-     MOBILE NAVIGATION
-  ======================================================= */
+  /* Mobile nav */
 
   .sidebar-nav {
-    padding: 12px 0;
+    padding:
+      12px 0;
   }
 
   .nav-item {
-    padding: 13px 18px;
+    padding:
+      13px 18px;
 
-    margin: 0 8px;
+    margin:
+      0 8px;
 
     font-size: 14px;
   }
 
 
-  /* =======================================================
-     MOBILE LOGOUT
-  ======================================================= */
+  /* Mobile logout */
 
   .sidebar-logout {
-    margin: 8px;
+    margin:
+      8px;
 
-    padding: 14px 18px;
+    padding:
+      14px 18px;
   }
 
 
-  /* =======================================================
-     PROFILE POPOVER
-  ======================================================= */
+  /* Profile */
 
   .profile-popover {
     left: 8px;
-
     right: 8px;
 
-    max-height: calc(100vh - 180px);
+    max-height:
+      calc(100vh - 180px);
 
     overflow-y: auto;
   }
@@ -844,7 +829,6 @@
 
 /* =========================================================
    SMALL PHONES
-   <= 480px
 ========================================================= */
 
 @media (max-width: 480px) {
@@ -855,35 +839,23 @@
     max-width: 82vw;
   }
 
-
-  /* -------------------------------------------------------
-     BLACK MENU BUTTON
-  ------------------------------------------------------- */
-
   .mobile-sidebar-toggle {
-    width: 40px;
-
-    height: 50px;
+    width: 52px;
+    height: 68px;
   }
 
   .mobile-sidebar-toggle span {
-    width: 21px;
-
-    height: 3px;
+    width: 29px;
+    height: 4px;
   }
 
-
-  /* -------------------------------------------------------
-     LOGO
-  ------------------------------------------------------- */
-
   .sidebar-logo {
-    padding: 18px 16px;
+    padding:
+      18px 16px;
   }
 
   .sidebar-logo-img {
     width: 34px;
-
     height: 34px;
   }
 
@@ -891,65 +863,15 @@
     font-size: 19px;
   }
 
-
-  /* -------------------------------------------------------
-     USER
-  ------------------------------------------------------- */
-
   .sidebar-user {
-    padding: 16px;
+    padding:
+      16px;
   }
 
-
-  /* -------------------------------------------------------
-     NAVIGATION
-  ------------------------------------------------------- */
-
   .nav-item {
-    padding: 12px 16px;
+    padding:
+      12px 16px;
 
     font-size: 14px;
-  }
-
-
-  /* -------------------------------------------------------
-     LOGOUT
-  ------------------------------------------------------- */
-
-  .sidebar-logout {
-    margin: 8px;
-
-    padding: 13px 16px;
-  }
-}
-
-
-/* =========================================================
-   VERY SMALL PHONES
-   <= 360px
-========================================================= */
-
-@media (max-width: 360px) {
-
-  .sidebar {
-    width: 235px;
-  }
-
-  .sidebar-logo {
-    padding: 16px 14px;
-  }
-
-  .sidebar-user {
-    padding: 14px;
-  }
-
-  .nav-item {
-    padding: 11px 14px;
-  }
-
-  .sidebar-logout {
-    margin: 6px;
-
-    padding: 12px 14px;
   }
 }
