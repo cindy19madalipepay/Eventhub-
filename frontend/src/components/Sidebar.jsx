@@ -1,267 +1,126 @@
-import { useState, useEffect, useRef } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import api from '../utils/api';
-import toast from 'react-hot-toast';
+import React, { useEffect, useState } from 'react';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import './Sidebar.css';
 
 /* =========================================================
-   ICONS
-   Built-in SVG icons — no package required
+   SIMPLE FLATICON-STYLE SVG ICONS
+   Black icon only — no colored background
 ========================================================= */
 
-const Icons = {
-  menu: (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M4 6h16M4 12h16M4 18h16" />
-    </svg>
-  ),
+const Icon = ({ type, size = 23 }) => {
+  const common = {
+    width: size,
+    height: size,
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 1.8,
+    strokeLinecap: 'round',
+    strokeLinejoin: 'round',
+  };
 
-  overview: (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <rect x="3" y="3" width="7" height="7" rx="1" />
-      <rect x="14" y="3" width="7" height="7" rx="1" />
-      <rect x="3" y="14" width="7" height="7" rx="1" />
-      <rect x="14" y="14" width="7" height="7" rx="1" />
-    </svg>
-  ),
+  switch (type) {
+    case 'grid':
+      return (
+        <svg {...common}>
+          <rect x="3" y="3" width="7" height="7" rx="1" />
+          <rect x="14" y="3" width="7" height="7" rx="1" />
+          <rect x="3" y="14" width="7" height="7" rx="1" />
+          <rect x="14" y="14" width="7" height="7" rx="1" />
+        </svg>
+      );
 
-  create: (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <rect x="3" y="4" width="18" height="17" rx="2" />
-      <path d="M8 2v4M16 2v4M3 9h18M12 13v5M9.5 15.5h5" />
-    </svg>
-  ),
+    case 'calendar':
+      return (
+        <svg {...common}>
+          <rect x="3" y="5" width="18" height="16" rx="2" />
+          <path d="M16 3v4M8 3v4M3 10h18" />
+          <path d="M12 14v4M10 16h4" />
+        </svg>
+      );
 
-  departments: (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M3 21h18M5 21V8l7-4 7 4v13M9 21v-6h6v6M8 10h1M15 10h1M8 13h1M15 13h1" />
-    </svg>
-  ),
+    case 'building':
+      return (
+        <svg {...common}>
+          <path d="M4 21V7l8-4 8 4v14" />
+          <path d="M8 21v-4h8v4M8 10h1M12 10h1M16 10h1M8 13h1M12 13h1M16 13h1" />
+        </svg>
+      );
 
-  receipts: (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3Z" />
-      <path d="M9 8h6M9 12h6M9 16h4" />
-    </svg>
-  ),
+    case 'receipt':
+      return (
+        <svg {...common}>
+          <path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3z" />
+          <path d="M9 8h6M9 12h6M9 16h4" />
+        </svg>
+      );
 
-  evaluation: (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M4 19V5M4 19h16" />
-      <path d="m7 15 3-4 3 2 5-7" />
-    </svg>
-  ),
+    case 'chart':
+      return (
+        <svg {...common}>
+          <path d="M4 19V5M4 19h17" />
+          <path d="M7 15l4-4 3 2 5-7" />
+          <path d="M17 6h2v2" />
+        </svg>
+      );
 
-  dashboard: (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z" />
-    </svg>
-  ),
+    case 'bell':
+      return (
+        <svg {...common}>
+          <path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+          <path d="M10 21h4" />
+        </svg>
+      );
 
-  attendance: (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <circle cx="9" cy="8" r="3" />
-      <path d="M3 20c0-3.3 2.7-6 6-6 2.1 0 4 1.1 5.1 2.8M16 8l2 2 4-4" />
-    </svg>
-  ),
+    case 'history':
+      return (
+        <svg {...common}>
+          <path d="M3 12a9 9 0 1 0 3-6.7" />
+          <path d="M3 4v5h5" />
+          <path d="M12 7v5l3 2" />
+        </svg>
+      );
 
-  reports: (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M5 20V10M12 20V4M19 20v-7" />
-    </svg>
-  ),
+    case 'logout':
+      return (
+        <svg {...common}>
+          <path d="M10 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5" />
+          <path d="M14 8l4 4-4 4" />
+          <path d="M18 12H8" />
+        </svg>
+      );
 
-  notifications: (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" />
-    </svg>
-  ),
+    case 'menu':
+      return (
+        <svg {...common} strokeWidth="2.2">
+          <path d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      );
 
-  events: (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <rect x="3" y="4" width="18" height="17" rx="2" />
-      <path d="M8 2v4M16 2v4M3 9h18" />
-    </svg>
-  ),
+    case 'users':
+      return (
+        <svg {...common}>
+          <circle cx="9" cy="8" r="3" />
+          <path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" />
+          <path d="M16 5.5a3 3 0 0 1 0 5.8M17 14c2.3.7 4 2.8 4 5" />
+        </svg>
+      );
 
-  history: (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M3 12a9 9 0 1 0 3-6.7" />
-      <path d="M3 4v6h6M12 7v5l3 2" />
-    </svg>
-  ),
+    case 'clipboard':
+      return (
+        <svg {...common}>
+          <rect x="5" y="4" width="14" height="17" rx="2" />
+          <path d="M9 4V2h6v2M8 9h8M8 13h8M8 17h5" />
+        </svg>
+      );
 
-  logout: (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M10 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5" />
-      <path d="M14 8l4 4-4 4M18 12H8" />
-    </svg>
-  ),
-};
-
-
-/* =========================================================
-   MENU ITEMS
-========================================================= */
-
-const menuItems = {
-  admin: [
-    {
-      path: '/admin/dashboard',
-      label: 'Overview',
-      icon: Icons.overview,
-    },
-    {
-      path: '/admin/create-event',
-      label: 'Create Event',
-      icon: Icons.create,
-    },
-    {
-      path: '/admin/attendance',
-      label: 'Departments',
-      icon: Icons.departments,
-    },
-    {
-      path: '/admin/receipts',
-      label: 'Receipts',
-      icon: Icons.receipts,
-    },
-    {
-      path: '/admin/evaluation',
-      label: 'Evaluation Results',
-      icon: Icons.evaluation,
-    },
-  ],
-
-  department_head: [
-    {
-      path: '/dept/dashboard',
-      label: 'Dashboard',
-      icon: Icons.dashboard,
-    },
-    {
-      path: '/dept/attendance',
-      label: 'Attendance',
-      icon: Icons.attendance,
-    },
-    {
-      path: '/dept/reports',
-      label: 'Reports',
-      icon: Icons.reports,
-    },
-    {
-      path: '/dept/evaluation',
-      label: 'Evaluation Results',
-      icon: Icons.evaluation,
-    },
-  ],
-
-  student: [
-    {
-      path: '/student/notifications',
-      label: 'Notifications',
-      icon: Icons.notifications,
-    },
-    {
-      path: '/student/my-events',
-      label: 'My Events',
-      icon: Icons.events,
-    },
-    {
-      path: '/student/history',
-      label: 'History',
-      icon: Icons.history,
-    },
-  ],
-
-  student_leader: [
-    {
-      path: '/student/notifications',
-      label: 'Notifications',
-      icon: Icons.notifications,
-    },
-    {
-      path: '/student/my-events',
-      label: 'My Events',
-      icon: Icons.events,
-    },
-    {
-      path: '/student/history',
-      label: 'History',
-      icon: Icons.history,
-    },
-  ],
-
-  alumni: [
-    {
-      path: '/student/notifications',
-      label: 'Notifications',
-      icon: Icons.notifications,
-    },
-    {
-      path: '/student/my-events',
-      label: 'My Events',
-      icon: Icons.events,
-    },
-    {
-      path: '/student/history',
-      label: 'History',
-      icon: Icons.history,
-    },
-  ],
-
-  stakeholder: [
-    {
-      path: '/student/notifications',
-      label: 'Notifications',
-      icon: Icons.notifications,
-    },
-    {
-      path: '/student/my-events',
-      label: 'My Events',
-      icon: Icons.events,
-    },
-    {
-      path: '/student/history',
-      label: 'History',
-      icon: Icons.history,
-    },
-  ],
-};
-
-
-/* =========================================================
-   AVATAR
-========================================================= */
-
-const Avatar = ({ user, size = 'md', src }) => {
-  const initials =
-    `${user?.first_name?.[0] || ''}${user?.last_name?.[0] || ''}`;
-
-  const className =
-    `user-avatar ${size === 'lg' ? 'user-avatar-lg' : ''}`;
-
-  const photoUrl =
-    src || user?.profile_picture || null;
-
-  if (photoUrl) {
-    return (
-      <div className={className}>
-        <img
-          src={photoUrl}
-          alt=""
-          className="user-avatar-img"
-        />
-      </div>
-    );
+    default:
+      return (
+        <svg {...common}>
+          <circle cx="12" cy="12" r="9" />
+        </svg>
+      );
   }
-
-  return (
-    <div className={className}>
-      {initials}
-    </div>
-  );
 };
 
 
@@ -269,650 +128,334 @@ const Avatar = ({ user, size = 'md', src }) => {
    SIDEBAR
 ========================================================= */
 
-const Sidebar = ({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) => {
-
-  const { user, logout, updateUser } = useAuth();
+const Sidebar = () => {
+  const location = useLocation();
   const navigate = useNavigate();
 
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [collapsed, setCollapsed] = useState(false);
 
-  const [profileOpen, setProfileOpen] = useState(false);
-  const [editing, setEditing] = useState(false);
-  const [saving, setSaving] = useState(false);
-
-  const [form, setForm] = useState({
-    first_name: '',
+  const [user, setUser] = useState({
+    first_name: 'User',
     last_name: '',
+    role: 'student',
+    profile_picture: null,
   });
 
-  const [avatarFile, setAvatarFile] = useState(null);
-  const [avatarPreview, setAvatarPreview] = useState(null);
-
-  const popoverRef = useRef(null);
-  const fileInputRef = useRef(null);
-
-
-  /* =====================================================
-     CLOSE PROFILE WHEN CLICKING OUTSIDE
-  ===================================================== */
+  /* -------------------------------------------------------
+     GET USER
+  ------------------------------------------------------- */
 
   useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (
-        popoverRef.current &&
-        !popoverRef.current.contains(e.target)
-      ) {
-        setProfileOpen(false);
-        setEditing(false);
+    try {
+      const possibleKeys = [
+        'user',
+        'currentUser',
+        'authUser',
+      ];
+
+      let storedUser = null;
+
+      for (const key of possibleKeys) {
+        const data = localStorage.getItem(key);
+
+        if (data) {
+          try {
+            const parsed = JSON.parse(data);
+
+            if (parsed && typeof parsed === 'object') {
+              storedUser = parsed;
+              break;
+            }
+          } catch {
+            // Ignore invalid localStorage values
+          }
+        }
       }
-    };
 
-    document.addEventListener('mousedown', handleClickOutside);
-
-    return () => {
-      document.removeEventListener(
-        'mousedown',
-        handleClickOutside
-      );
-    };
+      if (storedUser) {
+        setUser((prev) => ({
+          ...prev,
+          ...storedUser,
+        }));
+      }
+    } catch (error) {
+      console.error('Sidebar user error:', error);
+    }
   }, []);
 
+  /* -------------------------------------------------------
+     ROLE
+  ------------------------------------------------------- */
 
-  /* =====================================================
-     UNREAD NOTIFICATIONS
-  ===================================================== */
+  const role = String(user?.role || 'student').toLowerCase();
 
-  useEffect(() => {
+  const firstName = user?.first_name || 'User';
+  const lastName = user?.last_name || '';
 
-    const studentLikeRoles = [
-      'student',
-      'student_leader',
-      'alumni',
-      'stakeholder',
+  const fullName = `${firstName} ${lastName}`.trim();
+
+  const initials = `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`
+    .toUpperCase();
+
+  /* -------------------------------------------------------
+     ROLE LABEL
+  ------------------------------------------------------- */
+
+  const roleLabel =
+    role === 'admin'
+      ? 'Admin'
+      : role === 'department_head'
+      ? 'Department Head'
+      : role === 'student_leader'
+      ? 'Student Leader'
+      : role === 'alumni'
+      ? 'Alumni'
+      : role === 'stakeholder'
+      ? 'Stakeholder'
+      : 'Student';
+
+  /* -------------------------------------------------------
+     MENU ITEMS
+  ------------------------------------------------------- */
+
+  let menuItems = [];
+
+  if (role === 'admin') {
+    menuItems = [
+      {
+        label: 'Overview',
+        path: '/admin/dashboard',
+        icon: 'grid',
+      },
+      {
+        label: 'Create Event',
+        path: '/admin/create-event',
+        icon: 'calendar',
+      },
+      {
+        label: 'Departments',
+        path: '/admin/users',
+        icon: 'building',
+      },
+      {
+        label: 'Receipts',
+        path: '/admin/receipts',
+        icon: 'receipt',
+      },
+      {
+        label: 'Evaluation Results',
+        path: '/admin/evaluation',
+        icon: 'chart',
+      },
     ];
+  } else if (role === 'department_head') {
+    menuItems = [
+      {
+        label: 'Overview',
+        path: '/dept/dashboard',
+        icon: 'grid',
+      },
+      {
+        label: 'Attendance',
+        path: '/dept/attendance',
+        icon: 'clipboard',
+      },
+      {
+        label: 'Reports',
+        path: '/dept/reports',
+        icon: 'chart',
+      },
+      {
+        label: 'Evaluation Results',
+        path: '/dept/evaluation',
+        icon: 'chart',
+      },
+    ];
+  } else {
+    menuItems = [
+      {
+        label: 'Notifications',
+        path: '/student/notifications',
+        icon: 'bell',
+        badge: 1,
+      },
+      {
+        label: 'My Events',
+        path: '/student/my-events',
+        icon: 'calendar',
+      },
+      {
+        label: 'History',
+        path: '/student/history',
+        icon: 'history',
+      },
+    ];
+  }
 
-    if (!studentLikeRoles.includes(user?.role)) {
-      return;
-    }
-
-    const fetchUnread = async () => {
-      try {
-
-        const res = await api.get('/notifications/my');
-
-        const count =
-          (res.data.notifications || [])
-            .filter((n) => !n.is_read)
-            .length;
-
-        setUnreadCount(count);
-
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
-    fetchUnread();
-
-    const interval =
-      setInterval(fetchUnread, 30000);
-
-    return () => clearInterval(interval);
-
-  }, [user]);
-
-
-  /* =====================================================
+  /* -------------------------------------------------------
      LOGOUT
-  ===================================================== */
+  ------------------------------------------------------- */
 
   const handleLogout = () => {
-
-    logout();
-
-    toast.success(
-      'Logged out successfully.'
-    );
+    localStorage.removeItem('user');
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('authUser');
+    localStorage.removeItem('token');
 
     navigate('/login');
-
   };
 
-
-  /* =====================================================
-     PROFILE
-  ===================================================== */
-
-  const openProfile = () => {
-
-    setProfileOpen((prev) => !prev);
-
-    setEditing(false);
-
-  };
-
-
-  const startEditing = () => {
-
-    setForm({
-      first_name: user?.first_name || '',
-      last_name: user?.last_name || '',
-    });
-
-    setAvatarFile(null);
-    setAvatarPreview(null);
-
-    setEditing(true);
-
-  };
-
-
-  const cancelEditing = () => {
-
-    setAvatarFile(null);
-    setAvatarPreview(null);
-
-    setEditing(false);
-
-  };
-
-
-  /* =====================================================
-     PHOTO
-  ===================================================== */
-
-  const handleAvatarPick = (e) => {
-
-    const file = e.target.files?.[0];
-
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-
-      toast.error(
-        'Please choose an image file.'
-      );
-
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-
-      toast.error(
-        'Image must be under 5MB.'
-      );
-
-      return;
-    }
-
-    setAvatarFile(file);
-
-    setAvatarPreview(
-      URL.createObjectURL(file)
-    );
-
-  };
-
-
-  /* =====================================================
-     SAVE PROFILE
-  ===================================================== */
-
-  const handleSave = async (e) => {
-
-    e.preventDefault();
-
-    setSaving(true);
-
-    try {
-
-      const payload = new FormData();
-
-      payload.append(
-        'first_name',
-        form.first_name.trim()
-      );
-
-      payload.append(
-        'last_name',
-        form.last_name.trim()
-      );
-
-      if (avatarFile) {
-        payload.append(
-          'avatar',
-          avatarFile
-        );
-      }
-
-      const res = await api.put(
-        '/users/profile',
-        payload,
-        {
-          headers: {
-            'Content-Type':
-              'multipart/form-data',
-          },
-        }
-      );
-
-      const updatedUser =
-        res.data?.user ||
-        res.data ||
-        {};
-
-      updateUser(updatedUser);
-
-      toast.success(
-        'Profile updated successfully.'
-      );
-
-      setEditing(false);
-      setAvatarFile(null);
-      setAvatarPreview(null);
-
-    } catch (err) {
-
-      console.error(
-        'Profile update error:',
-        err
-      );
-
-      toast.error(
-        err.response?.data?.message ||
-        'Failed to update profile.'
-      );
-
-    } finally {
-
-      setSaving(false);
-
-    }
-
-  };
-
-
-  const items =
-    menuItems[user?.role] || [];
-
-
-  const getRoleDisplay = (role) => {
-
-    if (!role) return '';
-
-    return role
-      .replace(/_/g, ' ')
-      .replace(/\b\w/g, (char) =>
-        char.toUpperCase()
-      );
-
-  };
-
-
-  /* =====================================================
-     NAVIGATION
-  ===================================================== */
+  /* -------------------------------------------------------
+     CLOSE SIDEBAR AFTER CLICKING ON MOBILE
+     ONLY WHEN COLLAPSED MODE IS BEING USED
+  ------------------------------------------------------- */
 
   const handleNavigation = () => {
-
-    /* On mobile close drawer after selecting */
-    if (window.innerWidth <= 768) {
-      setMobileOpen(false);
-    }
-
+    // Do not automatically close.
+    // User specifically wants the sidebar and content side-by-side.
   };
 
-
   return (
-    <>
-      {/* =================================================
-          MOBILE / DESKTOP 3-LINE BUTTON
-      ================================================= */}
+    <aside
+      className={`sidebar ${collapsed ? 'sidebar-collapsed' : 'sidebar-expanded'}`}
+    >
 
-      <button
-        className="sidebar-menu-toggle"
-        onClick={() => {
+      {/* ===================================================
+          TOP / LOGO
+      =================================================== */}
 
-          if (window.innerWidth <= 768) {
+      <div className="sidebar-top">
 
-            setMobileOpen(!mobileOpen);
+        <div className="brand-area">
+          <div className="brand-logo">
+            EH
+          </div>
 
-          } else {
-
-            setCollapsed(!collapsed);
-
-          }
-
-        }}
-        aria-label="Toggle sidebar"
-      >
-        {Icons.menu}
-      </button>
-
-
-      {/* =================================================
-          MOBILE BACKDROP
-      ================================================= */}
-
-      {mobileOpen && (
-        <div
-          className="sidebar-overlay"
-          onClick={() =>
-            setMobileOpen(false)
-          }
-        />
-      )}
-
-
-      {/* =================================================
-          SIDEBAR
-      ================================================= */}
-
-      <aside
-        className={`
-          sidebar
-          ${collapsed ? 'sidebar-collapsed' : ''}
-          ${mobileOpen ? 'sidebar-mobile-open' : ''}
-        `}
-      >
-
-        {/* =================================================
-            LOGO
-        ================================================= */}
-
-        <div className="sidebar-logo">
-
-          <img
-            src="/LG.png"
-            alt="EventHub Logo"
-            className="sidebar-logo-img"
-          />
-
-          <span className="sidebar-logo-text">
-            EventHub
-          </span>
-
-        </div>
-
-
-        {/* =================================================
-            USER
-        ================================================= */}
-
-        <div
-          className="sidebar-user-wrapper"
-          ref={popoverRef}
-        >
-
-          <button
-            className="sidebar-user"
-            onClick={openProfile}
-          >
-
-            <Avatar user={user} />
-
-            <div className="user-info">
-
-              <p className="user-name">
-                {user?.first_name}{' '}
-                {user?.last_name}
-              </p>
-
-              <p className="user-role">
-                {getRoleDisplay(user?.role)}
-              </p>
-
+          {!collapsed && (
+            <div className="brand-text">
+              <span className="brand-name">EventHub</span>
             </div>
-
-            <span
-              className={`user-caret ${
-                profileOpen ? 'open' : ''
-              }`}
-            >
-              ▾
-            </span>
-
-          </button>
-
-
-          {/* =================================================
-              PROFILE POPOVER
-          ================================================= */}
-
-          {profileOpen && (
-
-            <div className="profile-popover">
-
-              {!editing ? (
-
-                <>
-                  <div className="profile-popover-header">
-
-                    <Avatar
-                      user={user}
-                      size="lg"
-                    />
-
-                    <div>
-
-                      <p className="profile-popover-name">
-                        {user?.first_name}{' '}
-                        {user?.last_name}
-                      </p>
-
-                      <p className="profile-popover-role">
-                        {getRoleDisplay(user?.role)}
-                      </p>
-
-                    </div>
-
-                  </div>
-
-
-                  {user?.email && (
-                    <p className="profile-popover-email">
-                      {user.email}
-                    </p>
-                  )}
-
-
-                  <button
-                    className="profile-popover-btn"
-                    onClick={startEditing}
-                  >
-                    Edit Profile
-                  </button>
-
-                </>
-
-              ) : (
-
-                <form
-                  className="profile-popover-form"
-                  onSubmit={handleSave}
-                >
-
-                  <div className="avatar-edit-row">
-
-                    <Avatar
-                      user={user}
-                      size="lg"
-                      src={avatarPreview}
-                    />
-
-                    <div className="avatar-edit-actions">
-
-                      <button
-                        type="button"
-                        className="avatar-edit-btn"
-                        onClick={() =>
-                          fileInputRef.current?.click()
-                        }
-                      >
-                        Change Photo
-                      </button>
-
-                      <span className="avatar-edit-hint">
-                        JPG or PNG, up to 5MB
-                      </span>
-
-                    </div>
-
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleAvatarPick}
-                      hidden
-                    />
-
-                  </div>
-
-
-                  <label>
-                    First Name
-                  </label>
-
-                  <input
-                    type="text"
-                    value={form.first_name}
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        first_name:
-                          e.target.value,
-                      })
-                    }
-                    required
-                  />
-
-
-                  <label>
-                    Last Name
-                  </label>
-
-                  <input
-                    type="text"
-                    value={form.last_name}
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        last_name:
-                          e.target.value,
-                      })
-                    }
-                    required
-                  />
-
-
-                  <div className="profile-popover-actions">
-
-                    <button
-                      type="button"
-                      className="profile-popover-cancel"
-                      onClick={cancelEditing}
-                    >
-                      Cancel
-                    </button>
-
-                    <button
-                      type="submit"
-                      className="profile-popover-save"
-                      disabled={saving}
-                    >
-                      {saving
-                        ? 'Saving...'
-                        : 'Save'}
-                    </button>
-
-                  </div>
-
-                </form>
-
-              )}
-
-            </div>
-
           )}
-
         </div>
 
+        {/* HAMBURGER */}
+        <button
+          type="button"
+          className="sidebar-toggle"
+          onClick={() => setCollapsed((prev) => !prev)}
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          <Icon type="menu" size={25} />
+        </button>
 
-        {/* =================================================
-            NAVIGATION
-        ================================================= */}
+      </div>
 
-        <nav className="sidebar-nav">
 
-          {items.map((item) => (
+      {/* ===================================================
+          USER PROFILE
+      =================================================== */}
 
+      <div className="sidebar-profile">
+
+        <div className="profile-avatar">
+          {user?.profile_picture ? (
+            <img
+              src={user.profile_picture}
+              alt={fullName}
+            />
+          ) : (
+            initials || 'U'
+          )}
+        </div>
+
+        {!collapsed && (
+          <div className="profile-info">
+            <div className="profile-name" title={fullName}>
+              {fullName}
+            </div>
+
+            <div className="profile-role">
+              {roleLabel}
+            </div>
+          </div>
+        )}
+
+      </div>
+
+
+      {/* ===================================================
+          NAVIGATION
+      =================================================== */}
+
+      <nav className="sidebar-navigation">
+
+        {menuItems.map((item) => {
+          const isActive =
+            location.pathname === item.path ||
+            location.pathname.startsWith(`${item.path}/`);
+
+          return (
             <NavLink
               key={item.path}
               to={item.path}
+              className={`sidebar-link ${
+                isActive ? 'sidebar-link-active' : ''
+              }`}
               onClick={handleNavigation}
-              title={
-                collapsed
-                  ? item.label
-                  : undefined
-              }
-              className={({ isActive }) =>
-                `nav-item ${
-                  isActive ? 'active' : ''
-                }`
-              }
+              title={collapsed ? item.label : ''}
             >
 
-              <span className="nav-icon">
-                {item.icon}
+              <span className="sidebar-icon">
+                <Icon type={item.icon} size={23} />
               </span>
 
-              <span className="nav-label">
-                {item.label}
-              </span>
+              {!collapsed && (
+                <span className="sidebar-label">
+                  {item.label}
+                </span>
+              )}
 
-              {item.label ===
-                'Notifications' &&
-                unreadCount > 0 && (
-
-                  <span className="nav-badge">
-                    {unreadCount}
-                  </span>
-
-                )}
+              {!collapsed && item.badge && (
+                <span className="sidebar-badge">
+                  {item.badge}
+                </span>
+              )}
 
             </NavLink>
+          );
+        })}
 
-          ))}
-
-        </nav>
+      </nav>
 
 
-        {/* =================================================
-            LOGOUT
-        ================================================= */}
+      {/* ===================================================
+          LOGOUT
+      =================================================== */}
+
+      <div className="sidebar-bottom">
 
         <button
-          className="sidebar-logout"
+          type="button"
+          className="sidebar-link sidebar-logout"
           onClick={handleLogout}
-          title={
-            collapsed
-              ? 'Logout'
-              : undefined
-          }
+          title={collapsed ? 'Logout' : ''}
         >
 
-          <span className="nav-icon">
-            {Icons.logout}
+          <span className="sidebar-icon">
+            <Icon type="logout" size={23} />
           </span>
 
-          <span className="logout-label">
-            Logout
-          </span>
+          {!collapsed && (
+            <span className="sidebar-label">
+              Logout
+            </span>
+          )}
 
         </button>
 
-      </aside>
-    </>
+      </div>
+
+    </aside>
   );
 };
 

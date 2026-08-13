@@ -1,5 +1,5 @@
 /* =========================================================
-   DESIGN TOKENS
+   EVENTHUB DASHBOARD LAYOUT
 ========================================================= */
 
 :root {
@@ -31,13 +31,12 @@
     0 1px 2px rgba(15, 23, 42, 0.06);
 
   --shadow-md:
-    0 8px 24px -8px
-    rgba(106, 143, 120, 0.25);
+    0 8px 24px -8px rgba(106, 143, 120, 0.25);
 }
 
 
 /* =========================================================
-   GLOBAL
+   RESET
 ========================================================= */
 
 * {
@@ -47,11 +46,10 @@
 html,
 body,
 #root {
-  margin: 0;
-
-  min-height: 100%;
-
   width: 100%;
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 body {
@@ -59,6 +57,7 @@ body {
     'Inter',
     -apple-system,
     BlinkMacSystemFont,
+    'Segoe UI',
     sans-serif;
 
   color: var(--ink);
@@ -68,13 +67,14 @@ body {
 
 
 /* =========================================================
-   DASHBOARD
+   MAIN LAYOUT
 ========================================================= */
 
 .dashboard-layout {
-  min-height: 100vh;
+  display: flex;
 
   width: 100%;
+  min-height: 100vh;
 
   background: var(--bg);
 }
@@ -82,16 +82,15 @@ body {
 
 /* =========================================================
    MAIN CONTENT
+   DESKTOP
 ========================================================= */
 
 .main-content {
+  width: calc(100% - 260px);
 
   min-height: 100vh;
 
   margin-left: 260px;
-
-  width:
-    calc(100% - 260px);
 
   padding: 30px;
 
@@ -105,17 +104,16 @@ body {
 }
 
 
-/* =========================================================
-   WHEN SIDEBAR IS COLLAPSED
-========================================================= */
+/*
+   IMPORTANT:
+   Sidebar collapsed = 78px.
+   Content should move beside it.
+*/
 
-.dashboard-layout.layout-sidebar-collapsed
-.main-content {
-
+.dashboard-layout:has(.sidebar-collapsed) .main-content {
   margin-left: 78px;
 
-  width:
-    calc(100% - 78px);
+  width: calc(100% - 78px);
 }
 
 
@@ -128,7 +126,6 @@ body {
 }
 
 .page-header h2 {
-
   font-family:
     'Space Grotesk',
     'Inter',
@@ -142,12 +139,10 @@ body {
 
   color: var(--navy-deep);
 
-  margin:
-    0 0 6px;
+  margin: 0 0 6px;
 }
 
 .page-header p {
-
   color: var(--muted);
 
   font-size: 14.5px;
@@ -161,7 +156,6 @@ body {
 ========================================================= */
 
 .stats-row {
-
   display: grid;
 
   grid-template-columns:
@@ -173,18 +167,15 @@ body {
 }
 
 .stat-card {
-
   position: relative;
 
   background: var(--surface);
 
-  border:
-    1px solid var(--border);
+  border: 1px solid var(--border);
 
   border-radius: 12px;
 
-  padding:
-    14px 16px 12px;
+  padding: 14px 16px 12px;
 
   overflow: hidden;
 
@@ -196,7 +187,6 @@ body {
 }
 
 .stat-card::before {
-
   content: '';
 
   position: absolute;
@@ -215,42 +205,13 @@ body {
     );
 }
 
-.stat-card::after {
-
-  content: '';
-
-  position: absolute;
-
-  top: 4px;
-  left: 0;
-
-  width: 100%;
-  height: 1px;
-
-  background-image:
-    radial-gradient(
-      circle,
-      var(--bg) 1.5px,
-      transparent 1.5px
-    );
-
-  background-size:
-    8px 1px;
-
-  background-repeat: repeat-x;
-}
-
 .stat-card:hover {
+  transform: translateY(-2px);
 
-  transform:
-    translateY(-2px);
-
-  box-shadow:
-    var(--shadow-md);
+  box-shadow: var(--shadow-md);
 }
 
 .stat-label {
-
   display: block;
 
   font-size: 11px;
@@ -267,7 +228,6 @@ body {
 }
 
 .stat-value {
-
   display: block;
 
   font-family:
@@ -290,25 +250,20 @@ body {
 ========================================================= */
 
 .card {
-
   background: var(--surface);
 
-  border:
-    1px solid var(--border);
+  border: 1px solid var(--border);
 
-  border-radius:
-    var(--radius);
+  border-radius: var(--radius);
 
   padding: 24px;
 
   margin-bottom: 24px;
 
-  box-shadow:
-    var(--shadow-sm);
+  box-shadow: var(--shadow-sm);
 }
 
 .card h3 {
-
   font-family:
     'Space Grotesk',
     'Inter',
@@ -316,8 +271,7 @@ body {
 
   font-weight: 700;
 
-  letter-spacing:
-    -0.01em;
+  letter-spacing: -0.01em;
 }
 
 
@@ -326,24 +280,19 @@ body {
 ========================================================= */
 
 .badge {
-
   display: inline-block;
 
-  padding:
-    4px 12px;
+  padding: 4px 12px;
 
-  border-radius:
-    999px;
+  border-radius: 999px;
 
   font-size: 12px;
 
   font-weight: 700;
 
-  letter-spacing:
-    0.01em;
+  letter-spacing: 0.01em;
 
-  text-transform:
-    capitalize;
+  text-transform: capitalize;
 }
 
 .badge-green {
@@ -372,70 +321,51 @@ body {
 ========================================================= */
 
 .table-wrapper {
-
   overflow-x: auto;
 
   border-radius: 10px;
 
-  border:
-    1px solid var(--border);
+  border: 1px solid var(--border);
 }
 
 table {
-
   width: 100%;
 
-  border-collapse:
-    collapse;
+  border-collapse: collapse;
 
   font-size: 14px;
 }
 
 thead th {
-
   text-align: left;
 
-  padding:
-    12px 16px;
+  padding: 12px 16px;
 
-  background:
-    var(--bg);
+  background: var(--bg);
 
-  color:
-    var(--muted);
+  color: var(--muted);
 
-  font-size:
-    11.5px;
+  font-size: 11.5px;
 
-  font-weight:
-    700;
+  font-weight: 700;
 
-  text-transform:
-    uppercase;
+  text-transform: uppercase;
 
-  letter-spacing:
-    0.05em;
+  letter-spacing: 0.05em;
 
-  border-bottom:
-    1px solid var(--border);
+  border-bottom: 1px solid var(--border);
 
-  white-space:
-    nowrap;
+  white-space: nowrap;
 }
 
 tbody td {
+  padding: 14px 16px;
 
-  padding:
-    14px 16px;
+  border-bottom: 1px solid var(--border);
 
-  border-bottom:
-    1px solid var(--border);
+  vertical-align: middle;
 
-  vertical-align:
-    middle;
-
-  color:
-    var(--ink);
+  color: var(--ink);
 }
 
 tbody tr:last-child td {
@@ -448,93 +378,200 @@ tbody tr:hover {
 
 
 /* =========================================================
-   TABLET
+   DESKTOP
 ========================================================= */
 
-@media (max-width: 768px) {
-
-  /*
-     The content occupies the remaining screen.
-     Sidebar is a fixed drawer.
-  */
+@media (min-width: 769px) {
 
   .main-content {
+    padding: 30px;
 
-    margin-left: 0;
-
-    width: 100%;
-
-    padding:
-      70px 18px 24px;
+    /*
+       Give dashboard plenty of space.
+    */
+    max-width: none;
   }
-
-
-  /*
-     Even when desktop state says collapsed,
-     phone content remains full width.
-  */
-
-  .dashboard-layout.layout-sidebar-collapsed
-  .main-content {
-
-    margin-left: 0;
-
-    width: 100%;
-  }
-
-
-  .stats-row {
-
-    grid-template-columns:
-      repeat(2, 1fr);
-
-    gap: 10px;
-  }
-
-  .stat-value {
-    font-size: 19px;
-  }
-
-  .card {
-    padding: 18px;
-  }
-
-  table {
-    font-size: 13px;
-  }
-
-  thead th,
-  tbody td {
-    padding:
-      10px 12px;
-  }
-
 }
 
 
 /* =========================================================
-   SMALL PHONE
+   MOBILE
+   SIDEBAR = LEFT 50%
+   CONTENT = RIGHT 50%
+========================================================= */
+
+@media (max-width: 768px) {
+
+  .dashboard-layout {
+    display: block;
+
+    width: 100%;
+
+    min-height: 100vh;
+
+    position: relative;
+  }
+
+
+  /* -------------------------------------------------------
+     EXPANDED SIDEBAR = 50%
+  ------------------------------------------------------- */
+
+  .sidebar-expanded ~ .main-content {
+    margin-left: 50vw;
+
+    width: 50vw;
+
+    padding: 20px 12px;
+  }
+
+
+  /*
+     The selector above does not work because Sidebar and
+     main-content are siblings through the same parent only
+     when Sidebar appears before main-content.
+  */
+
+  .dashboard-layout .main-content {
+    margin-left: 50vw;
+
+    width: 50vw;
+
+    min-height: 100vh;
+
+    padding: 20px 12px;
+
+    overflow-x: hidden;
+
+    transition:
+      margin-left 0.25s ease,
+      width 0.25s ease;
+  }
+
+
+  /* -------------------------------------------------------
+     COLLAPSED SIDEBAR = 68px
+  ------------------------------------------------------- */
+
+  .dashboard-layout:has(.sidebar-collapsed) .main-content {
+    margin-left: 68px;
+
+    width: calc(100% - 68px);
+  }
+
+
+  /* -------------------------------------------------------
+     PAGE HEADER
+  ------------------------------------------------------- */
+
+  .page-header {
+    margin-bottom: 20px;
+  }
+
+  .page-header h2 {
+    font-size: 22px;
+
+    line-height: 1.2;
+  }
+
+  .page-header p {
+    font-size: 13px;
+  }
+
+
+  /* -------------------------------------------------------
+     STATS
+  ------------------------------------------------------- */
+
+  .stats-row {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
+    gap: 8px;
+
+    margin-bottom: 16px;
+  }
+
+  .stat-card {
+    padding: 12px;
+  }
+
+  .stat-value {
+    font-size: 18px;
+  }
+
+
+  /* -------------------------------------------------------
+     CARDS
+  ------------------------------------------------------- */
+
+  .card {
+    padding: 14px;
+
+    margin-bottom: 16px;
+
+    border-radius: 12px;
+  }
+
+
+  /* -------------------------------------------------------
+     TABLE
+  ------------------------------------------------------- */
+
+  .table-wrapper {
+    width: 100%;
+
+    overflow-x: auto;
+  }
+
+  table {
+    min-width: 600px;
+
+    font-size: 12px;
+  }
+
+  thead th,
+  tbody td {
+    padding: 9px 10px;
+  }
+}
+
+
+/* =========================================================
+   SMALL PHONES
 ========================================================= */
 
 @media (max-width: 480px) {
 
-  .main-content {
-
-    padding:
-      66px 12px 20px;
+  .dashboard-layout .main-content {
+    padding: 18px 9px;
   }
 
+  .page-header h2 {
+    font-size: 20px;
+  }
+
+  .page-header p {
+    font-size: 12px;
+  }
 
   .stats-row {
+    gap: 7px;
+  }
 
-    grid-template-columns:
-      1fr;
+  .stat-card {
+    padding: 10px;
+  }
+
+  .stat-label {
+    font-size: 9px;
+  }
+
+  .stat-value {
+    font-size: 16px;
   }
 
   .card {
-
-    padding:
-      15px;
+    padding: 12px;
   }
-
 }
