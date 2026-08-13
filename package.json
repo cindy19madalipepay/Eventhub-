@@ -13,6 +13,7 @@
     "get-caller-file": "^2.0.5",
     "get-east-asian-width": "^1.6.0",
     "qrcode": "^1.5.4",
+    "react-icons": "^5.7.0",
     "rxjs": "^7.8.2",
     "shell-quote": "^1.8.4",
     "string-width": "^7.2.0",
