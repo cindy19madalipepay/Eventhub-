@@ -1,30 +1,53 @@
-/* ===== SIDEBAR ===== */
+/* =========================================================
+   EVENTHUB SIDEBAR
+   Desktop + Mobile Responsive Sidebar
+========================================================= */
+
 .sidebar {
   position: fixed;
   top: 0;
   left: 0;
   width: 260px;
   height: 100vh;
-  background: linear-gradient(180deg, #ffffff 0%, #ffffff 12%, #6a8f78 45%, #2f4a3d 80%, #1f3329 100%);
+
+  background: linear-gradient(
+    180deg,
+    #ffffff 0%,
+    #ffffff 12%,
+    #6a8f78 45%,
+    #2f4a3d 80%,
+    #1f3329 100%
+  );
+
   color: #fff;
   display: flex;
   flex-direction: column;
-  z-index: 100;
+
+  z-index: 1000;
   overflow-y: auto;
+
+  transition: transform 0.25s ease;
 }
 
-/* Logo */
+
+/* =========================================================
+   LOGO
+========================================================= */
+
 .sidebar-logo {
   display: flex;
   align-items: center;
   gap: 12px;
+
   padding: 24px 20px;
-  border-bottom: 1px solid rgba(0,0,0,0.08);
+
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .sidebar-logo-img {
   width: 36px;
   height: 36px;
+
   object-fit: contain;
   border-radius: 8px;
 }
@@ -32,57 +55,163 @@
 .sidebar-logo span {
   font-size: 20px;
   font-weight: 700;
+
   color: #1a2e22;
 }
 
-/* User Info */
+
+/* =========================================================
+   USER INFO
+========================================================= */
+
+.sidebar-user-wrapper {
+  position: relative;
+}
+
 .sidebar-user {
+  width: 100%;
+
   display: flex;
   align-items: center;
   gap: 12px;
+
   padding: 20px;
-  border-bottom: 1px solid rgba(0,0,0,0.08);
+
+  background: none;
+  border: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+
+  cursor: pointer;
+
+  text-align: left;
+  font: inherit;
+  color: inherit;
+
+  border-radius: 0;
+
+  transition: background 0.15s ease;
 }
+
+.sidebar-user:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+
+/* =========================================================
+   AVATAR
+========================================================= */
 
 .user-avatar {
   width: 40px;
   height: 40px;
+
+  flex-shrink: 0;
+
   background: #8fbc9c;
   color: #1a2e22;
+
   border-radius: 50%;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
   font-weight: 700;
   font-size: 14px;
+
   text-transform: uppercase;
+
+  overflow: hidden;
+  padding: 0;
 }
+
+.user-avatar-img {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+  display: block;
+}
+
+.user-avatar-lg {
+  width: 40px;
+  height: 40px;
+
+  font-size: 14px;
+}
+
+
+/* =========================================================
+   USER TEXT
+========================================================= */
 
 .user-info {
   display: flex;
   flex-direction: column;
   gap: 2px;
+
+  min-width: 0;
 }
 
 .user-name {
   font-size: 14px;
   font-weight: 600;
+
   color: #1a2e22;
+
   margin: 0;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .user-role {
   font-size: 12px;
-  color: rgba(26,46,34,0.6);
+
+  color: rgba(26, 46, 34, 0.6);
+
   margin: 0;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* Navigation */
+
+/* =========================================================
+   USER CARET
+========================================================= */
+
+.user-caret {
+  margin-left: auto;
+
+  font-size: 11px;
+
+  color: rgba(26, 46, 34, 0.6);
+
+  transition: transform 0.15s ease;
+}
+
+.user-caret.open {
+  color: #1a2e22;
+
+  transform: rotate(180deg);
+}
+
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+
 .sidebar-nav {
   flex: 1;
+
   padding: 12px 0;
+
   display: flex;
   flex-direction: column;
+
   gap: 2px;
 }
 
@@ -90,163 +219,176 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+
   padding: 12px 20px;
-  color: rgba(255,255,255,0.6);
+
+  margin: 0 8px;
+
+  color: rgba(255, 255, 255, 0.6);
+
   text-decoration: none;
+
   font-size: 14px;
   font-weight: 500;
-  transition: all 0.2s ease;
-  margin: 0 8px;
+
   border-radius: 8px;
+
+  transition: all 0.2s ease;
 }
 
 .nav-item:hover {
-  background: rgba(255,255,255,0.05);
+  background: rgba(255, 255, 255, 0.05);
+
   color: #fff;
 }
 
 .nav-item.active {
-  background: rgba(255,255,255,0.1);
+  background: rgba(255, 255, 255, 0.1);
+
   color: #000;
 }
 
+
+/* =========================================================
+   NOTIFICATION BADGE
+========================================================= */
+
 .nav-badge {
   background: #ef4444;
+
   color: #fff;
+
   font-size: 11px;
   font-weight: 600;
+
   padding: 2px 8px;
+
   border-radius: 10px;
+
   min-width: 20px;
+
   text-align: center;
 }
 
-/* Logout */
+
+/* =========================================================
+   LOGOUT
+========================================================= */
+
 .sidebar-logout {
   display: flex;
   align-items: center;
+
   padding: 14px 20px;
+
   margin: 8px;
-  background: rgba(255,255,255,0.05);
+
+  background: rgba(255, 255, 255, 0.05);
+
   border: none;
   border-radius: 8px;
-  color: rgba(255,255,255,0.6);
+
+  color: rgba(255, 255, 255, 0.6);
+
   font-size: 14px;
   font-weight: 500;
+
   cursor: pointer;
+
   transition: all 0.2s ease;
 }
 
 .sidebar-logout:hover {
-  background: rgba(255,255,255,0.1);
+  background: rgba(255, 255, 255, 0.1);
+
   color: #fff;
 }
 
-/* Scrollbar */
-.sidebar::-webkit-scrollbar {
-  width: 4px;
-}
 
-.sidebar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.sidebar::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.1);
-  border-radius: 4px;
-}
-/* ===========================
-   SIDEBAR PROFILE POPOVER
-=========================== */
-.sidebar-user-wrapper {
-  position: relative;
-}
-
-/* turn the existing .sidebar-user div into a clickable button look-alike */
-button.sidebar-user {
-  width: 100%;
-  background: none;
-  border: none;
-  cursor: pointer;
-  text-align: left;
-  font: inherit;
-  color: inherit;
-  border-radius: 10px;
-  transition: background 0.15s ease;
-}
-
-button.sidebar-user:hover {
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.user-caret {
-  margin-left: auto;
-  font-size: 11px;
-  color: rgba(26,46,34,0.6);
-  transition: transform 0.15s ease;
-}
-
-.user-caret.open {
-  color: #1a2e22;
-  transform: rotate(180deg);
-}
+/* =========================================================
+   PROFILE POPOVER
+========================================================= */
 
 .profile-popover {
   position: absolute;
+
   top: calc(100% + 8px);
   left: 8px;
   right: 8px;
+
   background: #ffffff;
+
   color: #0f172a;
+
   border-radius: 12px;
-  box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.35);
+
+  box-shadow:
+    0 12px 32px -8px rgba(0, 0, 0, 0.35);
+
   padding: 16px;
+
   z-index: 1100;
 }
 
 .profile-popover-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
-}
 
-.user-avatar-lg {
-  width: 40px;
-  height: 40px;
-  font-size: 14px;
+  gap: 10px;
+
+  margin-bottom: 10px;
 }
 
 .profile-popover-name {
   font-size: 13.5px;
   font-weight: 700;
+
   margin: 0;
+
   color: #0f172a;
 }
 
 .profile-popover-role {
   font-size: 11.5px;
+
   color: #6b7280;
+
   margin: 0;
+
   text-transform: capitalize;
 }
 
 .profile-popover-email {
   font-size: 12px;
+
   color: #6b7280;
+
   margin: 0 0 12px;
+
   word-break: break-all;
 }
 
+
+/* =========================================================
+   EDIT PROFILE BUTTON
+========================================================= */
+
 .profile-popover-btn {
   width: 100%;
+
   background: #0f3460;
+
   color: #fff;
+
   border: none;
+
   padding: 9px 14px;
+
   border-radius: 8px;
+
   font-size: 13px;
   font-weight: 600;
+
   cursor: pointer;
 }
 
@@ -254,7 +396,11 @@ button.sidebar-user:hover {
   background: #0a2647;
 }
 
-/* ── edit form ── */
+
+/* =========================================================
+   EDIT PROFILE FORM
+========================================================= */
+
 .profile-popover-form {
   display: flex;
   flex-direction: column;
@@ -262,10 +408,15 @@ button.sidebar-user:hover {
 
 .profile-popover-form label {
   font-size: 11px;
+
   font-weight: 600;
+
   text-transform: uppercase;
+
   letter-spacing: 0.04em;
+
   color: #6b7280;
+
   margin-bottom: 4px;
 }
 
@@ -275,36 +426,58 @@ button.sidebar-user:hover {
 
 .profile-popover-form input {
   border: 1px solid #e6e9f2;
+
   border-radius: 8px;
+
   padding: 8px 10px;
+
   font-size: 13px;
+
   font-family: inherit;
+
+  width: 100%;
+
+  box-sizing: border-box;
 }
 
 .profile-popover-form input:focus {
   outline: none;
+
   border-color: #0f3460;
 }
 
+
+/* =========================================================
+   PROFILE ACTION BUTTONS
+========================================================= */
+
 .profile-popover-actions {
   display: flex;
+
   gap: 8px;
+
   margin-top: 14px;
 }
 
 .profile-popover-cancel,
 .profile-popover-save {
   flex: 1;
+
   padding: 8px 12px;
+
   border-radius: 8px;
+
   font-size: 12.5px;
   font-weight: 600;
+
   border: none;
+
   cursor: pointer;
 }
 
 .profile-popover-cancel {
   background: #f1f2f6;
+
   color: #4b5563;
 }
 
@@ -314,6 +487,7 @@ button.sidebar-user:hover {
 
 .profile-popover-save {
   background: #0f3460;
+
   color: #fff;
 }
 
@@ -323,48 +497,49 @@ button.sidebar-user:hover {
 
 .profile-popover-save:disabled {
   background: #a9b6c9;
+
   cursor: not-allowed;
 }
-/* ===========================
-   AVATAR IMAGE SUPPORT
-=========================== */
-.user-avatar {
-  overflow: hidden;
-  padding: 0;
-}
 
-.user-avatar-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
 
-/* ===========================
-   PHOTO PICKER (edit mode)
-=========================== */
+/* =========================================================
+   PHOTO PICKER
+========================================================= */
+
 .avatar-edit-row {
   display: flex;
   align-items: center;
+
   gap: 12px;
+
   margin-bottom: 14px;
 }
 
 .avatar-edit-actions {
   display: flex;
   flex-direction: column;
+
   gap: 3px;
+
+  min-width: 0;
 }
 
 .avatar-edit-btn {
   background: #f1f2f6;
+
   color: #0f3460;
+
   border: none;
+
   padding: 6px 12px;
+
   border-radius: 7px;
+
   font-size: 12px;
   font-weight: 700;
+
   cursor: pointer;
+
   width: fit-content;
 }
 
@@ -374,62 +549,100 @@ button.sidebar-user:hover {
 
 .avatar-edit-hint {
   font-size: 10.5px;
+
   color: #9ca3af;
 }
+
+
 /* =========================================================
-   MOBILE SIDEBAR
-   Desktop design stays unchanged.
+   SCROLLBAR
 ========================================================= */
 
-/* Mobile menu button */
+.sidebar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+
+  border-radius: 4px;
+}
+
+
+/* =========================================================
+   MOBILE MENU BUTTON
+   Hidden on desktop
+========================================================= */
+
 .mobile-sidebar-toggle {
   display: none;
 }
 
-/* Mobile overlay */
+
+/* =========================================================
+   MOBILE OVERLAY
+   Hidden on desktop
+========================================================= */
+
 .mobile-sidebar-overlay {
   display: none;
 }
 
 
 /* =========================================================
-   PHONE / TABLET
+   TABLET + PHONE
+   <= 768px
 ========================================================= */
 
 @media (max-width: 768px) {
 
-  /* Sidebar becomes a slide-out drawer */
+  /* -------------------------------------------------------
+     SIDEBAR DRAWER
+  ------------------------------------------------------- */
+
   .sidebar {
     width: 260px;
+
     max-width: 82vw;
+
     height: 100vh;
 
-    position: fixed;
     top: 0;
     left: 0;
 
-    transform: translateX(-100%);
+    transform: translateX(-105%);
+
     transition: transform 0.25s ease;
 
-    z-index: 1000;
+    z-index: 2000;
 
-    box-shadow: 8px 0 25px rgba(0, 0, 0, 0.25);
+    box-shadow:
+      8px 0 25px rgba(0, 0, 0, 0.25);
   }
 
-  /* Open sidebar */
+  /*
+     IMPORTANT:
+     React adds .mobile-open when the hamburger is clicked.
+  */
+
   .sidebar.mobile-open {
     transform: translateX(0);
   }
 
 
-  /* =====================================================
-     MOBILE MENU BUTTON
-  ===================================================== */
+  /* -------------------------------------------------------
+     HAMBURGER BUTTON
+  ------------------------------------------------------- */
 
   .mobile-sidebar-toggle {
     display: flex;
 
     position: fixed;
+
     top: 14px;
     right: 14px;
 
@@ -439,20 +652,28 @@ button.sidebar-user:hover {
     align-items: center;
     justify-content: center;
 
-    border: none;
-    border-radius: 10px;
-
     background: #ffffff;
+
     color: #1a2e22;
 
-    font-size: 22px;
-    font-weight: 700;
+    border: 1px solid rgba(26, 46, 34, 0.12);
+
+    border-radius: 10px;
+
+    font-size: 24px;
+
+    line-height: 1;
 
     cursor: pointer;
 
-    z-index: 2000;
+    z-index: 3000;
 
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+    box-shadow:
+      0 4px 14px rgba(0, 0, 0, 0.18);
+  }
+
+  .mobile-sidebar-toggle:hover {
+    background: #f5f7f6;
   }
 
   .mobile-sidebar-toggle:active {
@@ -460,33 +681,44 @@ button.sidebar-user:hover {
   }
 
 
-  /* =====================================================
-     DARK BACKDROP
-  ===================================================== */
+  /* -------------------------------------------------------
+     OVERLAY
+  ------------------------------------------------------- */
 
   .mobile-sidebar-overlay {
     display: block;
 
     position: fixed;
+
     inset: 0;
 
     background: rgba(0, 0, 0, 0.45);
 
-    z-index: 900;
+    z-index: 1900;
   }
 
 
-  /* =====================================================
-     SIDEBAR CONTENT
-  ===================================================== */
+  /* -------------------------------------------------------
+     MOBILE LOGO
+  ------------------------------------------------------- */
 
   .sidebar-logo {
     padding: 20px 18px;
   }
 
+
+  /* -------------------------------------------------------
+     MOBILE USER
+  ------------------------------------------------------- */
+
   .sidebar-user {
     padding: 18px;
   }
+
+
+  /* -------------------------------------------------------
+     MOBILE NAVIGATION
+  ------------------------------------------------------- */
 
   .sidebar-nav {
     padding: 12px 0;
@@ -494,24 +726,34 @@ button.sidebar-user:hover {
 
   .nav-item {
     padding: 13px 18px;
+
     margin: 0 8px;
+
+    font-size: 14px;
   }
+
+
+  /* -------------------------------------------------------
+     MOBILE LOGOUT
+  ------------------------------------------------------- */
 
   .sidebar-logout {
     margin: 8px;
+
     padding: 14px 18px;
   }
 
 
-  /* =====================================================
-     PROFILE POPOVER
-  ===================================================== */
+  /* -------------------------------------------------------
+     PROFILE POPOVER ON PHONE
+  ------------------------------------------------------- */
 
   .profile-popover {
     left: 8px;
     right: 8px;
 
     max-height: calc(100vh - 180px);
+
     overflow-y: auto;
   }
 }
@@ -519,14 +761,19 @@ button.sidebar-user:hover {
 
 /* =========================================================
    SMALL PHONES
+   <= 480px
 ========================================================= */
 
 @media (max-width: 480px) {
 
   .sidebar {
     width: 250px;
+
     max-width: 82vw;
   }
+
+
+  /* Hamburger */
 
   .mobile-sidebar-toggle {
     width: 42px;
@@ -535,8 +782,11 @@ button.sidebar-user:hover {
     top: 12px;
     right: 12px;
 
-    font-size: 20px;
+    font-size: 22px;
   }
+
+
+  /* Logo */
 
   .sidebar-logo {
     padding: 18px 16px;
@@ -551,12 +801,56 @@ button.sidebar-user:hover {
     font-size: 19px;
   }
 
+
+  /* User */
+
   .sidebar-user {
     padding: 16px;
   }
 
+
+  /* Navigation */
+
   .nav-item {
     padding: 12px 16px;
+
     font-size: 14px;
+  }
+
+
+  /* Logout */
+
+  .sidebar-logout {
+    padding: 13px 16px;
+  }
+}
+
+
+/* =========================================================
+   VERY SMALL PHONES
+   <= 360px
+========================================================= */
+
+@media (max-width: 360px) {
+
+  .sidebar {
+    width: 235px;
+  }
+
+  .sidebar-logo {
+    padding: 16px 14px;
+  }
+
+  .sidebar-user {
+    padding: 14px;
+  }
+
+  .nav-item {
+    padding: 11px 14px;
+  }
+
+  .sidebar-logout {
+    margin: 6px;
+    padding: 12px 14px;
   }
 }

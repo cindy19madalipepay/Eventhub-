@@ -7,52 +7,66 @@ import './Sidebar.css';
 
 const menuItems = {
   admin: [
-    { path: '/admin/dashboard',    label: 'Overview' },
+    { path: '/admin/dashboard', label: 'Overview' },
     { path: '/admin/create-event', label: 'Create Event' },
-    { path: '/admin/attendance',   label: 'Departments' },
-    { path: '/admin/receipts',     label: 'Receipts' },
-    { path: '/admin/evaluation',   label: 'Evaluation Results' },
+    { path: '/admin/attendance', label: 'Departments' },
+    { path: '/admin/receipts', label: 'Receipts' },
+    { path: '/admin/evaluation', label: 'Evaluation Results' },
   ],
+
   department_head: [
-    { path: '/dept/dashboard',  label: 'Dashboard' },
+    { path: '/dept/dashboard', label: 'Dashboard' },
     { path: '/dept/attendance', label: 'Attendance' },
-    { path: '/dept/reports',    label: 'Reports' },
+    { path: '/dept/reports', label: 'Reports' },
     { path: '/dept/evaluation', label: 'Evaluation Results' },
   ],
+
   student: [
     { path: '/student/notifications', label: 'Notifications' },
-    { path: '/student/my-events',     label: 'My Events' },
-    { path: '/student/history',       label: 'History' },
+    { path: '/student/my-events', label: 'My Events' },
+    { path: '/student/history', label: 'History' },
   ],
+
   student_leader: [
     { path: '/student/notifications', label: 'Notifications' },
-    { path: '/student/my-events',     label: 'My Events' },
-    { path: '/student/history',       label: 'History' },
+    { path: '/student/my-events', label: 'My Events' },
+    { path: '/student/history', label: 'History' },
   ],
+
   alumni: [
     { path: '/student/notifications', label: 'Notifications' },
-    { path: '/student/my-events',     label: 'My Events' },
-    { path: '/student/history',       label: 'History' },
+    { path: '/student/my-events', label: 'My Events' },
+    { path: '/student/history', label: 'History' },
   ],
+
   stakeholder: [
     { path: '/student/notifications', label: 'Notifications' },
-    { path: '/student/my-events',     label: 'My Events' },
-    { path: '/student/history',       label: 'History' },
+    { path: '/student/my-events', label: 'My Events' },
+    { path: '/student/history', label: 'History' },
   ],
 };
 
 const Avatar = ({ user, size = 'md', src }) => {
   const initials = `${user?.first_name?.[0] || ''}${user?.last_name?.[0] || ''}`;
-  const className = `user-avatar ${size === 'lg' ? 'user-avatar-lg' : ''}`;
+
+  const className = `user-avatar ${
+    size === 'lg' ? 'user-avatar-lg' : ''
+  }`;
+
   const photoUrl = src || user?.profile_picture || null;
 
   if (photoUrl) {
     return (
       <div className={className}>
-        <img src={photoUrl} alt="" className="user-avatar-img" />
+        <img
+          src={photoUrl}
+          alt=""
+          className="user-avatar-img"
+        />
       </div>
     );
   }
+
   return <div className={className}>{initials}</div>;
 };
 
@@ -61,37 +75,73 @@ const Sidebar = () => {
   const navigate = useNavigate();
 
   const [unreadCount, setUnreadCount] = useState(0);
+
+  // Profile
   const [profileOpen, setProfileOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ first_name: '', last_name: '' });
+
+  const [form, setForm] = useState({
+    first_name: '',
+    last_name: '',
+  });
+
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
+
+  // Mobile sidebar
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const popoverRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  // Close popover on outside click
+  // =========================================================
+  // CLOSE PROFILE POPOVER WHEN CLICKING OUTSIDE
+  // =========================================================
+
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (popoverRef.current && !popoverRef.current.contains(e.target)) {
+      if (
+        popoverRef.current &&
+        !popoverRef.current.contains(e.target)
+      ) {
         setProfileOpen(false);
         setEditing(false);
       }
     };
+
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener(
+        'mousedown',
+        handleClickOutside
+      );
+    };
   }, []);
 
-  // Poll unread notifications
+  // =========================================================
+  // UNREAD NOTIFICATIONS
+  // =========================================================
+
   useEffect(() => {
-    const studentLikeRoles = ['student', 'student_leader', 'alumni', 'stakeholder'];
+    const studentLikeRoles = [
+      'student',
+      'student_leader',
+      'alumni',
+      'stakeholder',
+    ];
+
     if (!studentLikeRoles.includes(user?.role)) return;
 
     const fetchUnread = async () => {
       try {
         const res = await api.get('/notifications/my');
-        const count = (res.data.notifications || []).filter((n) => !n.is_read).length;
+
+        const count = (res.data.notifications || [])
+          .filter((n) => !n.is_read)
+          .length;
+
         setUnreadCount(count);
       } catch (e) {
         console.error(e);
@@ -99,15 +149,44 @@ const Sidebar = () => {
     };
 
     fetchUnread();
-    const interval = setInterval(fetchUnread, 30000);
+
+    const interval = setInterval(
+      fetchUnread,
+      30000
+    );
+
     return () => clearInterval(interval);
   }, [user]);
 
+  // =========================================================
+  // MOBILE SIDEBAR
+  // =========================================================
+
+  const toggleMobileSidebar = () => {
+    setMobileOpen((prev) => !prev);
+  };
+
+  const closeMobileSidebar = () => {
+    setMobileOpen(false);
+  };
+
+  // =========================================================
+  // LOGOUT
+  // =========================================================
+
   const handleLogout = () => {
+    closeMobileSidebar();
+
     logout();
+
     toast.success('Logged out successfully.');
+
     navigate('/login');
   };
+
+  // =========================================================
+  // PROFILE
+  // =========================================================
 
   const openProfile = () => {
     setProfileOpen((prev) => !prev);
@@ -119,6 +198,7 @@ const Sidebar = () => {
       first_name: user?.first_name || '',
       last_name: user?.last_name || '',
     });
+
     setAvatarFile(null);
     setAvatarPreview(null);
     setEditing(true);
@@ -130,47 +210,90 @@ const Sidebar = () => {
     setEditing(false);
   };
 
+  // =========================================================
+  // PHOTO
+  // =========================================================
+
   const handleAvatarPick = (e) => {
     const file = e.target.files?.[0];
+
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
       toast.error('Please choose an image file.');
       return;
     }
+
     if (file.size > 5 * 1024 * 1024) {
       toast.error('Image must be under 5MB.');
       return;
     }
 
     setAvatarFile(file);
-    setAvatarPreview(URL.createObjectURL(file));
+
+    setAvatarPreview(
+      URL.createObjectURL(file)
+    );
   };
+
+  // =========================================================
+  // SAVE PROFILE
+  // =========================================================
 
   const handleSave = async (e) => {
     e.preventDefault();
+
     setSaving(true);
+
     try {
       const payload = new FormData();
-      payload.append('first_name', form.first_name);
-      payload.append('last_name', form.last_name);
-      if (avatarFile) payload.append('avatar', avatarFile);
 
-      const res = await api.put('/users/profile', payload, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      payload.append(
+        'first_name',
+        form.first_name.trim()
+      );
 
-      const updatedUser = res.data?.user || res.data || {};
+      payload.append(
+        'last_name',
+        form.last_name.trim()
+      );
 
-      // Persist globally + localStorage
+      if (avatarFile) {
+        payload.append('avatar', avatarFile);
+      }
+
+      const res = await api.put(
+        '/users/profile',
+        payload,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+
+      const updatedUser =
+        res.data?.user || res.data || {};
+
+      // Update React state + localStorage
       updateUser(updatedUser);
 
-      toast.success('Profile updated.');
+      toast.success('Profile updated successfully.');
+
       setEditing(false);
       setAvatarFile(null);
       setAvatarPreview(null);
+
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to update profile.');
+      console.error(
+        'Profile update error:',
+        err
+      );
+
+      toast.error(
+        err.response?.data?.message ||
+        'Failed to update profile.'
+      );
     } finally {
       setSaving(false);
     }
@@ -180,114 +303,287 @@ const Sidebar = () => {
 
   const getRoleDisplay = (role) => {
     if (!role) return '';
-    return role.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
+
+    return role
+      .replace(/_/g, ' ')
+      .replace(/\b\w/g, (char) =>
+        char.toUpperCase()
+      );
   };
 
   return (
-    <aside className="sidebar">
-      <div className="sidebar-logo">
-        <img src="/LG.png" alt="EventHub Logo" className="sidebar-logo-img" />
-        <span>EventHub</span>
-      </div>
+    <>
+      {/* =====================================================
+          MOBILE 3-LINE BUTTON
+      ===================================================== */}
 
-      <div className="sidebar-user-wrapper" ref={popoverRef}>
-        <button className="sidebar-user" onClick={openProfile}>
-          <Avatar user={user} />
-          <div className="user-info">
-            <p className="user-name">{user?.first_name} {user?.last_name}</p>
-            <p className="user-role">{getRoleDisplay(user?.role)}</p>
-          </div>
-          <span className={`user-caret ${profileOpen ? 'open' : ''}`}>▾</span>
-        </button>
+      <button
+        className={`mobile-sidebar-toggle ${
+          mobileOpen ? 'open' : ''
+        }`}
+        onClick={toggleMobileSidebar}
+        aria-label="Open navigation menu"
+        aria-expanded={mobileOpen}
+      >
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
 
-        {profileOpen && (
-          <div className="profile-popover">
-            {!editing ? (
-              <>
-                <div className="profile-popover-header">
-                  <Avatar user={user} size="lg" />
-                  <div>
-                    <p className="profile-popover-name">{user?.first_name} {user?.last_name}</p>
-                    <p className="profile-popover-role">{getRoleDisplay(user?.role)}</p>
+      {/* =====================================================
+          MOBILE OVERLAY
+      ===================================================== */}
+
+      {mobileOpen && (
+        <div
+          className="mobile-sidebar-overlay"
+          onClick={closeMobileSidebar}
+        />
+      )}
+
+      {/* =====================================================
+          SIDEBAR
+      ===================================================== */}
+
+      <aside
+        className={`sidebar ${
+          mobileOpen ? 'mobile-open' : ''
+        }`}
+      >
+
+        {/* LOGO */}
+
+        <div className="sidebar-logo">
+          <img
+            src="/LG.png"
+            alt="EventHub Logo"
+            className="sidebar-logo-img"
+          />
+
+          <span>EventHub</span>
+        </div>
+
+        {/* USER / PROFILE */}
+
+        <div
+          className="sidebar-user-wrapper"
+          ref={popoverRef}
+        >
+          <button
+            className="sidebar-user"
+            onClick={openProfile}
+          >
+            <Avatar user={user} />
+
+            <div className="user-info">
+              <p className="user-name">
+                {user?.first_name}{' '}
+                {user?.last_name}
+              </p>
+
+              <p className="user-role">
+                {getRoleDisplay(user?.role)}
+              </p>
+            </div>
+
+            <span
+              className={`user-caret ${
+                profileOpen ? 'open' : ''
+              }`}
+            >
+              ▾
+            </span>
+          </button>
+
+          {/* PROFILE POPOVER */}
+
+          {profileOpen && (
+            <div className="profile-popover">
+
+              {!editing ? (
+                <>
+                  <div className="profile-popover-header">
+
+                    <Avatar
+                      user={user}
+                      size="lg"
+                    />
+
+                    <div>
+                      <p className="profile-popover-name">
+                        {user?.first_name}{' '}
+                        {user?.last_name}
+                      </p>
+
+                      <p className="profile-popover-role">
+                        {getRoleDisplay(user?.role)}
+                      </p>
+                    </div>
+
                   </div>
-                </div>
-                {user?.email && (
-                  <p className="profile-popover-email">{user.email}</p>
-                )}
-                <button className="profile-popover-btn" onClick={startEditing}>
-                  Edit Profile
-                </button>
-              </>
-            ) : (
-              <form className="profile-popover-form" onSubmit={handleSave}>
-                <div className="avatar-edit-row">
-                  <Avatar user={user} size="lg" src={avatarPreview} />
-                  <div className="avatar-edit-actions">
+
+                  {user?.email && (
+                    <p className="profile-popover-email">
+                      {user.email}
+                    </p>
+                  )}
+
+                  <button
+                    className="profile-popover-btn"
+                    onClick={startEditing}
+                  >
+                    Edit Profile
+                  </button>
+                </>
+              ) : (
+
+                <form
+                  className="profile-popover-form"
+                  onSubmit={handleSave}
+                >
+
+                  <div className="avatar-edit-row">
+
+                    <Avatar
+                      user={user}
+                      size="lg"
+                      src={avatarPreview}
+                    />
+
+                    <div className="avatar-edit-actions">
+
+                      <button
+                        type="button"
+                        className="avatar-edit-btn"
+                        onClick={() =>
+                          fileInputRef.current?.click()
+                        }
+                      >
+                        Change Photo
+                      </button>
+
+                      <span className="avatar-edit-hint">
+                        JPG or PNG, up to 5MB
+                      </span>
+
+                    </div>
+
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarPick}
+                      hidden
+                    />
+
+                  </div>
+
+                  <label>
+                    First Name
+                  </label>
+
+                  <input
+                    type="text"
+                    value={form.first_name}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        first_name: e.target.value,
+                      })
+                    }
+                    required
+                  />
+
+                  <label>
+                    Last Name
+                  </label>
+
+                  <input
+                    type="text"
+                    value={form.last_name}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        last_name: e.target.value,
+                      })
+                    }
+                    required
+                  />
+
+                  <div className="profile-popover-actions">
+
                     <button
                       type="button"
-                      className="avatar-edit-btn"
-                      onClick={() => fileInputRef.current?.click()}
+                      className="profile-popover-cancel"
+                      onClick={cancelEditing}
                     >
-                      Change Photo
+                      Cancel
                     </button>
-                    <span className="avatar-edit-hint">JPG or PNG, up to 5MB</span>
+
+                    <button
+                      type="submit"
+                      className="profile-popover-save"
+                      disabled={saving}
+                    >
+                      {saving
+                        ? 'Saving...'
+                        : 'Save'}
+                    </button>
+
                   </div>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleAvatarPick}
-                    hidden
-                  />
-                </div>
 
-                <label>First Name</label>
-                <input
-                  type="text"
-                  value={form.first_name}
-                  onChange={(e) => setForm({ ...form, first_name: e.target.value })}
-                  required
-                />
-                <label>Last Name</label>
-                <input
-                  type="text"
-                  value={form.last_name}
-                  onChange={(e) => setForm({ ...form, last_name: e.target.value })}
-                  required
-                />
-                <div className="profile-popover-actions">
-                  <button type="button" className="profile-popover-cancel" onClick={cancelEditing}>
-                    Cancel
-                  </button>
-                  <button type="submit" className="profile-popover-save" disabled={saving}>
-                    {saving ? 'Saving...' : 'Save'}
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
-        )}
-      </div>
+                </form>
+              )}
 
-      <nav className="sidebar-nav">
-        {items.map((item) => (
-          <NavLink
-            key={item.path}
-            to={item.path}
-            className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
-          >
-            <span className="nav-label">{item.label}</span>
-            {item.label === 'Notifications' && unreadCount > 0 && (
-              <span className="nav-badge">{unreadCount}</span>
-            )}
-          </NavLink>
-        ))}
-      </nav>
+            </div>
+          )}
+        </div>
 
-      <button className="sidebar-logout" onClick={handleLogout}>
-        <span>Logout</span>
-      </button>
-    </aside>
+        {/* NAVIGATION */}
+
+        <nav className="sidebar-nav">
+
+          {items.map((item) => (
+
+            <NavLink
+              key={item.path}
+              to={item.path}
+              onClick={closeMobileSidebar}
+              className={({ isActive }) =>
+                `nav-item ${
+                  isActive ? 'active' : ''
+                }`
+              }
+            >
+
+              <span className="nav-label">
+                {item.label}
+              </span>
+
+              {item.label === 'Notifications' &&
+                unreadCount > 0 && (
+                  <span className="nav-badge">
+                    {unreadCount}
+                  </span>
+                )}
+
+            </NavLink>
+
+          ))}
+
+        </nav>
+
+        {/* LOGOUT */}
+
+        <button
+          className="sidebar-logout"
+          onClick={handleLogout}
+        >
+          <span>Logout</span>
+        </button>
+
+      </aside>
+    </>
   );
 };
 
