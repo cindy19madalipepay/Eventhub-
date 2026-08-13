@@ -1,334 +1,89 @@
-import { useState, useEffect, useRef } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import api from '../utils/api';
-import toast from 'react-hot-toast';
-import './Sidebar.css';
+import React, { useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import {
+  FaBell,
+  FaCalendarDays,
+  FaClockRotateLeft,
+  FaRightFromBracket,
+  FaBars,
+  FaXmark,
+  FaChevronDown,
+  FaUser,
+  FaGear,
+} from "react-icons/fa6";
 
-const menuItems = {
-  admin: [
-    { path: '/admin/dashboard', label: 'Overview' },
-    { path: '/admin/create-event', label: 'Create Event' },
-    { path: '/admin/attendance', label: 'Departments' },
-    { path: '/admin/receipts', label: 'Receipts' },
-    { path: '/admin/evaluation', label: 'Evaluation Results' },
-  ],
+import { useAuth } from "../context/AuthContext";
 
-  department_head: [
-    { path: '/dept/dashboard', label: 'Dashboard' },
-    { path: '/dept/attendance', label: 'Attendance' },
-    { path: '/dept/reports', label: 'Reports' },
-    { path: '/dept/evaluation', label: 'Evaluation Results' },
-  ],
-
-  student: [
-    { path: '/student/notifications', label: 'Notifications' },
-    { path: '/student/my-events', label: 'My Events' },
-    { path: '/student/history', label: 'History' },
-  ],
-
-  student_leader: [
-    { path: '/student/notifications', label: 'Notifications' },
-    { path: '/student/my-events', label: 'My Events' },
-    { path: '/student/history', label: 'History' },
-  ],
-
-  alumni: [
-    { path: '/student/notifications', label: 'Notifications' },
-    { path: '/student/my-events', label: 'My Events' },
-    { path: '/student/history', label: 'History' },
-  ],
-
-  stakeholder: [
-    { path: '/student/notifications', label: 'Notifications' },
-    { path: '/student/my-events', label: 'My Events' },
-    { path: '/student/history', label: 'History' },
-  ],
-};
-
-const Avatar = ({ user, size = 'md', src }) => {
-  const initials = `${user?.first_name?.[0] || ''}${user?.last_name?.[0] || ''}`;
-
-  const className = `user-avatar ${
-    size === 'lg' ? 'user-avatar-lg' : ''
-  }`;
-
-  const photoUrl = src || user?.profile_picture || null;
-
-  if (photoUrl) {
-    return (
-      <div className={className}>
-        <img
-          src={photoUrl}
-          alt=""
-          className="user-avatar-img"
-        />
-      </div>
-    );
-  }
-
-  return <div className={className}>{initials}</div>;
-};
+import "./Sidebar.css";
 
 const Sidebar = () => {
-  const { user, logout, updateUser } = useAuth();
+  const { user, logout } = useAuth();
+
+  const location = useLocation();
   const navigate = useNavigate();
 
-  const [unreadCount, setUnreadCount] = useState(0);
-
-  // Profile
-  const [profileOpen, setProfileOpen] = useState(false);
-  const [editing, setEditing] = useState(false);
-  const [saving, setSaving] = useState(false);
-
-  const [form, setForm] = useState({
-    first_name: '',
-    last_name: '',
-  });
-
-  const [avatarFile, setAvatarFile] = useState(null);
-  const [avatarPreview, setAvatarPreview] = useState(null);
-
-  // Mobile sidebar
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
 
-  const popoverRef = useRef(null);
-  const fileInputRef = useRef(null);
+  /* =========================================================
+     USER INFORMATION
+  ========================================================= */
 
-  // =========================================================
-  // CLOSE PROFILE POPOVER WHEN CLICKING OUTSIDE
-  // =========================================================
+  const firstName = user?.first_name || "User";
+  const lastName = user?.last_name || "";
 
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (
-        popoverRef.current &&
-        !popoverRef.current.contains(e.target)
-      ) {
-        setProfileOpen(false);
-        setEditing(false);
-      }
-    };
+  const fullName = `${firstName} ${lastName}`.trim();
 
-    document.addEventListener('mousedown', handleClickOutside);
+  const role = user?.role
+    ? user.role.replace("_", " ")
+    : "Student";
 
-    return () => {
-      document.removeEventListener(
-        'mousedown',
-        handleClickOutside
-      );
-    };
-  }, []);
+  const initials =
+    `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase();
 
-  // =========================================================
-  // UNREAD NOTIFICATIONS
-  // =========================================================
-
-  useEffect(() => {
-    const studentLikeRoles = [
-      'student',
-      'student_leader',
-      'alumni',
-      'stakeholder',
-    ];
-
-    if (!studentLikeRoles.includes(user?.role)) return;
-
-    const fetchUnread = async () => {
-      try {
-        const res = await api.get('/notifications/my');
-
-        const count = (res.data.notifications || [])
-          .filter((n) => !n.is_read)
-          .length;
-
-        setUnreadCount(count);
-      } catch (e) {
-        console.error(e);
-      }
-    };
-
-    fetchUnread();
-
-    const interval = setInterval(
-      fetchUnread,
-      30000
-    );
-
-    return () => clearInterval(interval);
-  }, [user]);
-
-  // =========================================================
-  // MOBILE SIDEBAR
-  // =========================================================
-
-  const toggleMobileSidebar = () => {
-    setMobileOpen((prev) => !prev);
-  };
-
-  const closeMobileSidebar = () => {
-    setMobileOpen(false);
-  };
-
-  // =========================================================
-  // LOGOUT
-  // =========================================================
+  /* =========================================================
+     LOGOUT
+  ========================================================= */
 
   const handleLogout = () => {
-    closeMobileSidebar();
-
     logout();
-
-    toast.success('Logged out successfully.');
-
-    navigate('/login');
+    navigate("/login");
   };
 
-  // =========================================================
-  // PROFILE
-  // =========================================================
+  /* =========================================================
+     CLOSE MOBILE SIDEBAR
+  ========================================================= */
 
-  const openProfile = () => {
-    setProfileOpen((prev) => !prev);
-    setEditing(false);
-  };
-
-  const startEditing = () => {
-    setForm({
-      first_name: user?.first_name || '',
-      last_name: user?.last_name || '',
-    });
-
-    setAvatarFile(null);
-    setAvatarPreview(null);
-    setEditing(true);
-  };
-
-  const cancelEditing = () => {
-    setAvatarFile(null);
-    setAvatarPreview(null);
-    setEditing(false);
-  };
-
-  // =========================================================
-  // PHOTO
-  // =========================================================
-
-  const handleAvatarPick = (e) => {
-    const file = e.target.files?.[0];
-
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please choose an image file.');
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image must be under 5MB.');
-      return;
-    }
-
-    setAvatarFile(file);
-
-    setAvatarPreview(
-      URL.createObjectURL(file)
-    );
-  };
-
-  // =========================================================
-  // SAVE PROFILE
-  // =========================================================
-
-  const handleSave = async (e) => {
-    e.preventDefault();
-
-    setSaving(true);
-
-    try {
-      const payload = new FormData();
-
-      payload.append(
-        'first_name',
-        form.first_name.trim()
-      );
-
-      payload.append(
-        'last_name',
-        form.last_name.trim()
-      );
-
-      if (avatarFile) {
-        payload.append('avatar', avatarFile);
-      }
-
-      const res = await api.put(
-        '/users/profile',
-        payload,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        }
-      );
-
-      const updatedUser =
-        res.data?.user || res.data || {};
-
-      // Update React state + localStorage
-      updateUser(updatedUser);
-
-      toast.success('Profile updated successfully.');
-
-      setEditing(false);
-      setAvatarFile(null);
-      setAvatarPreview(null);
-
-    } catch (err) {
-      console.error(
-        'Profile update error:',
-        err
-      );
-
-      toast.error(
-        err.response?.data?.message ||
-        'Failed to update profile.'
-      );
-    } finally {
-      setSaving(false);
+  const handleNavigation = () => {
+    if (window.innerWidth <= 768) {
+      setMobileOpen(false);
     }
   };
 
-  const items = menuItems[user?.role] || [];
+  /* =========================================================
+     ACTIVE MENU
+  ========================================================= */
 
-  const getRoleDisplay = (role) => {
-    if (!role) return '';
-
-    return role
-      .replace(/_/g, ' ')
-      .replace(/\b\w/g, (char) =>
-        char.toUpperCase()
-      );
+  const isActive = (path) => {
+    return location.pathname === path;
   };
 
   return (
     <>
       {/* =====================================================
-          MOBILE 3-LINE BUTTON
+          MOBILE MENU BUTTON
       ===================================================== */}
 
       <button
-        className={`mobile-sidebar-toggle ${
-          mobileOpen ? 'open' : ''
-        }`}
-        onClick={toggleMobileSidebar}
-        aria-label="Open navigation menu"
-        aria-expanded={mobileOpen}
+        type="button"
+        className="mobile-sidebar-toggle"
+        onClick={() => setMobileOpen(!mobileOpen)}
+        aria-label="Open navigation"
       >
-        <span></span>
-        <span></span>
-        <span></span>
+        {mobileOpen ? <FaXmark /> : <FaBars />}
       </button>
+
 
       {/* =====================================================
           MOBILE OVERLAY
@@ -337,250 +92,338 @@ const Sidebar = () => {
       {mobileOpen && (
         <div
           className="mobile-sidebar-overlay"
-          onClick={closeMobileSidebar}
+          onClick={() => setMobileOpen(false)}
         />
       )}
+
 
       {/* =====================================================
           SIDEBAR
       ===================================================== */}
 
       <aside
-        className={`sidebar ${
-          mobileOpen ? 'mobile-open' : ''
-        }`}
+        className={`
+          sidebar
+          ${collapsed ? "sidebar-collapsed" : ""}
+          ${mobileOpen ? "mobile-open" : ""}
+        `}
       >
 
-        {/* LOGO */}
+        {/* ===================================================
+            LOGO
+        =================================================== */}
 
         <div className="sidebar-logo">
+
           <img
-            src="/LG.png"
-            alt="EventHub Logo"
+            src="/logo.png"
+            alt="EventHub"
             className="sidebar-logo-img"
           />
 
-          <span>EventHub</span>
+          {!collapsed && (
+            <span className="sidebar-logo-name">
+              EventHub
+            </span>
+          )}
+
         </div>
 
-        {/* USER / PROFILE */}
 
-        <div
-          className="sidebar-user-wrapper"
-          ref={popoverRef}
-        >
+        {/* ===================================================
+            PROFILE
+        =================================================== */}
+
+        <div className="sidebar-user-wrapper">
+
           <button
+            type="button"
             className="sidebar-user"
-            onClick={openProfile}
+            onClick={() => {
+              if (collapsed) {
+                setCollapsed(false);
+                return;
+              }
+
+              setProfileOpen(!profileOpen);
+            }}
           >
-            <Avatar user={user} />
 
-            <div className="user-info">
-              <p className="user-name">
-                {user?.first_name}{' '}
-                {user?.last_name}
-              </p>
+            {/* AVATAR */}
 
-              <p className="user-role">
-                {getRoleDisplay(user?.role)}
-              </p>
-            </div>
+            <div className="user-avatar">
 
-            <span
-              className={`user-caret ${
-                profileOpen ? 'open' : ''
-              }`}
-            >
-              ▾
-            </span>
-          </button>
-
-          {/* PROFILE POPOVER */}
-
-          {profileOpen && (
-            <div className="profile-popover">
-
-              {!editing ? (
-                <>
-                  <div className="profile-popover-header">
-
-                    <Avatar
-                      user={user}
-                      size="lg"
-                    />
-
-                    <div>
-                      <p className="profile-popover-name">
-                        {user?.first_name}{' '}
-                        {user?.last_name}
-                      </p>
-
-                      <p className="profile-popover-role">
-                        {getRoleDisplay(user?.role)}
-                      </p>
-                    </div>
-
-                  </div>
-
-                  {user?.email && (
-                    <p className="profile-popover-email">
-                      {user.email}
-                    </p>
-                  )}
-
-                  <button
-                    className="profile-popover-btn"
-                    onClick={startEditing}
-                  >
-                    Edit Profile
-                  </button>
-                </>
+              {user?.profile_picture ? (
+                <img
+                  src={user.profile_picture}
+                  alt={fullName}
+                  className="user-avatar-img"
+                />
               ) : (
-
-                <form
-                  className="profile-popover-form"
-                  onSubmit={handleSave}
-                >
-
-                  <div className="avatar-edit-row">
-
-                    <Avatar
-                      user={user}
-                      size="lg"
-                      src={avatarPreview}
-                    />
-
-                    <div className="avatar-edit-actions">
-
-                      <button
-                        type="button"
-                        className="avatar-edit-btn"
-                        onClick={() =>
-                          fileInputRef.current?.click()
-                        }
-                      >
-                        Change Photo
-                      </button>
-
-                      <span className="avatar-edit-hint">
-                        JPG or PNG, up to 5MB
-                      </span>
-
-                    </div>
-
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleAvatarPick}
-                      hidden
-                    />
-
-                  </div>
-
-                  <label>
-                    First Name
-                  </label>
-
-                  <input
-                    type="text"
-                    value={form.first_name}
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        first_name: e.target.value,
-                      })
-                    }
-                    required
-                  />
-
-                  <label>
-                    Last Name
-                  </label>
-
-                  <input
-                    type="text"
-                    value={form.last_name}
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        last_name: e.target.value,
-                      })
-                    }
-                    required
-                  />
-
-                  <div className="profile-popover-actions">
-
-                    <button
-                      type="button"
-                      className="profile-popover-cancel"
-                      onClick={cancelEditing}
-                    >
-                      Cancel
-                    </button>
-
-                    <button
-                      type="submit"
-                      className="profile-popover-save"
-                      disabled={saving}
-                    >
-                      {saving
-                        ? 'Saving...'
-                        : 'Save'}
-                    </button>
-
-                  </div>
-
-                </form>
+                initials
               )}
 
             </div>
+
+
+            {/* USER INFORMATION */}
+
+            {!collapsed && (
+              <div className="user-info">
+
+                <p className="user-name">
+                  {fullName}
+                </p>
+
+                <p className="user-role">
+                  {role}
+                </p>
+
+              </div>
+            )}
+
+
+            {/* PROFILE ARROW */}
+
+            {!collapsed && (
+              <FaChevronDown
+                className={`user-caret ${
+                  profileOpen ? "open" : ""
+                }`}
+              />
+            )}
+
+          </button>
+
+
+          {/* =================================================
+              PROFILE POPOVER
+          ================================================= */}
+
+          {profileOpen && !collapsed && (
+            <div className="profile-popover">
+
+              <div className="profile-popover-header">
+
+                <div className="user-avatar user-avatar-lg">
+
+                  {user?.profile_picture ? (
+                    <img
+                      src={user.profile_picture}
+                      alt={fullName}
+                      className="user-avatar-img"
+                    />
+                  ) : (
+                    initials
+                  )}
+
+                </div>
+
+                <div>
+
+                  <p className="profile-popover-name">
+                    {fullName}
+                  </p>
+
+                  <p className="profile-popover-role">
+                    {role}
+                  </p>
+
+                </div>
+
+              </div>
+
+              {user?.email && (
+                <p className="profile-popover-email">
+                  {user.email}
+                </p>
+              )}
+
+              <button
+                type="button"
+                className="profile-popover-btn"
+                onClick={() => {
+                  setProfileOpen(false);
+                  navigate("/profile");
+                }}
+              >
+                <FaUser />
+                <span>View Profile</span>
+              </button>
+
+            </div>
           )}
+
         </div>
 
-        {/* NAVIGATION */}
+
+        {/* ===================================================
+            NAVIGATION
+        =================================================== */}
 
         <nav className="sidebar-nav">
 
-          {items.map((item) => (
+          {/* NOTIFICATIONS */}
 
-            <NavLink
-              key={item.path}
-              to={item.path}
-              onClick={closeMobileSidebar}
-              className={({ isActive }) =>
-                `nav-item ${
-                  isActive ? 'active' : ''
-                }`
-              }
-            >
+          <Link
+            to="/notifications"
+            className={`nav-item ${
+              isActive("/notifications") ? "active" : ""
+            }`}
+            onClick={handleNavigation}
+            title={collapsed ? "Notifications" : ""}
+          >
 
-              <span className="nav-label">
-                {item.label}
+            <span className="nav-item-left">
+
+              <FaBell className="nav-icon" />
+
+              {!collapsed && (
+                <span className="nav-label">
+                  Notifications
+                </span>
+              )}
+
+            </span>
+
+            {!collapsed && (
+              <span className="nav-badge">
+                1
               </span>
+            )}
 
-              {item.label === 'Notifications' &&
-                unreadCount > 0 && (
-                  <span className="nav-badge">
-                    {unreadCount}
-                  </span>
-                )}
+          </Link>
 
-            </NavLink>
 
-          ))}
+          {/* MY EVENTS */}
+
+          <Link
+            to="/my-events"
+            className={`nav-item ${
+              isActive("/my-events") ? "active" : ""
+            }`}
+            onClick={handleNavigation}
+            title={collapsed ? "My Events" : ""}
+          >
+
+            <span className="nav-item-left">
+
+              <FaCalendarDays className="nav-icon" />
+
+              {!collapsed && (
+                <span className="nav-label">
+                  My Events
+                </span>
+              )}
+
+            </span>
+
+          </Link>
+
+
+          {/* HISTORY */}
+
+          <Link
+            to="/history"
+            className={`nav-item ${
+              isActive("/history") ? "active" : ""
+            }`}
+            onClick={handleNavigation}
+            title={collapsed ? "History" : ""}
+          >
+
+            <span className="nav-item-left">
+
+              <FaClockRotateLeft className="nav-icon" />
+
+              {!collapsed && (
+                <span className="nav-label">
+                  History
+                </span>
+              )}
+
+            </span>
+
+          </Link>
+
+
+          {/* PROFILE */}
+
+          <Link
+            to="/profile"
+            className={`nav-item ${
+              isActive("/profile") ? "active" : ""
+            }`}
+            onClick={handleNavigation}
+            title={collapsed ? "Profile" : ""}
+          >
+
+            <span className="nav-item-left">
+
+              <FaUser className="nav-icon" />
+
+              {!collapsed && (
+                <span className="nav-label">
+                  Profile
+                </span>
+              )}
+
+            </span>
+
+          </Link>
 
         </nav>
 
-        {/* LOGOUT */}
 
-        <button
-          className="sidebar-logout"
-          onClick={handleLogout}
-        >
-          <span>Logout</span>
-        </button>
+        {/* ===================================================
+            BOTTOM SECTION
+        =================================================== */}
+
+        <div className="sidebar-bottom">
+
+          {/* COLLAPSE BUTTON */}
+
+          <button
+            type="button"
+            className="sidebar-collapse-btn"
+            onClick={() => {
+              setCollapsed(!collapsed);
+              setProfileOpen(false);
+            }}
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+
+            <FaBars className="collapse-icon" />
+
+            {!collapsed && (
+              <span>
+                Collapse Menu
+              </span>
+            )}
+
+          </button>
+
+
+          {/* LOGOUT */}
+
+          <button
+            type="button"
+            className="sidebar-logout"
+            onClick={handleLogout}
+            title={collapsed ? "Logout" : ""}
+          >
+
+            <FaRightFromBracket className="nav-icon" />
+
+            {!collapsed && (
+              <span>
+                Logout
+              </span>
+            )}
+
+          </button>
+
+        </div>
 
       </aside>
     </>
