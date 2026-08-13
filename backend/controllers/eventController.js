@@ -200,21 +200,25 @@ const createEvent = async (req, res) => {
       await connection.query(
         `
         INSERT INTO notifications (
+          user_id,
           event_id,
           title,
           message,
           type,
           target_role,
+          sent_by,
           sent_at
         )
-        VALUES (?, ?, ?, ?, ?, NOW())
+        VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
         `,
         [
+          createdBy,
           eventId,
           event_name.trim(),
           `A new event "${event_name.trim()}" has been posted. Check it out!`,
           'new_event',
           'student',
+          createdBy,
         ]
       );
 
