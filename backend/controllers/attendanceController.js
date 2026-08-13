@@ -266,16 +266,37 @@ const getAttendanceReport = async (req, res) => {
 
 const getDepartmentsOverview = async (req, res) => {
   try {
+    // Response key is `departments` (not `overview`) — both
+    // AdminDashboard.jsx and AttendanceReport.jsx read data.departments.
+    // Fields also match what those two components actually use:
+    //   - department_code: matched against the hardcoded BSIT/BSBA/etc
+    //     list in AttendanceReport.jsx
+    //   - student_count / student_leader_count: shown separately
+    //     ("12 students · 3 leaders")
+    //   - total_invited: denominator for the engagement % bar — every
+    //     student/student_leader in the department is "invited"
+    //   - attended_count / unique_attendees: distinct students from this
+    //     department with at least one attendance record (same number,
+    //     used in two different places in the UI)
     const [rows] = await pool.query(`
-      SELECT d.department_id, d.department_name,
-             COUNT(DISTINCT u.user_id) AS total_students,
-             COUNT(DISTINCT a.user_id) AS attended_count
+      SELECT
+        d.department_id,
+        d.department_code,
+        d.department_name,
+        COUNT(DISTINCT CASE WHEN u.role = 'student' THEN u.user_id END) AS student_count,
+        COUNT(DISTINCT CASE WHEN u.role = 'student_leader' THEN u.user_id END) AS student_leader_count,
+        COUNT(DISTINCT CASE WHEN u.role IN ('student', 'student_leader') THEN u.user_id END) AS total_invited,
+        COUNT(DISTINCT a.user_id) AS attended_count,
+        COUNT(DISTINCT a.user_id) AS unique_attendees
       FROM departments d
-      LEFT JOIN users u ON d.department_id = u.department_id AND u.role = 'student'
-      LEFT JOIN attendance a ON u.user_id = a.user_id
-      GROUP BY d.department_id
+      LEFT JOIN users u
+        ON u.department_id = d.department_id
+        AND u.role IN ('student', 'student_leader')
+      LEFT JOIN attendance a
+        ON a.user_id = u.user_id
+      GROUP BY d.department_id, d.department_code, d.department_name
     `);
-    return res.status(200).json({ success: true, overview: rows });
+    return res.status(200).json({ success: true, departments: rows });
   } catch (error) {
     console.error('GetDepartmentsOverview error:', error);
     return res.status(500).json({ success: false, message: 'Server error.' });
