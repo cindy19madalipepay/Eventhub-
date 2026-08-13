@@ -303,17 +303,37 @@ const getDepartmentsOverview = async (req, res) => {
   }
 };
 
+// ── FIXED ────────────────────────────────────────────────────────────────
+// Previously returned `attendance_count` and never sent `total_students` at
+// all, but AttendanceReport.jsx reads `event.attended_count` and
+// `event.total_students` for both the progress bar and the "3/12 (25.0%)"
+// label — so both always rendered as blank/undefined. total_students is
+// now every student + student_leader in the department (matching the
+// departments-overview denominator), and attended_count only counts
+// attendees who actually belong to this department.
 const getDepartmentSummary = async (req, res) => {
   try {
     const { deptId } = req.params;
-    const [rows] = await pool.query(`
-      SELECT e.event_id, e.event_name, COUNT(a.attendance_id) AS attendance_count
-      FROM events e
-      LEFT JOIN attendance a ON e.event_id = a.event_id
-      LEFT JOIN users u ON a.user_id = u.user_id AND u.department_id = ?
-      WHERE e.event_id IN (SELECT event_id FROM event_departments WHERE department_id = ?)
-      GROUP BY e.event_id
-    `, [deptId, deptId]);
+    const [rows] = await pool.query(
+      `SELECT
+          e.event_id,
+          e.event_name,
+          e.date_start,
+          (
+            SELECT COUNT(DISTINCT u2.user_id)
+            FROM users u2
+            WHERE u2.department_id = ?
+              AND u2.role IN ('student', 'student_leader')
+          ) AS total_students,
+          COUNT(DISTINCT CASE WHEN u.department_id = ? THEN a.user_id END) AS attended_count
+       FROM events e
+       JOIN event_departments ed ON ed.event_id = e.event_id AND ed.department_id = ?
+       LEFT JOIN attendance a ON a.event_id = e.event_id
+       LEFT JOIN users u ON a.user_id = u.user_id
+       GROUP BY e.event_id, e.event_name, e.date_start
+       ORDER BY e.date_start DESC`,
+      [deptId, deptId, deptId]
+    );
     return res.status(200).json({ success: true, summary: rows });
   } catch (error) {
     console.error('GetDepartmentSummary error:', error);
@@ -321,6 +341,14 @@ const getDepartmentSummary = async (req, res) => {
   }
 };
 
+// ── FIXED ────────────────────────────────────────────────────────────────
+// Previously returned `stats` as a plain array of { year_level, block,
+// total, attended } rows, but AttendanceReport.jsx's getBlockStats() reads
+// it as a lookup map — yearBlockStats['1-A'] etc. Against an array that
+// lookup is always undefined, so every block card showed 0/0 regardless of
+// real data. Now returns an object keyed by "year-block". Also now counts
+// student_leader alongside student, matching the departments-overview and
+// department-summary totals so the numbers agree with each other.
 const getYearBlockStats = async (req, res) => {
   try {
     const { deptId } = req.params;
@@ -330,11 +358,20 @@ const getYearBlockStats = async (req, res) => {
              COUNT(DISTINCT a.user_id) AS attended
       FROM users u
       LEFT JOIN attendance a ON u.user_id = a.user_id
-      WHERE u.department_id = ? AND u.role = 'student'
+      WHERE u.department_id = ? AND u.role IN ('student', 'student_leader')
       GROUP BY u.year_level, u.block
       ORDER BY u.year_level, u.block
     `, [deptId]);
-    return res.status(200).json({ success: true, stats: rows });
+
+    const stats = {};
+    rows.forEach((row) => {
+      stats[`${row.year_level}-${row.block}`] = {
+        total: Number(row.total),
+        attended: Number(row.attended),
+      };
+    });
+
+    return res.status(200).json({ success: true, stats });
   } catch (error) {
     console.error('GetYearBlockStats error:', error);
     return res.status(500).json({ success: false, message: 'Server error.' });
@@ -360,14 +397,11 @@ const getOrgBreakdown = async (req, res) => {
   }
 };
 
-// ── FIXED ────────────────────────────────────────────────────────────────
-// Previously this only read event_id/year_level/block from the query string
-// (never department_id, which the frontend actually sends) and returned a
-// single `report` array. The frontend expects two separate arrays —
-// `events` (one card per event, with total_students for the % bar) and
-// `attendance` (the raw attendee list, filtered to this exact year/block) —
-// so both ended up empty no matter what was clicked, showing
-// "No events found for this selection." every time.
+// ── FIXED (role count) ─────────────────────────────────────────────────
+// total_students now counts student_leader alongside student, matching the
+// role set used everywhere else (departments-overview, department-summary,
+// year-block-stats) so numbers agree across every view instead of the
+// block report undercounting relative to the dashboard.
 const getBlockReport = async (req, res) => {
   try {
     const { department_id, year_level, block } = req.query;
@@ -381,7 +415,7 @@ const getBlockReport = async (req, res) => {
     const [totalRows] = await pool.query(
       `SELECT COUNT(*) AS total
        FROM users
-       WHERE department_id = ? AND year_level = ? AND block = ? AND role = 'student'`,
+       WHERE department_id = ? AND year_level = ? AND block = ? AND role IN ('student', 'student_leader')`,
       [department_id, year_level, block]
     );
     const total_students = totalRows[0]?.total || 0;
