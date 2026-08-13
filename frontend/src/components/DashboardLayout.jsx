@@ -4,18 +4,27 @@ import Sidebar from './Sidebar';
 import './DashboardLayout.css';
 
 const DashboardLayout = () => {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  const [
+    sidebarCollapsed,
+    setSidebarCollapsed
+  ] = useState(false);
 
   const toggleSidebar = () => {
-    setSidebarCollapsed(prev => !prev);
+    setSidebarCollapsed(
+      prev => !prev
+    );
   };
 
   return (
     <div
       className={`dashboard-layout ${
-        sidebarCollapsed ? 'sidebar-collapsed' : 'sidebar-expanded'
+        sidebarCollapsed
+          ? 'sidebar-collapsed'
+          : 'sidebar-expanded'
       }`}
     >
+
       <Sidebar
         collapsed={sidebarCollapsed}
         onToggle={toggleSidebar}
@@ -24,6 +33,7 @@ const DashboardLayout = () => {
       <main className="main-content">
         <Outlet />
       </main>
+
     </div>
   );
 };
