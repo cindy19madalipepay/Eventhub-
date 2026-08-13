@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import './Sidebar.css';
 
 const Icon = ({ type, size = 23 }) => {
-
   const common = {
     width: size,
     height: size,
@@ -16,7 +15,6 @@ const Icon = ({ type, size = 23 }) => {
   };
 
   switch (type) {
-
     case 'grid':
       return (
         <svg {...common}>
@@ -88,16 +86,6 @@ const Icon = ({ type, size = 23 }) => {
         </svg>
       );
 
-    case 'users':
-      return (
-        <svg {...common}>
-          <circle cx="9" cy="8" r="3" />
-          <path d="M3 20c0-3 2.5-5 6-5s6 2 6 5" />
-          <path d="M16 5a3 3 0 0 1 0 6" />
-          <path d="M18 15c2 .5 3 2 3 4" />
-        </svg>
-      );
-
     case 'menu':
       return (
         <svg {...common} strokeWidth="2.2">
@@ -112,48 +100,70 @@ const Icon = ({ type, size = 23 }) => {
   }
 };
 
-
 const Sidebar = ({ collapsed, onToggle }) => {
-
   const navigate = useNavigate();
 
   const [profileOpen, setProfileOpen] = useState(false);
+  const [editProfileOpen, setEditProfileOpen] = useState(false);
 
-  /*
-   * Get logged-in user.
-   * This supports the structure used by your EventHub auth system.
-   */
-  let user = null;
+  const [user, setUser] = useState(null);
 
-  try {
-    const storedUser =
-      localStorage.getItem('user') ||
-      localStorage.getItem('currentUser');
+  const [editFirstName, setEditFirstName] = useState('');
+  const [editLastName, setEditLastName] = useState('');
+  const [editPhoto, setEditPhoto] = useState('');
 
-    if (storedUser) {
-      user = JSON.parse(storedUser);
+  /* =========================================================
+     LOAD USER
+  ========================================================= */
+
+  useEffect(() => {
+    try {
+      const storedUser =
+        localStorage.getItem('user') ||
+        localStorage.getItem('currentUser');
+
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
+    } catch (error) {
+      console.error('Unable to read user:', error);
     }
-  } catch (error) {
-    console.error('Unable to read user:', error);
-  }
+  }, []);
 
-  const firstName = user?.first_name || 'User';
-  const lastName = user?.last_name || '';
-  const fullName =
-    `${firstName} ${lastName}`.trim();
+  /* =========================================================
+     USER DATA
+  ========================================================= */
+
+  const firstName = user?.first_name || user?.firstName || 'User';
+  const lastName = user?.last_name || user?.lastName || '';
+
+  const fullName = `${firstName} ${lastName}`.trim();
 
   const role = user?.role || 'student';
 
+  const profilePhoto =
+    user?.profile_photo ||
+    user?.profilePhoto ||
+    user?.photo ||
+    user?.avatar ||
+    '';
+
   const initials =
-    `${firstName?.charAt(0) || 'U'}`
-    .toUpperCase();
+    firstName?.charAt(0)?.toUpperCase() || 'U';
 
   const isAdmin = role === 'admin';
   const isDepartmentHead = role === 'department_head';
 
-  /*
-   * ADMIN SIDEBAR
-   */
+  const roleText = isAdmin
+    ? 'Admin'
+    : isDepartmentHead
+      ? 'Department Head'
+      : 'Student';
+
+  /* =========================================================
+     ADMIN ITEMS
+  ========================================================= */
+
   const adminItems = [
     {
       label: 'Overview',
@@ -182,9 +192,10 @@ const Sidebar = ({ collapsed, onToggle }) => {
     }
   ];
 
-  /*
-   * DEPARTMENT HEAD SIDEBAR
-   */
+  /* =========================================================
+     DEPARTMENT ITEMS
+  ========================================================= */
+
   const departmentItems = [
     {
       label: 'Overview',
@@ -208,9 +219,10 @@ const Sidebar = ({ collapsed, onToggle }) => {
     }
   ];
 
-  /*
-   * STUDENT SIDEBAR
-   */
+  /* =========================================================
+     STUDENT ITEMS
+  ========================================================= */
+
   const studentItems = [
     {
       label: 'Notifications',
@@ -230,16 +242,88 @@ const Sidebar = ({ collapsed, onToggle }) => {
     }
   ];
 
-  const menuItems =
-    isAdmin
-      ? adminItems
-      : isDepartmentHead
-        ? departmentItems
-        : studentItems;
+  const menuItems = isAdmin
+    ? adminItems
+    : isDepartmentHead
+      ? departmentItems
+      : studentItems;
 
+  /* =========================================================
+     OPEN EDIT PROFILE
+  ========================================================= */
+
+  const openEditProfile = () => {
+    setEditFirstName(firstName);
+    setEditLastName(lastName);
+    setEditPhoto(profilePhoto);
+
+    setProfileOpen(false);
+    setEditProfileOpen(true);
+  };
+
+  /* =========================================================
+     SELECT PROFILE PHOTO
+  ========================================================= */
+
+  const handlePhotoChange = (event) => {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file.');
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onloadend = () => {
+      setEditPhoto(reader.result);
+    };
+
+    reader.readAsDataURL(file);
+  };
+
+  /* =========================================================
+     SAVE PROFILE
+  ========================================================= */
+
+  const handleSaveProfile = () => {
+    const trimmedFirstName = editFirstName.trim();
+    const trimmedLastName = editLastName.trim();
+
+    if (!trimmedFirstName) {
+      alert('First name is required.');
+      return;
+    }
+
+    const updatedUser = {
+      ...user,
+      first_name: trimmedFirstName,
+      last_name: trimmedLastName,
+      profile_photo: editPhoto
+    };
+
+    setUser(updatedUser);
+
+    localStorage.setItem(
+      'user',
+      JSON.stringify(updatedUser)
+    );
+
+    localStorage.setItem(
+      'currentUser',
+      JSON.stringify(updatedUser)
+    );
+
+    setEditProfileOpen(false);
+  };
+
+  /* =========================================================
+     LOGOUT
+  ========================================================= */
 
   const handleLogout = () => {
-
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     localStorage.removeItem('currentUser');
@@ -249,252 +333,390 @@ const Sidebar = ({ collapsed, onToggle }) => {
     });
   };
 
+  /* =========================================================
+     AVATAR COMPONENT
+  ========================================================= */
+
+  const Avatar = ({ popup = false }) => {
+    const className = popup
+      ? 'popup-avatar'
+      : 'profile-avatar';
+
+    return (
+      <div className={className}>
+        {profilePhoto ? (
+          <img
+            src={profilePhoto}
+            alt="Profile"
+            className="profile-image"
+          />
+        ) : (
+          initials
+        )}
+      </div>
+    );
+  };
 
   return (
-    <aside
-      className={`sidebar ${
-        collapsed ? 'sidebar-is-collapsed' : ''
-      }`}
-    >
+    <>
+      <aside
+        className={`sidebar ${
+          collapsed ? 'sidebar-is-collapsed' : ''
+        }`}
+      >
 
-      {/* =================================================
-          HEADER
-      ================================================= */}
+        {/* =================================================
+            HEADER
+        ================================================= */}
 
-      <div className="sidebar-header">
+        <div className="sidebar-header">
 
-        <div className="eventhub-brand">
+          <div className="eventhub-brand">
 
-          <div className="eventhub-logo">
-            EH
+            <div className="eventhub-logo">
+              EH
+            </div>
+
+            {!collapsed && (
+              <span className="eventhub-name">
+                EventHub
+              </span>
+            )}
+
           </div>
 
-          {!collapsed && (
-            <span className="eventhub-name">
-              EventHub
-            </span>
-          )}
+          <button
+            type="button"
+            className="sidebar-toggle"
+            onClick={onToggle}
+            aria-label="Toggle sidebar"
+          >
+            <Icon
+              type="menu"
+              size={28}
+            />
+          </button>
 
         </div>
 
 
-        {/* HAMBURGER */}
-        <button
-          type="button"
-          className="sidebar-toggle"
-          onClick={onToggle}
-          aria-label="Toggle sidebar"
-          title={
-            collapsed
-              ? 'Expand sidebar'
-              : 'Collapse sidebar'
-          }
-        >
-          <Icon
-            type="menu"
-            size={28}
-          />
-        </button>
-
-      </div>
-
-
-      {/* =================================================
-          PROFILE
-      ================================================= */}
-
-      <div className="sidebar-profile-area">
-
-        <button
-          type="button"
-          className="profile-trigger"
-          onClick={() =>
-            setProfileOpen(prev => !prev)
-          }
-        >
-
-          <div className="profile-avatar">
-            {initials}
-          </div>
-
-          {!collapsed && (
-            <div className="profile-text">
-
-              <strong>
-                {fullName}
-              </strong>
-
-              <span>
-                {isAdmin
-                  ? 'Admin'
-                  : isDepartmentHead
-                    ? 'Department Head'
-                    : 'Student'}
-              </span>
-
-            </div>
-          )}
-
-          {!collapsed && (
-            <span className="profile-arrow">
-              {profileOpen ? '⌃' : '⌄'}
-            </span>
-          )}
-
-        </button>
-
-
         {/* =================================================
-            PROFILE POPUP
+            PROFILE
         ================================================= */}
 
-        {profileOpen && !collapsed && (
+        <div className="sidebar-profile-area">
 
-          <div className="profile-popup">
+          <button
+            type="button"
+            className="profile-trigger"
+            onClick={() =>
+              setProfileOpen(prev => !prev)
+            }
+          >
 
-            <div className="popup-user">
+            <Avatar />
 
-              <div className="popup-avatar">
-                {initials}
-              </div>
+            {!collapsed && (
+              <div className="profile-text">
 
-              <div>
                 <strong>
                   {fullName}
                 </strong>
 
                 <span>
-                  {isAdmin
-                    ? 'Admin'
-                    : isDepartmentHead
-                      ? 'Department Head'
-                      : 'Student'}
+                  {roleText}
                 </span>
+
+              </div>
+            )}
+
+            {!collapsed && (
+              <span className="profile-arrow">
+                {profileOpen ? '⌃' : '⌄'}
+              </span>
+            )}
+
+          </button>
+
+
+          {/* =================================================
+              PROFILE POPUP
+          ================================================= */}
+
+          {profileOpen && !collapsed && (
+
+            <div className="profile-popup">
+
+              <div className="popup-user">
+
+                <Avatar popup />
+
+                <div>
+                  <strong>
+                    {fullName}
+                  </strong>
+
+                  <span>
+                    {roleText}
+                  </span>
+                </div>
+
               </div>
 
+              <div className="popup-email">
+                {user?.email || 'No email available'}
+              </div>
+
+              <button
+                type="button"
+                className="edit-profile-button"
+                onClick={openEditProfile}
+              >
+                Edit Profile
+              </button>
+
             </div>
 
+          )}
 
-            <div className="popup-email">
-              {user?.email || 'No email available'}
-            </div>
+        </div>
 
 
-            <button
-              type="button"
-              className="edit-profile-button"
-              onClick={() => {
-                /*
-                 * If your existing profile editor listens
-                 * for this event, it will open it.
-                 */
-                window.dispatchEvent(
-                  new CustomEvent(
-                    'open-edit-profile'
-                  )
-                );
+        {/* =================================================
+            NAVIGATION
+        ================================================= */}
 
-                setProfileOpen(false);
-              }}
+        <nav className="sidebar-navigation">
+
+          {menuItems.map(item => (
+
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) =>
+                `sidebar-link ${
+                  isActive
+                    ? 'sidebar-link-active'
+                    : ''
+                }`
+              }
+              title={collapsed ? item.label : ''}
             >
-              Edit Profile
-            </button>
 
-          </div>
+              <span className="sidebar-icon">
 
-        )}
+                <Icon
+                  type={item.icon}
+                  size={23}
+                />
 
-      </div>
+              </span>
+
+              {!collapsed && (
+                <span className="sidebar-link-label">
+                  {item.label}
+                </span>
+              )}
+
+              {!collapsed && item.badge && (
+                <span className="notification-badge">
+                  {item.badge}
+                </span>
+              )}
+
+            </NavLink>
+
+          ))}
+
+        </nav>
 
 
-      {/* =================================================
-          NAVIGATION
-      ================================================= */}
+        {/* =================================================
+            LOGOUT
+        ================================================= */}
 
-      <nav className="sidebar-navigation">
+        <div className="sidebar-footer">
 
-        {menuItems.map(item => (
-
-          <NavLink
-            key={item.path}
-            to={item.path}
-            className={({ isActive }) =>
-              `sidebar-link ${
-                isActive
-                  ? 'sidebar-link-active'
-                  : ''
-              }`
-            }
-            title={
-              collapsed
-                ? item.label
-                : ''
-            }
+          <button
+            type="button"
+            className="sidebar-logout"
+            onClick={handleLogout}
           >
 
             <span className="sidebar-icon">
+
               <Icon
-                type={item.icon}
+                type="logout"
                 size={23}
               />
-            </span>
 
+            </span>
 
             {!collapsed && (
-              <span className="sidebar-link-label">
-                {item.label}
+              <span>
+                Logout
               </span>
             )}
 
+          </button>
 
-            {!collapsed && item.badge && (
-              <span className="notification-badge">
-                {item.badge}
-              </span>
-            )}
+        </div>
 
-          </NavLink>
-
-        ))}
-
-      </nav>
+      </aside>
 
 
-      {/* =================================================
-          LOGOUT
-      ================================================= */}
+      {/* =====================================================
+          EDIT PROFILE MODAL
+      ===================================================== */}
 
-      <div className="sidebar-footer">
+      {editProfileOpen && (
 
-        <button
-          type="button"
-          className="sidebar-logout"
-          onClick={handleLogout}
-          title={
-            collapsed
-              ? 'Logout'
-              : ''
-          }
+        <div
+          className="edit-profile-overlay"
+          onClick={() => setEditProfileOpen(false)}
         >
 
-          <span className="sidebar-icon">
-            <Icon
-              type="logout"
-              size={23}
-            />
-          </span>
+          <div
+            className="edit-profile-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
 
-          {!collapsed && (
-            <span>
-              Logout
-            </span>
-          )}
+            <div className="edit-profile-header">
 
-        </button>
+              <h2>
+                Edit Profile
+              </h2>
 
-      </div>
+              <button
+                type="button"
+                className="close-profile-button"
+                onClick={() => setEditProfileOpen(false)}
+              >
+                ×
+              </button>
 
-    </aside>
+            </div>
+
+
+            {/* PHOTO */}
+
+            <div className="edit-photo-section">
+
+              <div className="edit-photo-preview">
+
+                {editPhoto ? (
+                  <img
+                    src={editPhoto}
+                    alt="Profile preview"
+                  />
+                ) : (
+                  initials
+                )}
+
+              </div>
+
+              <label className="change-photo-button">
+
+                Change Photo
+
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoChange}
+                  hidden
+                />
+
+              </label>
+
+            </div>
+
+
+            {/* FIRST NAME */}
+
+            <div className="profile-form-group">
+
+              <label>
+                First Name
+              </label>
+
+              <input
+                type="text"
+                value={editFirstName}
+                onChange={(e) =>
+                  setEditFirstName(e.target.value)
+                }
+                placeholder="Enter first name"
+              />
+
+            </div>
+
+
+            {/* LAST NAME */}
+
+            <div className="profile-form-group">
+
+              <label>
+                Last Name
+              </label>
+
+              <input
+                type="text"
+                value={editLastName}
+                onChange={(e) =>
+                  setEditLastName(e.target.value)
+                }
+                placeholder="Enter last name"
+              />
+
+            </div>
+
+
+            {/* EMAIL */}
+
+            <div className="profile-form-group">
+
+              <label>
+                Email
+              </label>
+
+              <input
+                type="email"
+                value={user?.email || ''}
+                disabled
+              />
+
+            </div>
+
+
+            {/* BUTTONS */}
+
+            <div className="edit-profile-actions">
+
+              <button
+                type="button"
+                className="cancel-profile-button"
+                onClick={() => setEditProfileOpen(false)}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className="save-profile-button"
+                onClick={handleSaveProfile}
+              >
+                Save Changes
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      )}
+
+    </>
   );
 };
 

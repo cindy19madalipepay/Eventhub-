@@ -1,29 +1,20 @@
 /* =========================================================
-   DESIGN TOKENS
+   EVENTHUB DASHBOARD LAYOUT
 ========================================================= */
 
 :root {
+  --sidebar-width: 260px;
+  --sidebar-collapsed-width: 78px;
+
+  --bg: #f5f7fb;
   --ink: #1f3329;
   --navy: #6a8f78;
   --navy-deep: #1f3329;
   --gold: #a8c9b5;
 
-  --bg: #f5f7fb;
   --surface: #ffffff;
   --border: #e6e9f2;
   --muted: #6b7280;
-
-  --green-bg: #e6f6ec;
-  --green-fg: #15803d;
-
-  --yellow-bg: #fef6e0;
-  --yellow-fg: #b8860b;
-
-  --blue-bg: #e7edfb;
-  --blue-fg: #1d4ed8;
-
-  --red-bg: #fbe9ea;
-  --red-fg: #c0392b;
 
   --radius: 14px;
 
@@ -46,9 +37,10 @@
 html,
 body,
 #root {
+  margin: 0;
+
   width: 100%;
   min-height: 100%;
-  margin: 0;
 }
 
 body {
@@ -56,6 +48,7 @@ body {
     'Inter',
     -apple-system,
     BlinkMacSystemFont,
+    'Segoe UI',
     sans-serif;
 
   color: var(--ink);
@@ -65,41 +58,51 @@ body {
 
 
 /* =========================================================
-   MAIN DASHBOARD
+   LAYOUT
 ========================================================= */
 
 .dashboard-layout {
   width: 100%;
-  height: 100vh;
 
-  display: flex;
-
-  overflow: hidden;
+  min-height: 100vh;
 
   background: var(--bg);
 }
 
 
 /* =========================================================
-   CONTENT
+   DESKTOP CONTENT
 ========================================================= */
 
 .main-content {
-  flex: 1;
-
-  min-width: 0;
   min-height: 100vh;
 
-  margin-left: 280px;
+  margin-left: var(--sidebar-width);
+
+  width: calc(100% - var(--sidebar-width));
 
   padding: 30px;
+
+  background: var(--bg);
 
   overflow-x: hidden;
   overflow-y: auto;
 
-  background: var(--bg);
+  transition:
+    margin-left 0.25s ease,
+    width 0.25s ease;
+}
 
-  -webkit-overflow-scrolling: touch;
+
+/* =========================================================
+   COLLAPSED DESKTOP
+========================================================= */
+
+.dashboard-layout.sidebar-collapsed .main-content {
+  margin-left: var(--sidebar-collapsed-width);
+
+  width:
+    calc(100% - var(--sidebar-collapsed-width));
 }
 
 
@@ -112,6 +115,8 @@ body {
 }
 
 .page-header h2 {
+  margin: 0 0 6px;
+
   font-family:
     'Space Grotesk',
     'Inter',
@@ -121,19 +126,15 @@ body {
 
   font-weight: 700;
 
-  letter-spacing: -0.02em;
-
   color: var(--navy-deep);
-
-  margin: 0 0 6px;
 }
 
 .page-header p {
+  margin: 0;
+
   color: var(--muted);
 
   font-size: 14.5px;
-
-  margin: 0;
 }
 
 
@@ -155,21 +156,15 @@ body {
 .stat-card {
   position: relative;
 
+  padding: 14px 16px 12px;
+
   background: var(--surface);
 
   border: 1px solid var(--border);
 
   border-radius: 12px;
 
-  padding: 14px 16px 12px;
-
-  overflow: hidden;
-
   box-shadow: var(--shadow-sm);
-
-  transition:
-    transform 0.18s ease,
-    box-shadow 0.18s ease;
 }
 
 .stat-card::before {
@@ -191,53 +186,24 @@ body {
     );
 }
 
-.stat-card::after {
-  content: '';
-
-  position: absolute;
-
-  top: 4px;
-  left: 0;
-
-  width: 100%;
-  height: 1px;
-
-  background-image:
-    radial-gradient(
-      circle,
-      var(--bg) 1.5px,
-      transparent 1.5px
-    );
-
-  background-size: 8px 1px;
-
-  background-repeat: repeat-x;
-}
-
-.stat-card:hover {
-  transform: translateY(-2px);
-
-  box-shadow: var(--shadow-md);
-}
-
 .stat-label {
   display: block;
+
+  margin-bottom: 6px;
+
+  color: var(--muted);
 
   font-size: 11px;
 
   font-weight: 600;
 
   text-transform: uppercase;
-
-  letter-spacing: 0.05em;
-
-  color: var(--muted);
-
-  margin-bottom: 6px;
 }
 
 .stat-value {
   display: block;
+
+  color: var(--navy-deep);
 
   font-family:
     'Space Grotesk',
@@ -247,10 +213,6 @@ body {
   font-size: 22px;
 
   font-weight: 700;
-
-  color: var(--navy-deep);
-
-  line-height: 1;
 }
 
 
@@ -259,69 +221,17 @@ body {
 ========================================================= */
 
 .card {
+  margin-bottom: 24px;
+
+  padding: 24px;
+
   background: var(--surface);
 
   border: 1px solid var(--border);
 
   border-radius: var(--radius);
 
-  padding: 24px;
-
-  margin-bottom: 24px;
-
   box-shadow: var(--shadow-sm);
-}
-
-.card h3 {
-  font-family:
-    'Space Grotesk',
-    'Inter',
-    sans-serif;
-
-  font-weight: 700;
-
-  letter-spacing: -0.01em;
-}
-
-
-/* =========================================================
-   BADGES
-========================================================= */
-
-.badge {
-  display: inline-block;
-
-  padding: 4px 12px;
-
-  border-radius: 999px;
-
-  font-size: 12px;
-
-  font-weight: 700;
-
-  letter-spacing: 0.01em;
-
-  text-transform: capitalize;
-}
-
-.badge-green {
-  background: var(--green-bg);
-  color: var(--green-fg);
-}
-
-.badge-yellow {
-  background: var(--yellow-bg);
-  color: var(--yellow-fg);
-}
-
-.badge-blue {
-  background: var(--blue-bg);
-  color: var(--blue-fg);
-}
-
-.badge-red {
-  background: var(--red-bg);
-  color: var(--red-fg);
 }
 
 
@@ -332,9 +242,9 @@ body {
 .table-wrapper {
   overflow-x: auto;
 
-  border-radius: 10px;
-
   border: 1px solid var(--border);
+
+  border-radius: 10px;
 }
 
 table {
@@ -346,9 +256,9 @@ table {
 }
 
 thead th {
-  text-align: left;
-
   padding: 12px 16px;
+
+  text-align: left;
 
   background: var(--bg);
 
@@ -360,8 +270,6 @@ thead th {
 
   text-transform: uppercase;
 
-  letter-spacing: 0.05em;
-
   border-bottom: 1px solid var(--border);
 
   white-space: nowrap;
@@ -372,515 +280,64 @@ tbody td {
 
   border-bottom: 1px solid var(--border);
 
-  vertical-align: middle;
-
   color: var(--ink);
-}
-
-tbody tr:last-child td {
-  border-bottom: none;
-}
-
-tbody tr:hover {
-  background: #fafbff;
 }
 
 
 /* =========================================================
-   TABLET / MOBILE
+   MOBILE
+   SIDEBAR + CONTENT SIDE BY SIDE
 ========================================================= */
 
 @media (max-width: 768px) {
 
-  /*
-    VERY IMPORTANT:
-
-    Sidebar:
-      left: 0
-      width: 50vw
-
-    Content:
-      margin-left: 50vw
-      width: 50vw
-
-    Therefore both stay BESIDE EACH OTHER.
-  */
-
   .dashboard-layout {
-    display: block;
+    position: relative;
 
     width: 100vw;
-    height: 100dvh;
-
-    overflow: hidden;
-  }
-
-  .main-content {
-    width: 50vw;
-
-    min-width: 50vw;
-
-    height: 100dvh;
     min-height: 100dvh;
 
-    margin-left: 50vw;
-
-    padding: 24px 16px;
-
-    overflow-x: auto;
-    overflow-y: auto;
-
-    -webkit-overflow-scrolling: touch;
+    overflow-x: hidden;
   }
 
 
   /* =====================================================
-     STAT CARDS
+     NORMAL MOBILE SIDEBAR
+     240px WIDE
   ===================================================== */
 
-  .stats-row {
-    grid-template-columns:
-      repeat(2, minmax(130px, 1fr));
-
-    gap: 10px;
-  }
-
-  .stat-value {
-    font-size: 19px;
-  }
-
-  .card {
-    padding: 18px;
-  }
-
-  table {
-    font-size: 13px;
-  }
-
-  thead th,
-  tbody td {
-    padding: 10px 12px;
-  }
-}
-
-
-/* =========================================================
-   SMALL PHONE
-========================================================= */
-
-@media (max-width: 430px) {
-
   .main-content {
-    width: 50vw;
+    width:
+      calc(100vw - 240px);
 
-    min-width: 50vw;
+    min-height: 100dvh;
 
-    margin-left: 50vw;
+    margin-left: 240px;
 
     padding: 20px 14px;
-  }
 
-  .stats-row {
-    grid-template-columns: 1fr;
-  }/* =========================================================
-   EVENTHUB DASHBOARD LAYOUT
-========================================================= */
-
-:root {
-  --ink: #1f3329;
-  --navy: #6a8f78;
-  --navy-deep: #1f3329;
-  --gold: #a8c9b5;
-
-  --bg: #f5f7fb;
-  --surface: #ffffff;
-  --border: #e6e9f2;
-  --muted: #6b7280;
-
-  --green-bg: #e6f6ec;
-  --green-fg: #15803d;
-
-  --yellow-bg: #fef6e0;
-  --yellow-fg: #b8860b;
-
-  --blue-bg: #e7edfb;
-  --blue-fg: #1d4ed8;
-
-  --red-bg: #fbe9ea;
-  --red-fg: #c0392b;
-
-  --radius: 14px;
-
-  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
-  --shadow-md: 0 8px 24px -8px rgba(106, 143, 120, 0.25);
-
-  --sidebar-width: 260px;
-  --sidebar-collapsed-width: 78px;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-html,
-body,
-#root {
-  margin: 0;
-  width: 100%;
-  min-height: 100%;
-}
-
-body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  color: var(--ink);
-  background: var(--bg);
-}
-
-/* =========================================================
-   MAIN DASHBOARD
-========================================================= */
-
-.dashboard-layout {
-  width: 100%;
-  min-height: 100vh;
-  background: var(--bg);
-}
-
-/* =========================================================
-   DESKTOP
-========================================================= */
-
-@media (min-width: 769px) {
-
-  .dashboard-layout {
-    display: block;
-  }
-
-  .dashboard-layout .main-content {
-    min-height: 100vh;
-    margin-left: var(--sidebar-width);
-    width: calc(100% - var(--sidebar-width));
-    padding: 30px;
-    background: var(--bg);
-
-    overflow-x: hidden;
+    overflow-x: auto;
+    overflow-y: auto;
 
     transition:
       margin-left 0.25s ease,
       width 0.25s ease;
   }
 
-  .dashboard-layout.sidebar-collapsed .main-content {
-    margin-left: var(--sidebar-collapsed-width);
-    width: calc(100% - var(--sidebar-collapsed-width));
-  }
-}
 
-/* =========================================================
-   MOBILE / TABLET
-   SIDEBAR = 50%
-   CONTENT = 50%
-========================================================= */
-
-@media (max-width: 768px) {
-
-  html,
-  body,
-  #root {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-  }
-
-  .dashboard-layout {
-    position: relative;
-    width: 100vw;
-    height: 100vh;
-    min-height: 100vh;
-    overflow: hidden;
-  }
-
-  /* -------------------------------------------------------
-     NORMAL SIDEBAR
-     50% OF PHONE WIDTH
-  ------------------------------------------------------- */
-
-  .dashboard-layout .main-content {
-    position: fixed;
-    top: 0;
-    right: 0;
-
-    width: 50vw;
-    height: 100vh;
-
-    margin: 0;
-    padding: 24px 16px;
-
-    overflow-x: hidden;
-    overflow-y: auto;
-
-    background: var(--bg);
-
-    transition:
-      width 0.25s ease,
-      left 0.25s ease;
-  }
-
-  /* -------------------------------------------------------
-     COLLAPSED SIDEBAR
-     CONTENT BECOMES LARGER
-  ------------------------------------------------------- */
+  /* =====================================================
+     COLLAPSED MOBILE
+     SIDEBAR = 78px
+     CONTENT = REST
+  ===================================================== */
 
   .dashboard-layout.sidebar-collapsed .main-content {
-    width: calc(100vw - var(--sidebar-collapsed-width));
+    width:
+      calc(100vw - 78px);
+
+    margin-left: 78px;
   }
-}
 
-/* =========================================================
-   PAGE HEADER
-========================================================= */
-
-.page-header {
-  margin-bottom: 28px;
-}
-
-.page-header h2 {
-  font-family: 'Space Grotesk', 'Inter', sans-serif;
-  font-size: 28px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--navy-deep);
-  margin: 0 0 6px;
-}
-
-.page-header p {
-  color: var(--muted);
-  font-size: 14.5px;
-  margin: 0;
-}
-
-/* =========================================================
-   STAT CARDS
-========================================================= */
-
-.stats-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 12px;
-  margin-bottom: 24px;
-}
-
-.stat-card {
-  position: relative;
-
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-
-  padding: 14px 16px 12px;
-
-  overflow: hidden;
-
-  box-shadow: var(--shadow-sm);
-
-  transition:
-    transform 0.18s ease,
-    box-shadow 0.18s ease;
-}
-
-.stat-card::before {
-  content: '';
-
-  position: absolute;
-  top: 0;
-  left: 0;
-
-  width: 100%;
-  height: 4px;
-
-  background: linear-gradient(
-    90deg,
-    var(--navy),
-    var(--gold)
-  );
-}
-
-.stat-card::after {
-  content: '';
-
-  position: absolute;
-  top: 4px;
-  left: 0;
-
-  width: 100%;
-  height: 1px;
-
-  background-image:
-    radial-gradient(
-      circle,
-      var(--bg) 1.5px,
-      transparent 1.5px
-    );
-
-  background-size: 8px 1px;
-  background-repeat: repeat-x;
-}
-
-.stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
-.stat-label {
-  display: block;
-
-  font-size: 11px;
-  font-weight: 600;
-
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-
-  color: var(--muted);
-
-  margin-bottom: 6px;
-}
-
-.stat-value {
-  display: block;
-
-  font-family: 'Space Grotesk', 'Inter', sans-serif;
-
-  font-size: 22px;
-  font-weight: 700;
-
-  color: var(--navy-deep);
-
-  line-height: 1;
-}
-
-/* =========================================================
-   CARD
-========================================================= */
-
-.card {
-  background: var(--surface);
-
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-
-  padding: 24px;
-  margin-bottom: 24px;
-
-  box-shadow: var(--shadow-sm);
-}
-
-.card h3 {
-  font-family: 'Space Grotesk', 'Inter', sans-serif;
-
-  font-weight: 700;
-  letter-spacing: -0.01em;
-}
-
-/* =========================================================
-   BADGES
-========================================================= */
-
-.badge {
-  display: inline-block;
-
-  padding: 4px 12px;
-
-  border-radius: 999px;
-
-  font-size: 12px;
-  font-weight: 700;
-
-  letter-spacing: 0.01em;
-
-  text-transform: capitalize;
-}
-
-.badge-green {
-  background: var(--green-bg);
-  color: var(--green-fg);
-}
-
-.badge-yellow {
-  background: var(--yellow-bg);
-  color: var(--yellow-fg);
-}
-
-.badge-blue {
-  background: var(--blue-bg);
-  color: var(--blue-fg);
-}
-
-.badge-red {
-  background: var(--red-bg);
-  color: var(--red-fg);
-}
-
-/* =========================================================
-   TABLE
-========================================================= */
-
-.table-wrapper {
-  overflow-x: auto;
-
-  border-radius: 10px;
-  border: 1px solid var(--border);
-}
-
-table {
-  width: 100%;
-
-  border-collapse: collapse;
-
-  font-size: 14px;
-}
-
-thead th {
-  text-align: left;
-
-  padding: 12px 16px;
-
-  background: var(--bg);
-  color: var(--muted);
-
-  font-size: 11.5px;
-  font-weight: 700;
-
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-
-  border-bottom: 1px solid var(--border);
-
-  white-space: nowrap;
-}
-
-tbody td {
-  padding: 14px 16px;
-
-  border-bottom: 1px solid var(--border);
-
-  vertical-align: middle;
-
-  color: var(--ink);
-}
-
-tbody tr:last-child td {
-  border-bottom: none;
-}
-
-tbody tr:hover {
-  background: #fafbff;
-}
-
-/* =========================================================
-   MOBILE PAGE CONTENT
-========================================================= */
-
-@media (max-width: 768px) {
 
   .page-header {
     margin-bottom: 20px;
@@ -896,6 +353,7 @@ tbody tr:hover {
 
   .stats-row {
     grid-template-columns: 1fr;
+
     gap: 10px;
   }
 
@@ -917,14 +375,27 @@ tbody tr:hover {
   }
 }
 
+
 /* =========================================================
-   VERY SMALL PHONES
+   SMALL PHONE
 ========================================================= */
 
 @media (max-width: 380px) {
 
-  .dashboard-layout .main-content {
-    padding: 20px 12px;
+  .main-content {
+    width:
+      calc(100vw - 220px);
+
+    margin-left: 220px;
+
+    padding: 18px 10px;
+  }
+
+  .dashboard-layout.sidebar-collapsed .main-content {
+    width:
+      calc(100vw - 72px);
+
+    margin-left: 72px;
   }
 
   .page-header h2 {
@@ -934,6 +405,4 @@ tbody tr:hover {
   .card {
     padding: 13px;
   }
-}
-
 }
