@@ -1,462 +1,563 @@
-import React, { useEffect, useState } from 'react';
-import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
 import './Sidebar.css';
 
-/* =========================================================
-   SIMPLE FLATICON-STYLE SVG ICONS
-   Black icon only — no colored background
-========================================================= */
-
-const Icon = ({ type, size = 23 }) => {
-  const common = {
-    width: size,
-    height: size,
-    viewBox: '0 0 24 24',
-    fill: 'none',
-    stroke: 'currentColor',
-    strokeWidth: 1.8,
-    strokeLinecap: 'round',
-    strokeLinejoin: 'round',
-  };
-
-  switch (type) {
-    case 'grid':
-      return (
-        <svg {...common}>
-          <rect x="3" y="3" width="7" height="7" rx="1" />
-          <rect x="14" y="3" width="7" height="7" rx="1" />
-          <rect x="3" y="14" width="7" height="7" rx="1" />
-          <rect x="14" y="14" width="7" height="7" rx="1" />
-        </svg>
-      );
-
-    case 'calendar':
-      return (
-        <svg {...common}>
-          <rect x="3" y="5" width="18" height="16" rx="2" />
-          <path d="M16 3v4M8 3v4M3 10h18" />
-          <path d="M12 14v4M10 16h4" />
-        </svg>
-      );
-
-    case 'building':
-      return (
-        <svg {...common}>
-          <path d="M4 21V7l8-4 8 4v14" />
-          <path d="M8 21v-4h8v4M8 10h1M12 10h1M16 10h1M8 13h1M12 13h1M16 13h1" />
-        </svg>
-      );
-
-    case 'receipt':
-      return (
-        <svg {...common}>
-          <path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3z" />
-          <path d="M9 8h6M9 12h6M9 16h4" />
-        </svg>
-      );
-
-    case 'chart':
-      return (
-        <svg {...common}>
-          <path d="M4 19V5M4 19h17" />
-          <path d="M7 15l4-4 3 2 5-7" />
-          <path d="M17 6h2v2" />
-        </svg>
-      );
-
-    case 'bell':
-      return (
-        <svg {...common}>
-          <path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
-          <path d="M10 21h4" />
-        </svg>
-      );
-
-    case 'history':
-      return (
-        <svg {...common}>
-          <path d="M3 12a9 9 0 1 0 3-6.7" />
-          <path d="M3 4v5h5" />
-          <path d="M12 7v5l3 2" />
-        </svg>
-      );
-
-    case 'logout':
-      return (
-        <svg {...common}>
-          <path d="M10 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5" />
-          <path d="M14 8l4 4-4 4" />
-          <path d="M18 12H8" />
-        </svg>
-      );
-
-    case 'menu':
-      return (
-        <svg {...common} strokeWidth="2.2">
-          <path d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-      );
-
-    case 'users':
-      return (
-        <svg {...common}>
-          <circle cx="9" cy="8" r="3" />
-          <path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" />
-          <path d="M16 5.5a3 3 0 0 1 0 5.8M17 14c2.3.7 4 2.8 4 5" />
-        </svg>
-      );
-
-    case 'clipboard':
-      return (
-        <svg {...common}>
-          <rect x="5" y="4" width="14" height="17" rx="2" />
-          <path d="M9 4V2h6v2M8 9h8M8 13h8M8 17h5" />
-        </svg>
-      );
-
-    default:
-      return (
-        <svg {...common}>
-          <circle cx="12" cy="12" r="9" />
-        </svg>
-      );
-  }
-};
-
-
-/* =========================================================
-   SIDEBAR
-========================================================= */
-
 const Sidebar = () => {
-  const location = useLocation();
   const navigate = useNavigate();
 
   const [collapsed, setCollapsed] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [editProfileOpen, setEditProfileOpen] = useState(false);
 
-  const [user, setUser] = useState({
-    first_name: 'User',
-    last_name: '',
-    role: 'student',
-    profile_picture: null,
-  });
+  // Get saved user information
+  const savedUser =
+    JSON.parse(localStorage.getItem('user')) ||
+    JSON.parse(localStorage.getItem('authUser')) ||
+    {};
 
-  /* -------------------------------------------------------
-     GET USER
-  ------------------------------------------------------- */
+  const [firstName, setFirstName] = useState(
+    savedUser.first_name || savedUser.firstName || 'User'
+  );
 
-  useEffect(() => {
-    try {
-      const possibleKeys = [
-        'user',
-        'currentUser',
-        'authUser',
-      ];
+  const [lastName, setLastName] = useState(
+    savedUser.last_name || savedUser.lastName || ''
+  );
 
-      let storedUser = null;
-
-      for (const key of possibleKeys) {
-        const data = localStorage.getItem(key);
-
-        if (data) {
-          try {
-            const parsed = JSON.parse(data);
-
-            if (parsed && typeof parsed === 'object') {
-              storedUser = parsed;
-              break;
-            }
-          } catch {
-            // Ignore invalid localStorage values
-          }
-        }
-      }
-
-      if (storedUser) {
-        setUser((prev) => ({
-          ...prev,
-          ...storedUser,
-        }));
-      }
-    } catch (error) {
-      console.error('Sidebar user error:', error);
-    }
-  }, []);
-
-  /* -------------------------------------------------------
-     ROLE
-  ------------------------------------------------------- */
-
-  const role = String(user?.role || 'student').toLowerCase();
-
-  const firstName = user?.first_name || 'User';
-  const lastName = user?.last_name || '';
+  const role = savedUser.role || 'student';
 
   const fullName = `${firstName} ${lastName}`.trim();
 
-  const initials = `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`
-    .toUpperCase();
+  const initials =
+    `${firstName?.charAt(0) || 'U'}${lastName?.charAt(0) || ''}`.toUpperCase();
 
-  /* -------------------------------------------------------
-     ROLE LABEL
-  ------------------------------------------------------- */
+  const getBasePath = () => {
+    if (role === 'admin') return '/admin';
+    if (role === 'department_head') return '/dept';
+    return '/student';
+  };
 
-  const roleLabel =
-    role === 'admin'
-      ? 'Admin'
-      : role === 'department_head'
-      ? 'Department Head'
-      : role === 'student_leader'
-      ? 'Student Leader'
-      : role === 'alumni'
-      ? 'Alumni'
-      : role === 'stakeholder'
-      ? 'Stakeholder'
-      : 'Student';
-
-  /* -------------------------------------------------------
-     MENU ITEMS
-  ------------------------------------------------------- */
-
-  let menuItems = [];
-
-  if (role === 'admin') {
-    menuItems = [
-      {
-        label: 'Overview',
-        path: '/admin/dashboard',
-        icon: 'grid',
-      },
-      {
-        label: 'Create Event',
-        path: '/admin/create-event',
-        icon: 'calendar',
-      },
-      {
-        label: 'Departments',
-        path: '/admin/users',
-        icon: 'building',
-      },
-      {
-        label: 'Receipts',
-        path: '/admin/receipts',
-        icon: 'receipt',
-      },
-      {
-        label: 'Evaluation Results',
-        path: '/admin/evaluation',
-        icon: 'chart',
-      },
-    ];
-  } else if (role === 'department_head') {
-    menuItems = [
-      {
-        label: 'Overview',
-        path: '/dept/dashboard',
-        icon: 'grid',
-      },
-      {
-        label: 'Attendance',
-        path: '/dept/attendance',
-        icon: 'clipboard',
-      },
-      {
-        label: 'Reports',
-        path: '/dept/reports',
-        icon: 'chart',
-      },
-      {
-        label: 'Evaluation Results',
-        path: '/dept/evaluation',
-        icon: 'chart',
-      },
-    ];
-  } else {
-    menuItems = [
-      {
-        label: 'Notifications',
-        path: '/student/notifications',
-        icon: 'bell',
-        badge: 1,
-      },
-      {
-        label: 'My Events',
-        path: '/student/my-events',
-        icon: 'calendar',
-      },
-      {
-        label: 'History',
-        path: '/student/history',
-        icon: 'history',
-      },
-    ];
-  }
-
-  /* -------------------------------------------------------
-     LOGOUT
-  ------------------------------------------------------- */
+  const basePath = getBasePath();
 
   const handleLogout = () => {
     localStorage.removeItem('user');
-    localStorage.removeItem('currentUser');
-    localStorage.removeItem('authUser');
     localStorage.removeItem('token');
+    localStorage.removeItem('authUser');
 
     navigate('/login');
   };
 
-  /* -------------------------------------------------------
-     CLOSE SIDEBAR AFTER CLICKING ON MOBILE
-     ONLY WHEN COLLAPSED MODE IS BEING USED
-  ------------------------------------------------------- */
+  const handleSaveProfile = () => {
+    const updatedUser = {
+      ...savedUser,
+      first_name: firstName,
+      last_name: lastName,
+    };
 
-  const handleNavigation = () => {
-    // Do not automatically close.
-    // User specifically wants the sidebar and content side-by-side.
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+
+    setEditProfileOpen(false);
+
+    window.location.reload();
   };
 
   return (
-    <aside
-      className={`sidebar ${collapsed ? 'sidebar-collapsed' : 'sidebar-expanded'}`}
-    >
+    <>
+      {/* SIDEBAR */}
+      <aside className={`sidebar ${collapsed ? 'sidebar-collapsed' : ''}`}>
 
-      {/* ===================================================
-          TOP / LOGO
-      =================================================== */}
+        {/* =========================
+            HEADER
+        ========================== */}
+        <div className="sidebar-header">
 
-      <div className="sidebar-top">
-
-        <div className="brand-area">
-          <div className="brand-logo">
-            EH
-          </div>
-
-          {!collapsed && (
-            <div className="brand-text">
-              <span className="brand-name">EventHub</span>
-            </div>
-          )}
-        </div>
-
-        {/* HAMBURGER */}
-        <button
-          type="button"
-          className="sidebar-toggle"
-          onClick={() => setCollapsed((prev) => !prev)}
-          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        >
-          <Icon type="menu" size={25} />
-        </button>
-
-      </div>
-
-
-      {/* ===================================================
-          USER PROFILE
-      =================================================== */}
-
-      <div className="sidebar-profile">
-
-        <div className="profile-avatar">
-          {user?.profile_picture ? (
-            <img
-              src={user.profile_picture}
-              alt={fullName}
-            />
-          ) : (
-            initials || 'U'
-          )}
-        </div>
-
-        {!collapsed && (
-          <div className="profile-info">
-            <div className="profile-name" title={fullName}>
-              {fullName}
+          <div className="eventhub-brand">
+            <div className="eventhub-logo">
+              EH
             </div>
 
-            <div className="profile-role">
-              {roleLabel}
-            </div>
-          </div>
-        )}
-
-      </div>
-
-
-      {/* ===================================================
-          NAVIGATION
-      =================================================== */}
-
-      <nav className="sidebar-navigation">
-
-        {menuItems.map((item) => {
-          const isActive =
-            location.pathname === item.path ||
-            location.pathname.startsWith(`${item.path}/`);
-
-          return (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              className={`sidebar-link ${
-                isActive ? 'sidebar-link-active' : ''
-              }`}
-              onClick={handleNavigation}
-              title={collapsed ? item.label : ''}
-            >
-
-              <span className="sidebar-icon">
-                <Icon type={item.icon} size={23} />
+            {!collapsed && (
+              <span className="eventhub-title">
+                EventHub
               </span>
+            )}
+          </div>
 
-              {!collapsed && (
-                <span className="sidebar-label">
-                  {item.label}
+          {/* HAMBURGER */}
+          <button
+            type="button"
+            className="sidebar-toggle"
+            onClick={() => setCollapsed(!collapsed)}
+            aria-label="Toggle sidebar"
+          >
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+
+        </div>
+
+        {/* =========================
+            PROFILE
+        ========================== */}
+        <div className="sidebar-profile">
+
+          <button
+            type="button"
+            className="profile-button"
+            onClick={() => setProfileOpen(!profileOpen)}
+          >
+            <div className="profile-avatar">
+              {initials}
+            </div>
+
+            {!collapsed && (
+              <div className="profile-info">
+                <strong>{fullName}</strong>
+
+                <span>
+                  {role === 'department_head'
+                    ? 'Department Head'
+                    : role === 'admin'
+                    ? 'Admin'
+                    : 'Student'}
                 </span>
-              )}
+              </div>
+            )}
 
-              {!collapsed && item.badge && (
-                <span className="sidebar-badge">
-                  {item.badge}
+            {!collapsed && (
+              <span className="profile-arrow">
+                {profileOpen ? '⌃' : '⌄'}
+              </span>
+            )}
+          </button>
+
+          {/* PROFILE DROPDOWN */}
+          {!collapsed && profileOpen && (
+            <div className="profile-dropdown">
+
+              <button
+                type="button"
+                onClick={() => setEditProfileOpen(true)}
+              >
+                <span className="dropdown-icon">
+                  <EditIcon />
                 </span>
-              )}
+                Edit Profile
+              </button>
 
-            </NavLink>
-          );
-        })}
+              <button
+                type="button"
+                onClick={() => setProfileOpen(false)}
+              >
+                <span className="dropdown-icon">
+                  <UserIcon />
+                </span>
+                My Account
+              </button>
 
-      </nav>
-
-
-      {/* ===================================================
-          LOGOUT
-      =================================================== */}
-
-      <div className="sidebar-bottom">
-
-        <button
-          type="button"
-          className="sidebar-link sidebar-logout"
-          onClick={handleLogout}
-          title={collapsed ? 'Logout' : ''}
-        >
-
-          <span className="sidebar-icon">
-            <Icon type="logout" size={23} />
-          </span>
-
-          {!collapsed && (
-            <span className="sidebar-label">
-              Logout
-            </span>
+            </div>
           )}
 
-        </button>
+        </div>
 
-      </div>
+        {/* =========================
+            NAVIGATION
+        ========================== */}
+        <nav className="sidebar-nav">
 
-    </aside>
+          {/* ADMIN */}
+          {role === 'admin' && (
+            <>
+              <SidebarLink
+                to={`${basePath}/dashboard`}
+                label="Overview"
+                collapsed={collapsed}
+                icon={<DashboardIcon />}
+              />
+
+              <SidebarLink
+                to={`${basePath}/create-event`}
+                label="Create Event"
+                collapsed={collapsed}
+                icon={<CalendarAddIcon />}
+              />
+
+              <SidebarLink
+                to={`${basePath}/events`}
+                label="Events"
+                collapsed={collapsed}
+                icon={<CalendarIcon />}
+              />
+
+              <SidebarLink
+                to={`${basePath}/users`}
+                label="Users"
+                collapsed={collapsed}
+                icon={<UsersIcon />}
+              />
+
+              <SidebarLink
+                to={`${basePath}/receipts`}
+                label="Receipts"
+                collapsed={collapsed}
+                icon={<ReceiptIcon />}
+              />
+
+              <SidebarLink
+                to={`${basePath}/attendance`}
+                label="Attendance"
+                collapsed={collapsed}
+                icon={<AttendanceIcon />}
+              />
+
+              <SidebarLink
+                to={`${basePath}/evaluation`}
+                label="Evaluation Results"
+                collapsed={collapsed}
+                icon={<ChartIcon />}
+              />
+            </>
+          )}
+
+          {/* DEPARTMENT HEAD */}
+          {role === 'department_head' && (
+            <>
+              <SidebarLink
+                to={`${basePath}/dashboard`}
+                label="Overview"
+                collapsed={collapsed}
+                icon={<DashboardIcon />}
+              />
+
+              <SidebarLink
+                to={`${basePath}/attendance`}
+                label="Attendance"
+                collapsed={collapsed}
+                icon={<AttendanceIcon />}
+              />
+
+              <SidebarLink
+                to={`${basePath}/reports`}
+                label="Reports"
+                collapsed={collapsed}
+                icon={<ChartIcon />}
+              />
+
+              <SidebarLink
+                to={`${basePath}/evaluation`}
+                label="Evaluation Results"
+                collapsed={collapsed}
+                icon={<ChartIcon />}
+              />
+            </>
+          )}
+
+          {/* STUDENT */}
+          {role !== 'admin' && role !== 'department_head' && (
+            <>
+              <SidebarLink
+                to={`${basePath}/notifications`}
+                label="Notifications"
+                collapsed={collapsed}
+                icon={<BellIcon />}
+                badge="1"
+              />
+
+              <SidebarLink
+                to={`${basePath}/my-events`}
+                label="My Events"
+                collapsed={collapsed}
+                icon={<CalendarIcon />}
+              />
+
+              <SidebarLink
+                to={`${basePath}/history`}
+                label="History"
+                collapsed={collapsed}
+                icon={<HistoryIcon />}
+              />
+            </>
+          )}
+
+        </nav>
+
+        {/* =========================
+            LOGOUT
+        ========================== */}
+        <div className="sidebar-bottom">
+
+          <button
+            type="button"
+            className={`logout-button ${collapsed ? 'icon-only' : ''}`}
+            onClick={handleLogout}
+          >
+            <LogoutIcon />
+
+            {!collapsed && (
+              <span>Logout</span>
+            )}
+          </button>
+
+        </div>
+
+      </aside>
+
+      {/* =========================
+          EDIT PROFILE MODAL
+      ========================== */}
+      {editProfileOpen && (
+        <div
+          className="profile-modal-overlay"
+          onClick={() => setEditProfileOpen(false)}
+        >
+          <div
+            className="profile-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+
+            <div className="profile-modal-header">
+              <div>
+                <h2>Edit Profile</h2>
+                <p>Update your account information.</p>
+              </div>
+
+              <button
+                type="button"
+                className="profile-modal-close"
+                onClick={() => setEditProfileOpen(false)}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="profile-modal-avatar">
+              {initials}
+            </div>
+
+            <div className="profile-form">
+
+              <label>
+                First Name
+                <input
+                  type="text"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                />
+              </label>
+
+              <label>
+                Last Name
+                <input
+                  type="text"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                />
+              </label>
+
+              <label>
+                Email
+                <input
+                  type="email"
+                  value={savedUser.email || ''}
+                  disabled
+                />
+              </label>
+
+              <label>
+                Role
+                <input
+                  type="text"
+                  value={
+                    role === 'admin'
+                      ? 'Admin'
+                      : role === 'department_head'
+                      ? 'Department Head'
+                      : 'Student'
+                  }
+                  disabled
+                />
+              </label>
+
+            </div>
+
+            <div className="profile-modal-actions">
+
+              <button
+                type="button"
+                className="cancel-profile-btn"
+                onClick={() => setEditProfileOpen(false)}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className="save-profile-btn"
+                onClick={handleSaveProfile}
+              >
+                Save Changes
+              </button>
+
+            </div>
+
+          </div>
+        </div>
+      )}
+    </>
   );
 };
+
+
+/* =====================================================
+   SIDEBAR LINK
+===================================================== */
+
+const SidebarLink = ({
+  to,
+  label,
+  icon,
+  collapsed,
+  badge,
+}) => {
+  return (
+    <NavLink
+      to={to}
+      title={collapsed ? label : ''}
+      className={({ isActive }) =>
+        `sidebar-link ${isActive ? 'active' : ''} ${
+          collapsed ? 'collapsed-link' : ''
+        }`
+      }
+    >
+
+      <span className="sidebar-icon">
+        {icon}
+      </span>
+
+      {!collapsed && (
+        <span className="sidebar-label">
+          {label}
+        </span>
+      )}
+
+      {!collapsed && badge && (
+        <span className="notification-badge">
+          {badge}
+        </span>
+      )}
+
+    </NavLink>
+  );
+};
+
+
+/* =====================================================
+   ICONS
+===================================================== */
+
+const DashboardIcon = () => (
+  <svg viewBox="0 0 24 24">
+    <rect x="3" y="3" width="7" height="7" rx="1" />
+    <rect x="14" y="3" width="7" height="7" rx="1" />
+    <rect x="3" y="14" width="7" height="7" rx="1" />
+    <rect x="14" y="14" width="7" height="7" rx="1" />
+  </svg>
+);
+
+const CalendarIcon = () => (
+  <svg viewBox="0 0 24 24">
+    <rect x="3" y="4" width="18" height="17" rx="2" />
+    <line x1="8" y1="2" x2="8" y2="6" />
+    <line x1="16" y1="2" x2="16" y2="6" />
+    <line x1="3" y1="9" x2="21" y2="9" />
+    <line x1="12" y1="13" x2="12" y2="18" />
+    <line x1="9.5" y1="15.5" x2="14.5" y2="15.5" />
+  </svg>
+);
+
+const CalendarAddIcon = () => (
+  <svg viewBox="0 0 24 24">
+    <rect x="3" y="4" width="18" height="17" rx="2" />
+    <line x1="8" y1="2" x2="8" y2="6" />
+    <line x1="16" y1="2" x2="16" y2="6" />
+    <line x1="3" y1="9" x2="21" y2="9" />
+    <line x1="12" y1="12" x2="12" y2="18" />
+    <line x1="9" y1="15" x2="15" y2="15" />
+  </svg>
+);
+
+const BellIcon = () => (
+  <svg viewBox="0 0 24 24">
+    <path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+    <path d="M10 21h4" />
+  </svg>
+);
+
+const HistoryIcon = () => (
+  <svg viewBox="0 0 24 24">
+    <path d="M3 12a9 9 0 1 0 3-6.7" />
+    <polyline points="3 4 3 9 8 9" />
+    <line x1="12" y1="7" x2="12" y2="12" />
+    <line x1="12" y1="12" x2="16" y2="14" />
+  </svg>
+);
+
+const ReceiptIcon = () => (
+  <svg viewBox="0 0 24 24">
+    <path d="M5 3h14v18l-3-2-4 2-4-2-3 2V3z" />
+    <line x1="8" y1="8" x2="16" y2="8" />
+    <line x1="8" y1="12" x2="16" y2="12" />
+    <line x1="8" y1="16" x2="13" y2="16" />
+  </svg>
+);
+
+const ChartIcon = () => (
+  <svg viewBox="0 0 24 24">
+    <polyline points="3 20 3 4" />
+    <polyline points="3 20 21 20" />
+    <polyline points="6 16 10 12 13 14 19 7" />
+  </svg>
+);
+
+const AttendanceIcon = () => (
+  <svg viewBox="0 0 24 24">
+    <rect x="4" y="3" width="16" height="18" rx="2" />
+    <line x1="8" y1="8" x2="16" y2="8" />
+    <line x1="8" y1="12" x2="16" y2="12" />
+    <polyline points="8 16 10 18 15 14" />
+  </svg>
+);
+
+const UsersIcon = () => (
+  <svg viewBox="0 0 24 24">
+    <circle cx="9" cy="8" r="3" />
+    <circle cx="17" cy="9" r="2.5" />
+    <path d="M3 20c0-3.5 2.5-6 6-6s6 2.5 6 6" />
+    <path d="M15 14c3 0 5 2 5 5" />
+  </svg>
+);
+
+const UserIcon = () => (
+  <svg viewBox="0 0 24 24">
+    <circle cx="12" cy="8" r="4" />
+    <path d="M4 21c0-4 3.5-7 8-7s8 3 8 7" />
+  </svg>
+);
+
+const EditIcon = () => (
+  <svg viewBox="0 0 24 24">
+    <path d="M4 20h4L19 9l-4-4L4 16v4z" />
+    <line x1="13" y1="6" x2="18" y2="11" />
+  </svg>
+);
+
+const LogoutIcon = () => (
+  <svg viewBox="0 0 24 24">
+    <path d="M10 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5" />
+    <polyline points="14 8 19 12 14 16" />
+    <line x1="9" y1="12" x2="19" y2="12" />
+  </svg>
+);
+
 
 export default Sidebar;
