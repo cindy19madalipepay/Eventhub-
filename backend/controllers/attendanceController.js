@@ -360,27 +360,67 @@ const getOrgBreakdown = async (req, res) => {
   }
 };
 
+// ── FIXED ────────────────────────────────────────────────────────────────
+// Previously this only read event_id/year_level/block from the query string
+// (never department_id, which the frontend actually sends) and returned a
+// single `report` array. The frontend expects two separate arrays —
+// `events` (one card per event, with total_students for the % bar) and
+// `attendance` (the raw attendee list, filtered to this exact year/block) —
+// so both ended up empty no matter what was clicked, showing
+// "No events found for this selection." every time.
 const getBlockReport = async (req, res) => {
   try {
-    const { event_id, year_level, block } = req.query;
-    let query = `
-      SELECT a.*, u.first_name, u.last_name, u.year_level, u.block, d.department_name
+    const { department_id, year_level, block } = req.query;
+
+    if (!department_id || !year_level || !block) {
+      return res.status(400).json({ success: false, message: 'department_id, year_level, and block are required.' });
+    }
+
+    // Total students in this exact department/year/block — used as the
+    // denominator for each event's attendance percentage on the frontend.
+    const [totalRows] = await pool.query(
+      `SELECT COUNT(*) AS total
+       FROM users
+       WHERE department_id = ? AND year_level = ? AND block = ? AND role = 'student'`,
+      [department_id, year_level, block]
+    );
+    const total_students = totalRows[0]?.total || 0;
+
+    // Every event assigned to this department — each one becomes its own
+    // card in the block report view.
+    const [events] = await pool.query(
+      `SELECT e.event_id, e.event_name, e.date_start, e.time_start, e.venue
+       FROM events e
+       JOIN event_departments ed ON ed.event_id = e.event_id
+       WHERE ed.department_id = ?
+       ORDER BY e.date_start DESC`,
+      [department_id]
+    );
+    const eventsWithTotal = events.map((e) => ({ ...e, total_students }));
+
+    // Attendance records for students in this exact year/block — includes
+    // checkin_photo so the "View Photo" button has something to show, and
+    // aliases checked_in_at as scanned_at to match what the frontend reads.
+    let attQuery = `
+      SELECT
+        a.attendance_id, a.event_id, a.checkin_photo,
+        a.checked_in_at AS scanned_at,
+        u.first_name, u.last_name, u.year_level, u.block, u.role, u.position
       FROM attendance a
       JOIN users u ON a.user_id = u.user_id
-      LEFT JOIN departments d ON u.department_id = d.department_id
-      WHERE u.role = 'student'
+      WHERE u.department_id = ? AND u.year_level = ? AND u.block = ?
     `;
-    const params = [];
-    if (event_id) { query += ' AND a.event_id = ?'; params.push(event_id); }
-    if (year_level) { query += ' AND u.year_level = ?'; params.push(year_level); }
-    if (block) { query += ' AND u.block = ?'; params.push(block); }
+    const params = [department_id, year_level, block];
+
     if (req.user?.role === 'department_head') {
-      query += ' AND u.department_id = ?';
+      attQuery += ' AND u.department_id = ?';
       params.push(req.user.department_id);
     }
-    query += ' ORDER BY a.checked_in_at DESC';
-    const [rows] = await pool.query(query, params);
-    return res.status(200).json({ success: true, report: rows });
+    attQuery += ' ORDER BY a.checked_in_at DESC';
+
+    const [attendance] = await pool.query(attQuery, params);
+
+    return res.status(200).json({ success: true, events: eventsWithTotal, attendance });
   } catch (error) {
     console.error('GetBlockReport error:', error);
     return res.status(500).json({ success: false, message: 'Server error.' });
