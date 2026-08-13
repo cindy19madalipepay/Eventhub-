@@ -134,7 +134,7 @@ const AttendanceReport = () => {
         department_id: user.department_id,
       };
       setSelectedDept(deptObj);
-      fetchDepartmentSummary(deptObj.id);
+      fetchDepartmentSummary(deptObj.department_id);
       setView('year-blocks');
     }
   }, [isDeptHead, user, selectedDept]);
@@ -220,7 +220,7 @@ const AttendanceReport = () => {
     const matched = departmentsData.find(d => d.department_code === dept.id);
     const enrichedDept = { ...dept, department_id: matched?.department_id ?? null };
     setSelectedDept(enrichedDept);
-    fetchDepartmentSummary(dept.id);
+    fetchDepartmentSummary(enrichedDept.department_id);
     setView('year-blocks');
   };
 
