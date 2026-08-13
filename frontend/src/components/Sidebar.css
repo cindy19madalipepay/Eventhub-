@@ -1,5 +1,5 @@
 /* =========================================================
-   EVENTHUB SIDEBAR
+   SIDEBAR
 ========================================================= */
 
 .sidebar {
@@ -25,17 +25,24 @@
   display: flex;
   flex-direction: column;
 
-  z-index: 1000;
+  z-index: 1500;
 
   overflow-y: auto;
   overflow-x: hidden;
 
   transition:
     width 0.25s ease,
-    transform 0.25s ease;
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
 
-  box-shadow:
-    4px 0 20px rgba(0, 0, 0, 0.08);
+
+/* =========================================================
+   COLLAPSED DESKTOP SIDEBAR
+========================================================= */
+
+.sidebar.sidebar-collapsed {
+  width: 78px;
 }
 
 
@@ -44,25 +51,27 @@
 ========================================================= */
 
 .sidebar-logo {
-  min-height: 82px;
+  height: 82px;
 
   display: flex;
   align-items: center;
+  justify-content: flex-start;
 
-  gap: 10px;
+  gap: 12px;
 
-  padding: 18px 16px;
+  padding: 20px;
 
   border-bottom:
     1px solid rgba(0, 0, 0, 0.08);
 
   flex-shrink: 0;
+
+  white-space: nowrap;
 }
 
-
 .sidebar-logo-img {
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
 
   object-fit: contain;
 
@@ -71,14 +80,11 @@
   flex-shrink: 0;
 }
 
-
 .sidebar-logo-text {
   font-size: 20px;
   font-weight: 700;
 
   color: #1a2e22;
-
-  white-space: nowrap;
 
   transition:
     opacity 0.2s ease,
@@ -86,43 +92,15 @@
 }
 
 
-/* =========================================================
-   THREE-LINE COLLAPSE BUTTON
-   BLACK
-========================================================= */
+/* Collapsed logo */
 
-.sidebar-collapse-btn {
-  width: 34px;
-  height: 34px;
-
-  padding: 7px;
-
-  border: none;
-  background: transparent;
-
-  display: flex;
-  flex-direction: column;
-
+.sidebar-collapsed .sidebar-logo {
   justify-content: center;
-  align-items: center;
-
-  gap: 4px;
-
-  cursor: pointer;
-
-  flex-shrink: 0;
+  padding: 20px 10px;
 }
 
-
-.sidebar-collapse-btn span {
-  display: block;
-
-  width: 19px;
-  height: 2px;
-
-  background: #000000;
-
-  border-radius: 3px;
+.sidebar-collapsed .sidebar-logo-text {
+  display: none;
 }
 
 
@@ -132,10 +110,8 @@
 
 .sidebar-user-wrapper {
   position: relative;
-
   flex-shrink: 0;
 }
-
 
 .sidebar-user {
   width: 100%;
@@ -145,12 +121,11 @@
 
   gap: 12px;
 
-  padding: 18px 16px;
+  padding: 20px;
 
   background: transparent;
 
   border: none;
-
   border-bottom:
     1px solid rgba(0, 0, 0, 0.08);
 
@@ -159,17 +134,14 @@
   text-align: left;
 
   font: inherit;
-
   color: inherit;
 
   transition:
     background 0.15s ease;
 }
 
-
 .sidebar-user:hover {
-  background:
-    rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 
@@ -202,7 +174,6 @@
   flex-shrink: 0;
 }
 
-
 .user-avatar-img {
   width: 100%;
   height: 100%;
@@ -213,29 +184,21 @@
 }
 
 
-.user-avatar-lg {
-  width: 42px;
-  height: 42px;
-
-  font-size: 14px;
-}
-
-
 /* =========================================================
    USER INFO
 ========================================================= */
 
 .user-info {
-  min-width: 0;
-
   display: flex;
   flex-direction: column;
 
   gap: 2px;
 
-  flex: 1;
-}
+  min-width: 0;
 
+  transition:
+    opacity 0.2s ease;
+}
 
 .user-name {
   font-size: 14px;
@@ -250,7 +213,6 @@
   text-overflow: ellipsis;
 }
 
-
 .user-role {
   font-size: 12px;
 
@@ -264,7 +226,6 @@
   text-overflow: ellipsis;
 }
 
-
 .user-caret {
   margin-left: auto;
 
@@ -277,12 +238,26 @@
     transform 0.15s ease;
 }
 
-
 .user-caret.open {
   color: #1a2e22;
 
-  transform:
-    rotate(180deg);
+  transform: rotate(180deg);
+}
+
+
+/* =========================================================
+   COLLAPSED USER
+========================================================= */
+
+.sidebar-collapsed .sidebar-user {
+  justify-content: center;
+
+  padding: 18px 8px;
+}
+
+.sidebar-collapsed .user-info,
+.sidebar-collapsed .user-caret {
+  display: none;
 }
 
 
@@ -293,7 +268,7 @@
 .sidebar-nav {
   flex: 1;
 
-  padding: 12px 0;
+  padding: 14px 0;
 
   display: flex;
   flex-direction: column;
@@ -304,18 +279,25 @@
 }
 
 
+/* =========================================================
+   NAV ITEM
+========================================================= */
+
 .nav-item {
-  display: flex;
-
-  align-items: center;
-
   min-height: 46px;
 
-  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+
+  position: relative;
+
+  gap: 13px;
+
+  padding: 11px 18px;
 
   margin: 0 8px;
 
-  gap: 12px;
+  border-radius: 9px;
 
   color:
     rgba(255, 255, 255, 0.72);
@@ -325,29 +307,25 @@
   font-size: 14px;
   font-weight: 500;
 
-  border-radius: 9px;
-
   transition:
-    background 0.18s ease,
-    color 0.18s ease;
+    background 0.2s ease,
+    color 0.2s ease;
 
-  position: relative;
+  white-space: nowrap;
 }
-
 
 .nav-item:hover {
   background:
-    rgba(255, 255, 255, 0.08);
+    rgba(255, 255, 255, 0.10);
 
   color: #ffffff;
 }
 
-
 .nav-item.active {
   background:
-    rgba(255, 255, 255, 0.16);
+    rgba(255, 255, 255, 0.18);
 
-  color: #000000;
+  color: #ffffff;
 }
 
 
@@ -356,28 +334,36 @@
 ========================================================= */
 
 .nav-icon {
-  width: 24px;
-  min-width: 24px;
-
-  height: 24px;
+  width: 22px;
+  height: 22px;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  font-size: 18px;
+  flex-shrink: 0;
+}
 
-  color: currentColor;
+.nav-icon svg {
+  width: 20px;
+  height: 20px;
 
-  font-weight: 500;
+  fill: none;
 
-  line-height: 1;
+  stroke: currentColor;
+
+  stroke-width: 1.8;
+
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 
-.nav-label {
-  white-space: nowrap;
+/* =========================================================
+   LABEL
+========================================================= */
 
+.nav-label {
   overflow: hidden;
 
   transition:
@@ -385,6 +371,10 @@
     width 0.2s ease;
 }
 
+
+/* =========================================================
+   BADGE
+========================================================= */
 
 .nav-badge {
   margin-left: auto;
@@ -394,9 +384,9 @@
   color: #ffffff;
 
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
 
-  padding: 2px 8px;
+  padding: 2px 7px;
 
   border-radius: 10px;
 
@@ -407,24 +397,54 @@
 
 
 /* =========================================================
+   COLLAPSED NAV
+========================================================= */
+
+.sidebar-collapsed .nav-item {
+  justify-content: center;
+
+  padding: 11px 8px;
+
+  margin-left: 8px;
+  margin-right: 8px;
+}
+
+.sidebar-collapsed .nav-label {
+  display: none;
+}
+
+.sidebar-collapsed .nav-badge {
+  position: absolute;
+
+  top: 4px;
+  right: 5px;
+
+  min-width: 17px;
+
+  padding: 1px 4px;
+
+  font-size: 9px;
+}
+
+
+/* =========================================================
    LOGOUT
 ========================================================= */
 
 .sidebar-logout {
-  display: flex;
-
-  align-items: center;
-
-  gap: 12px;
-
   min-height: 46px;
 
-  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+
+  gap: 13px;
+
+  padding: 11px 18px;
 
   margin: 8px;
 
   background:
-    rgba(255, 255, 255, 0.05);
+    rgba(255, 255, 255, 0.06);
 
   border: none;
 
@@ -439,119 +459,26 @@
   cursor: pointer;
 
   transition:
-    background 0.18s ease,
-    color 0.18s ease;
-}
+    background 0.2s ease,
+    color 0.2s ease;
 
+  white-space: nowrap;
+}
 
 .sidebar-logout:hover {
   background:
-    rgba(255, 255, 255, 0.1);
+    rgba(255, 255, 255, 0.12);
 
   color: #ffffff;
 }
 
-
-.logout-icon {
-  width: 24px;
-  min-width: 24px;
-
-  height: 24px;
-
-  display: flex;
-
-  align-items: center;
+.sidebar-collapsed .sidebar-logout {
   justify-content: center;
 
-  font-size: 18px;
+  padding: 11px 8px;
 }
 
-
-/* =========================================================
-   COLLAPSED DESKTOP SIDEBAR
-========================================================= */
-
-.sidebar.sidebar-collapsed {
-  width: 78px;
-}
-
-
-.sidebar.sidebar-collapsed
-.sidebar-logo {
-  justify-content: center;
-
-  padding-left: 10px;
-  padding-right: 10px;
-}
-
-
-.sidebar.sidebar-collapsed
-.sidebar-logo-text {
-  display: none;
-}
-
-
-.sidebar.sidebar-collapsed
-.sidebar-user {
-  justify-content: center;
-
-  padding-left: 10px;
-  padding-right: 10px;
-}
-
-
-.sidebar.sidebar-collapsed
-.user-info,
-.sidebar.sidebar-collapsed
-.user-caret {
-  display: none;
-}
-
-
-.sidebar.sidebar-collapsed
-.nav-item {
-  justify-content: center;
-
-  padding-left: 10px;
-  padding-right: 10px;
-
-  margin-left: 8px;
-  margin-right: 8px;
-}
-
-
-.sidebar.sidebar-collapsed
-.nav-label {
-  display: none;
-}
-
-
-.sidebar.sidebar-collapsed
-.nav-badge {
-  position: absolute;
-
-  top: 4px;
-  right: 4px;
-
-  min-width: 16px;
-
-  padding: 1px 4px;
-
-  font-size: 9px;
-}
-
-
-.sidebar.sidebar-collapsed
-.sidebar-logout {
-  justify-content: center;
-
-  padding-left: 10px;
-  padding-right: 10px;
-}
-
-
-.sidebar.sidebar-collapsed
-.logout-label {
+.sidebar-collapsed .logout-label {
   display: none;
 }
 
@@ -580,18 +507,11 @@
 
   padding: 16px;
 
-  z-index: 1100;
-
-  max-height:
-    calc(100vh - 150px);
-
-  overflow-y: auto;
+  z-index: 3000;
 }
-
 
 .profile-popover-header {
   display: flex;
-
   align-items: center;
 
   gap: 10px;
@@ -599,6 +519,12 @@
   margin-bottom: 10px;
 }
 
+.user-avatar-lg {
+  width: 42px;
+  height: 42px;
+
+  font-size: 14px;
+}
 
 .profile-popover-name {
   font-size: 13.5px;
@@ -608,7 +534,6 @@
 
   color: #0f172a;
 }
-
 
 .profile-popover-role {
   font-size: 11.5px;
@@ -620,22 +545,26 @@
   text-transform: capitalize;
 }
 
-
 .profile-popover-email {
   font-size: 12px;
 
   color: #6b7280;
 
-  margin: 0 0 12px;
+  margin:
+    0 0 12px;
 
   word-break: break-all;
 }
 
 
+/* =========================================================
+   PROFILE BUTTON
+========================================================= */
+
 .profile-popover-btn {
   width: 100%;
 
-  background: #0f3460;
+  background: #1f3329;
 
   color: #ffffff;
 
@@ -646,27 +575,24 @@
   border-radius: 8px;
 
   font-size: 13px;
-
   font-weight: 600;
 
   cursor: pointer;
 }
 
-
 .profile-popover-btn:hover {
-  background: #0a2647;
+  background: #2f4a3d;
 }
 
 
 /* =========================================================
-   EDIT PROFILE
+   PROFILE FORM
 ========================================================= */
 
 .profile-popover-form {
   display: flex;
   flex-direction: column;
 }
-
 
 .profile-popover-form label {
   font-size: 11px;
@@ -682,16 +608,13 @@
   margin-bottom: 4px;
 }
 
-
 .profile-popover-form label:not(:first-child) {
   margin-top: 10px;
 }
 
-
 .profile-popover-form input {
-  width: 100%;
-
-  border: 1px solid #e6e9f2;
+  border:
+    1px solid #e6e9f2;
 
   border-radius: 8px;
 
@@ -702,13 +625,16 @@
   font-family: inherit;
 }
 
-
 .profile-popover-form input:focus {
   outline: none;
 
-  border-color: #0f3460;
+  border-color: #6a8f78;
 }
 
+
+/* =========================================================
+   PROFILE ACTIONS
+========================================================= */
 
 .profile-popover-actions {
   display: flex;
@@ -717,7 +643,6 @@
 
   margin-top: 14px;
 }
-
 
 .profile-popover-cancel,
 .profile-popover-save {
@@ -736,30 +661,17 @@
   cursor: pointer;
 }
 
-
 .profile-popover-cancel {
   background: #f1f2f6;
 
   color: #4b5563;
 }
 
-
-.profile-popover-cancel:hover {
-  background: #e6e9f2;
-}
-
-
 .profile-popover-save {
-  background: #0f3460;
+  background: #1f3329;
 
   color: #ffffff;
 }
-
-
-.profile-popover-save:hover:not(:disabled) {
-  background: #0a2647;
-}
-
 
 .profile-popover-save:disabled {
   background: #a9b6c9;
@@ -769,7 +681,7 @@
 
 
 /* =========================================================
-   PHOTO PICKER
+   PHOTO EDIT
 ========================================================= */
 
 .avatar-edit-row {
@@ -782,7 +694,6 @@
   margin-bottom: 14px;
 }
 
-
 .avatar-edit-actions {
   display: flex;
 
@@ -791,11 +702,10 @@
   gap: 3px;
 }
 
-
 .avatar-edit-btn {
   background: #f1f2f6;
 
-  color: #0f3460;
+  color: #1f3329;
 
   border: none;
 
@@ -808,329 +718,12 @@
   font-weight: 700;
 
   cursor: pointer;
-
-  width: fit-content;
 }
-
-
-.avatar-edit-btn:hover {
-  background: #e6e9f2;
-}
-
 
 .avatar-edit-hint {
   font-size: 10.5px;
 
   color: #9ca3af;
-}
-
-
-/* =========================================================
-   MOBILE HAMBURGER
-========================================================= */
-
-.mobile-sidebar-toggle {
-  display: none;
-}
-
-
-/* =========================================================
-   MOBILE OVERLAY
-========================================================= */
-
-.mobile-sidebar-overlay {
-  display: none;
-}
-
-
-/* =========================================================
-   MOBILE
-========================================================= */
-
-@media (max-width: 768px) {
-
-  /* -------------------------------------------------------
-     Sidebar becomes drawer
-  ------------------------------------------------------- */
-
-  .sidebar {
-    width: 260px;
-
-    max-width: 82vw;
-
-    height: 100vh;
-
-    position: fixed;
-
-    top: 0;
-    left: 0;
-
-    transform:
-      translateX(-100%);
-
-    transition:
-      transform 0.25s ease;
-
-    z-index: 2000;
-
-    box-shadow:
-      8px 0 25px
-      rgba(0, 0, 0, 0.25);
-  }
-
-
-  .sidebar.mobile-open {
-    transform:
-      translateX(0);
-  }
-
-
-  /* -------------------------------------------------------
-     MOBILE HAMBURGER
-  ------------------------------------------------------- */
-
-  .mobile-sidebar-toggle {
-    display: flex;
-
-    position: fixed;
-
-    top: 14px;
-    left: 14px;
-
-    width: 44px;
-    height: 44px;
-
-    align-items: center;
-    justify-content: center;
-
-    flex-direction: column;
-
-    gap: 4px;
-
-    border: none;
-
-    border-radius: 10px;
-
-    background: #ffffff;
-
-    cursor: pointer;
-
-    z-index: 3000;
-
-    box-shadow:
-      0 4px 14px
-      rgba(0, 0, 0, 0.18);
-  }
-
-
-  .mobile-sidebar-toggle span {
-    display: block;
-
-    width: 20px;
-    height: 2px;
-
-    background: #000000;
-
-    border-radius: 3px;
-  }
-
-
-  .mobile-sidebar-toggle:active {
-    transform: scale(0.95);
-  }
-
-
-  /* -------------------------------------------------------
-     OVERLAY
-  ------------------------------------------------------- */
-
-  .mobile-sidebar-overlay {
-    display: block;
-
-    position: fixed;
-
-    inset: 0;
-
-    background:
-      rgba(0, 0, 0, 0.45);
-
-    z-index: 1900;
-  }
-
-
-  /* -------------------------------------------------------
-     MOBILE SIDEBAR CONTENT
-  ------------------------------------------------------- */
-
-  .sidebar-logo {
-    padding: 20px 16px;
-  }
-
-
-  .sidebar-collapse-btn {
-    display: none;
-  }
-
-
-  .sidebar-logo-text {
-    display: block !important;
-
-    opacity: 1 !important;
-
-    width: auto !important;
-  }
-
-
-  .sidebar-user {
-    padding: 18px 16px;
-  }
-
-
-  .sidebar-nav {
-    padding: 12px 0;
-  }
-
-
-  .nav-item {
-    padding: 13px 16px;
-  }
-
-
-  .nav-label {
-    display: block !important;
-
-    opacity: 1 !important;
-
-    width: auto !important;
-  }
-
-
-  .sidebar-logout {
-    padding: 13px 16px;
-  }
-
-
-  .logout-label {
-    display: block !important;
-  }
-
-
-  /* -------------------------------------------------------
-     DISABLE DESKTOP COLLAPSE ON PHONE
-  ------------------------------------------------------- */
-
-  .sidebar.sidebar-collapsed {
-    width: 260px;
-  }
-
-
-  .sidebar.sidebar-collapsed
-  .sidebar-logo {
-    justify-content: flex-start;
-  }
-
-
-  .sidebar.sidebar-collapsed
-  .sidebar-user {
-    justify-content: flex-start;
-  }
-
-
-  .sidebar.sidebar-collapsed
-  .user-info {
-    display: flex;
-  }
-
-
-  .sidebar.sidebar-collapsed
-  .user-caret {
-    display: block;
-  }
-
-
-  .sidebar.sidebar-collapsed
-  .nav-item {
-    justify-content: flex-start;
-
-    padding-left: 16px;
-    padding-right: 16px;
-  }
-
-
-  .sidebar.sidebar-collapsed
-  .nav-label {
-    display: block;
-  }
-
-
-  .sidebar.sidebar-collapsed
-  .sidebar-logout {
-    justify-content: flex-start;
-  }
-
-
-  /* -------------------------------------------------------
-     PROFILE
-  ------------------------------------------------------- */
-
-  .profile-popover {
-    left: 8px;
-    right: 8px;
-
-    max-height:
-      calc(100vh - 170px);
-  }
-}
-
-
-/* =========================================================
-   SMALL PHONES
-========================================================= */
-
-@media (max-width: 480px) {
-
-  .sidebar {
-    width: 250px;
-
-    max-width: 82vw;
-  }
-
-
-  .mobile-sidebar-toggle {
-    width: 42px;
-    height: 42px;
-
-    top: 12px;
-    left: 12px;
-  }
-
-
-  .sidebar-logo {
-    padding: 18px 14px;
-  }
-
-
-  .sidebar-logo-img {
-    width: 34px;
-    height: 34px;
-  }
-
-
-  .sidebar-logo-text {
-    font-size: 19px;
-  }
-
-
-  .sidebar-user {
-    padding: 16px 14px;
-  }
-
-
-  .nav-item {
-    padding: 12px 14px;
-
-    font-size: 14px;
-  }
 }
 
 
@@ -1142,15 +735,305 @@
   width: 4px;
 }
 
-
 .sidebar::-webkit-scrollbar-track {
   background: transparent;
 }
 
-
 .sidebar::-webkit-scrollbar-thumb {
   background:
-    rgba(255, 255, 255, 0.18);
+    rgba(255, 255, 255, 0.15);
 
   border-radius: 4px;
+}
+
+
+/* =========================================================
+   3-LINE MENU BUTTON
+   BLACK ICON
+========================================================= */
+
+.sidebar-menu-toggle {
+  position: fixed;
+
+  top: 16px;
+  left: 276px;
+
+  width: 42px;
+  height: 42px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  background: #ffffff;
+
+  border: 1px solid #e6e9f2;
+
+  border-radius: 9px;
+
+  color: #000000;
+
+  cursor: pointer;
+
+  z-index: 2000;
+
+  box-shadow:
+    0 3px 12px
+    rgba(0, 0, 0, 0.12);
+
+  transition:
+    left 0.25s ease,
+    transform 0.15s ease;
+}
+
+.sidebar-menu-toggle:hover {
+  background: #f5f7fb;
+}
+
+.sidebar-menu-toggle:active {
+  transform: scale(0.95);
+}
+
+.sidebar-menu-toggle svg {
+  width: 22px;
+  height: 22px;
+
+  fill: none;
+
+  stroke: currentColor;
+
+  stroke-width: 2;
+
+  stroke-linecap: round;
+}
+
+
+/* Move button when sidebar collapsed */
+
+.sidebar-menu-toggle:has(+ .sidebar.sidebar-collapsed) {
+  left: 94px;
+}
+
+
+/* =========================================================
+   MOBILE OVERLAY
+========================================================= */
+
+.sidebar-overlay {
+  display: none;
+}
+
+
+/* =========================================================
+   TABLET / PHONE
+========================================================= */
+
+@media (max-width: 768px) {
+
+  /*
+     IMPORTANT:
+     Sidebar stays fixed.
+     It does NOT become position: relative.
+  */
+
+  .sidebar {
+    width: 50vw;
+
+    min-width: 220px;
+
+    max-width: 300px;
+
+    height: 100vh;
+
+    transform: translateX(-105%);
+
+    box-shadow:
+      8px 0 30px
+      rgba(0, 0, 0, 0.25);
+  }
+
+
+  /* OPEN MOBILE SIDEBAR */
+
+  .sidebar.sidebar-mobile-open {
+    transform: translateX(0);
+  }
+
+
+  /*
+     On phone we don't need collapsed mode.
+     Show the full menu inside the drawer.
+  */
+
+  .sidebar.sidebar-collapsed {
+    width: 50vw;
+
+    min-width: 220px;
+
+    max-width: 300px;
+  }
+
+  .sidebar.sidebar-collapsed .sidebar-logo {
+    justify-content: flex-start;
+
+    padding: 20px;
+  }
+
+  .sidebar.sidebar-collapsed .sidebar-logo-text {
+    display: block;
+  }
+
+  .sidebar.sidebar-collapsed .user-info,
+  .sidebar.sidebar-collapsed .user-caret {
+    display: flex;
+  }
+
+  .sidebar.sidebar-collapsed .sidebar-user {
+    justify-content: flex-start;
+
+    padding: 20px;
+  }
+
+  .sidebar.sidebar-collapsed .nav-item {
+    justify-content: flex-start;
+
+    padding: 11px 18px;
+  }
+
+  .sidebar.sidebar-collapsed .nav-label {
+    display: block;
+  }
+
+  .sidebar.sidebar-collapsed .sidebar-logout {
+    justify-content: flex-start;
+
+    padding: 11px 18px;
+  }
+
+  .sidebar.sidebar-collapsed .logout-label {
+    display: block;
+  }
+
+
+  /* =====================================================
+     MOBILE MENU BUTTON
+  ===================================================== */
+
+  .sidebar-menu-toggle {
+    top: 12px;
+
+    left: auto;
+    right: 14px;
+
+    width: 42px;
+    height: 42px;
+
+    color: #000000;
+
+    z-index: 2500;
+  }
+
+
+  /*
+     3 lines are always visible on phone
+  */
+
+  .sidebar-menu-toggle svg {
+    width: 23px;
+    height: 23px;
+
+    stroke: #000000;
+  }
+
+
+  /* =====================================================
+     MOBILE OVERLAY
+  ===================================================== */
+
+  .sidebar-overlay {
+    display: block;
+
+    position: fixed;
+
+    inset: 0;
+
+    background:
+      rgba(0, 0, 0, 0.40);
+
+    z-index: 1400;
+  }
+
+
+  /* =====================================================
+     MOBILE PROFILE
+  ===================================================== */
+
+  .profile-popover {
+    left: 8px;
+    right: 8px;
+
+    max-height:
+      calc(100vh - 170px);
+
+    overflow-y: auto;
+  }
+
+}
+
+
+/* =========================================================
+   SMALL PHONE
+========================================================= */
+
+@media (max-width: 480px) {
+
+  .sidebar {
+    width: 50vw;
+
+    min-width: 190px;
+
+    max-width: 260px;
+  }
+
+  .sidebar.sidebar-collapsed {
+    width: 50vw;
+  }
+
+  .sidebar-logo {
+    height: 72px;
+
+    padding: 16px;
+  }
+
+  .sidebar-logo-img {
+    width: 34px;
+    height: 34px;
+  }
+
+  .sidebar-logo-text {
+    font-size: 18px;
+  }
+
+  .sidebar-user {
+    padding: 16px;
+  }
+
+  .nav-item {
+    padding:
+      10px 14px;
+
+    margin-left: 6px;
+    margin-right: 6px;
+
+    font-size: 13px;
+  }
+
+  .sidebar-logout {
+    margin: 6px;
+
+    padding:
+      10px 14px;
+  }
+
 }

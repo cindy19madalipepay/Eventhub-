@@ -6,47 +6,227 @@ import toast from 'react-hot-toast';
 import './Sidebar.css';
 
 /* =========================================================
+   ICONS
+   Built-in SVG icons — no package required
+========================================================= */
+
+const Icons = {
+  menu: (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 6h16M4 12h16M4 18h16" />
+    </svg>
+  ),
+
+  overview: (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="3" y="3" width="7" height="7" rx="1" />
+      <rect x="14" y="3" width="7" height="7" rx="1" />
+      <rect x="3" y="14" width="7" height="7" rx="1" />
+      <rect x="14" y="14" width="7" height="7" rx="1" />
+    </svg>
+  ),
+
+  create: (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="3" y="4" width="18" height="17" rx="2" />
+      <path d="M8 2v4M16 2v4M3 9h18M12 13v5M9.5 15.5h5" />
+    </svg>
+  ),
+
+  departments: (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M3 21h18M5 21V8l7-4 7 4v13M9 21v-6h6v6M8 10h1M15 10h1M8 13h1M15 13h1" />
+    </svg>
+  ),
+
+  receipts: (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3Z" />
+      <path d="M9 8h6M9 12h6M9 16h4" />
+    </svg>
+  ),
+
+  evaluation: (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 19V5M4 19h16" />
+      <path d="m7 15 3-4 3 2 5-7" />
+    </svg>
+  ),
+
+  dashboard: (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z" />
+    </svg>
+  ),
+
+  attendance: (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="9" cy="8" r="3" />
+      <path d="M3 20c0-3.3 2.7-6 6-6 2.1 0 4 1.1 5.1 2.8M16 8l2 2 4-4" />
+    </svg>
+  ),
+
+  reports: (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M5 20V10M12 20V4M19 20v-7" />
+    </svg>
+  ),
+
+  notifications: (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" />
+    </svg>
+  ),
+
+  events: (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="3" y="4" width="18" height="17" rx="2" />
+      <path d="M8 2v4M16 2v4M3 9h18" />
+    </svg>
+  ),
+
+  history: (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M3 12a9 9 0 1 0 3-6.7" />
+      <path d="M3 4v6h6M12 7v5l3 2" />
+    </svg>
+  ),
+
+  logout: (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M10 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5" />
+      <path d="M14 8l4 4-4 4M18 12H8" />
+    </svg>
+  ),
+};
+
+
+/* =========================================================
    MENU ITEMS
 ========================================================= */
 
 const menuItems = {
   admin: [
-    { path: '/admin/dashboard', label: 'Overview', icon: '▦' },
-    { path: '/admin/create-event', label: 'Create Event', icon: '＋' },
-    { path: '/admin/attendance', label: 'Departments', icon: '♧' },
-    { path: '/admin/receipts', label: 'Receipts', icon: '▤' },
-    { path: '/admin/evaluation', label: 'Evaluation Results', icon: '★' },
+    {
+      path: '/admin/dashboard',
+      label: 'Overview',
+      icon: Icons.overview,
+    },
+    {
+      path: '/admin/create-event',
+      label: 'Create Event',
+      icon: Icons.create,
+    },
+    {
+      path: '/admin/attendance',
+      label: 'Departments',
+      icon: Icons.departments,
+    },
+    {
+      path: '/admin/receipts',
+      label: 'Receipts',
+      icon: Icons.receipts,
+    },
+    {
+      path: '/admin/evaluation',
+      label: 'Evaluation Results',
+      icon: Icons.evaluation,
+    },
   ],
 
   department_head: [
-    { path: '/dept/dashboard', label: 'Dashboard', icon: '▦' },
-    { path: '/dept/attendance', label: 'Attendance', icon: '✓' },
-    { path: '/dept/reports', label: 'Reports', icon: '▤' },
-    { path: '/dept/evaluation', label: 'Evaluation Results', icon: '★' },
+    {
+      path: '/dept/dashboard',
+      label: 'Dashboard',
+      icon: Icons.dashboard,
+    },
+    {
+      path: '/dept/attendance',
+      label: 'Attendance',
+      icon: Icons.attendance,
+    },
+    {
+      path: '/dept/reports',
+      label: 'Reports',
+      icon: Icons.reports,
+    },
+    {
+      path: '/dept/evaluation',
+      label: 'Evaluation Results',
+      icon: Icons.evaluation,
+    },
   ],
 
   student: [
-    { path: '/student/notifications', label: 'Notifications', icon: '♧' },
-    { path: '/student/my-events', label: 'My Events', icon: '▣' },
-    { path: '/student/history', label: 'History', icon: '◷' },
+    {
+      path: '/student/notifications',
+      label: 'Notifications',
+      icon: Icons.notifications,
+    },
+    {
+      path: '/student/my-events',
+      label: 'My Events',
+      icon: Icons.events,
+    },
+    {
+      path: '/student/history',
+      label: 'History',
+      icon: Icons.history,
+    },
   ],
 
   student_leader: [
-    { path: '/student/notifications', label: 'Notifications', icon: '♧' },
-    { path: '/student/my-events', label: 'My Events', icon: '▣' },
-    { path: '/student/history', label: 'History', icon: '◷' },
+    {
+      path: '/student/notifications',
+      label: 'Notifications',
+      icon: Icons.notifications,
+    },
+    {
+      path: '/student/my-events',
+      label: 'My Events',
+      icon: Icons.events,
+    },
+    {
+      path: '/student/history',
+      label: 'History',
+      icon: Icons.history,
+    },
   ],
 
   alumni: [
-    { path: '/student/notifications', label: 'Notifications', icon: '♧' },
-    { path: '/student/my-events', label: 'My Events', icon: '▣' },
-    { path: '/student/history', label: 'History', icon: '◷' },
+    {
+      path: '/student/notifications',
+      label: 'Notifications',
+      icon: Icons.notifications,
+    },
+    {
+      path: '/student/my-events',
+      label: 'My Events',
+      icon: Icons.events,
+    },
+    {
+      path: '/student/history',
+      label: 'History',
+      icon: Icons.history,
+    },
   ],
 
   stakeholder: [
-    { path: '/student/notifications', label: 'Notifications', icon: '♧' },
-    { path: '/student/my-events', label: 'My Events', icon: '▣' },
-    { path: '/student/history', label: 'History', icon: '◷' },
+    {
+      path: '/student/notifications',
+      label: 'Notifications',
+      icon: Icons.notifications,
+    },
+    {
+      path: '/student/my-events',
+      label: 'My Events',
+      icon: Icons.events,
+    },
+    {
+      path: '/student/history',
+      label: 'History',
+      icon: Icons.history,
+    },
   ],
 };
 
@@ -59,12 +239,11 @@ const Avatar = ({ user, size = 'md', src }) => {
   const initials =
     `${user?.first_name?.[0] || ''}${user?.last_name?.[0] || ''}`;
 
-  const className = `
-    user-avatar
-    ${size === 'lg' ? 'user-avatar-lg' : ''}
-  `;
+  const className =
+    `user-avatar ${size === 'lg' ? 'user-avatar-lg' : ''}`;
 
-  const photoUrl = src || user?.profile_picture || null;
+  const photoUrl =
+    src || user?.profile_picture || null;
 
   if (photoUrl) {
     return (
@@ -90,7 +269,8 @@ const Avatar = ({ user, size = 'md', src }) => {
    SIDEBAR
 ========================================================= */
 
-const Sidebar = () => {
+const Sidebar = ({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) => {
+
   const { user, logout, updateUser } = useAuth();
   const navigate = useNavigate();
 
@@ -99,9 +279,6 @@ const Sidebar = () => {
   const [profileOpen, setProfileOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
-
-  const [collapsed, setCollapsed] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
 
   const [form, setForm] = useState({
     first_name: '',
@@ -115,9 +292,9 @@ const Sidebar = () => {
   const fileInputRef = useRef(null);
 
 
-  /* =========================================================
+  /* =====================================================
      CLOSE PROFILE WHEN CLICKING OUTSIDE
-  ========================================================= */
+  ===================================================== */
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -141,35 +318,12 @@ const Sidebar = () => {
   }, []);
 
 
-  /* =========================================================
-     ESCAPE KEY
-  ========================================================= */
+  /* =====================================================
+     UNREAD NOTIFICATIONS
+  ===================================================== */
 
   useEffect(() => {
-    const handleEscape = (e) => {
-      if (e.key === 'Escape') {
-        setMobileOpen(false);
-        setProfileOpen(false);
-        setEditing(false);
-      }
-    };
 
-    document.addEventListener('keydown', handleEscape);
-
-    return () => {
-      document.removeEventListener(
-        'keydown',
-        handleEscape
-      );
-    };
-  }, []);
-
-
-  /* =========================================================
-     NOTIFICATIONS
-  ========================================================= */
-
-  useEffect(() => {
     const studentLikeRoles = [
       'student',
       'student_leader',
@@ -183,59 +337,37 @@ const Sidebar = () => {
 
     const fetchUnread = async () => {
       try {
+
         const res = await api.get('/notifications/my');
 
-        const count = (
-          res.data.notifications || []
-        ).filter((n) => !n.is_read).length;
+        const count =
+          (res.data.notifications || [])
+            .filter((n) => !n.is_read)
+            .length;
 
         setUnreadCount(count);
+
       } catch (error) {
-        console.error(
-          'Notification error:',
-          error
-        );
+        console.error(error);
       }
     };
 
     fetchUnread();
 
-    const interval = setInterval(
-      fetchUnread,
-      30000
-    );
+    const interval =
+      setInterval(fetchUnread, 30000);
 
     return () => clearInterval(interval);
+
   }, [user]);
 
 
-  /* =========================================================
-     MOBILE SIDEBAR
-  ========================================================= */
-
-  const toggleMobileSidebar = () => {
-    setMobileOpen((prev) => !prev);
-  };
-
-  const closeMobileSidebar = () => {
-    setMobileOpen(false);
-  };
-
-
-  /* =========================================================
-     DESKTOP COLLAPSE
-  ========================================================= */
-
-  const toggleCollapsed = () => {
-    setCollapsed((prev) => !prev);
-  };
-
-
-  /* =========================================================
+  /* =====================================================
      LOGOUT
-  ========================================================= */
+  ===================================================== */
 
   const handleLogout = () => {
+
     logout();
 
     toast.success(
@@ -243,61 +375,73 @@ const Sidebar = () => {
     );
 
     navigate('/login');
+
   };
 
 
-  /* =========================================================
+  /* =====================================================
      PROFILE
-  ========================================================= */
+  ===================================================== */
 
   const openProfile = () => {
+
     setProfileOpen((prev) => !prev);
+
     setEditing(false);
+
   };
 
 
   const startEditing = () => {
+
     setForm({
-      first_name:
-        user?.first_name || '',
-      last_name:
-        user?.last_name || '',
+      first_name: user?.first_name || '',
+      last_name: user?.last_name || '',
     });
 
     setAvatarFile(null);
     setAvatarPreview(null);
 
     setEditing(true);
+
   };
 
 
   const cancelEditing = () => {
+
     setAvatarFile(null);
     setAvatarPreview(null);
+
     setEditing(false);
+
   };
 
 
-  /* =========================================================
-     PROFILE PHOTO
-  ========================================================= */
+  /* =====================================================
+     PHOTO
+  ===================================================== */
 
   const handleAvatarPick = (e) => {
+
     const file = e.target.files?.[0];
 
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
+
       toast.error(
         'Please choose an image file.'
       );
+
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
+
       toast.error(
         'Image must be under 5MB.'
       );
+
       return;
     }
 
@@ -306,19 +450,22 @@ const Sidebar = () => {
     setAvatarPreview(
       URL.createObjectURL(file)
     );
+
   };
 
 
-  /* =========================================================
+  /* =====================================================
      SAVE PROFILE
-  ========================================================= */
+  ===================================================== */
 
   const handleSave = async (e) => {
+
     e.preventDefault();
 
     setSaving(true);
 
     try {
+
       const payload = new FormData();
 
       payload.append(
@@ -354,10 +501,6 @@ const Sidebar = () => {
         res.data ||
         {};
 
-      /*
-       * IMPORTANT:
-       * This updates React state AND localStorage.
-       */
       updateUser(updatedUser);
 
       toast.success(
@@ -368,36 +511,24 @@ const Sidebar = () => {
       setAvatarFile(null);
       setAvatarPreview(null);
 
-    } catch (error) {
+    } catch (err) {
+
       console.error(
         'Profile update error:',
-        error
+        err
       );
 
       toast.error(
-        error.response?.data?.message ||
+        err.response?.data?.message ||
         'Failed to update profile.'
       );
 
     } finally {
+
       setSaving(false);
+
     }
-  };
 
-
-  /* =========================================================
-     ROLE DISPLAY
-  ========================================================= */
-
-  const getRoleDisplay = (role) => {
-    if (!role) return '';
-
-    return role
-      .replace(/_/g, ' ')
-      .replace(
-        /\b\w/g,
-        (char) => char.toUpperCase()
-      );
   };
 
 
@@ -405,69 +536,91 @@ const Sidebar = () => {
     menuItems[user?.role] || [];
 
 
-  /* =========================================================
-     RENDER
-  ========================================================= */
+  const getRoleDisplay = (role) => {
+
+    if (!role) return '';
+
+    return role
+      .replace(/_/g, ' ')
+      .replace(/\b\w/g, (char) =>
+        char.toUpperCase()
+      );
+
+  };
+
+
+  /* =====================================================
+     NAVIGATION
+  ===================================================== */
+
+  const handleNavigation = () => {
+
+    /* On mobile close drawer after selecting */
+    if (window.innerWidth <= 768) {
+      setMobileOpen(false);
+    }
+
+  };
+
 
   return (
     <>
-      {/* =====================================================
-          MOBILE HAMBURGER
-      ===================================================== */}
+      {/* =================================================
+          MOBILE / DESKTOP 3-LINE BUTTON
+      ================================================= */}
 
       <button
-        type="button"
-        className="mobile-sidebar-toggle"
-        onClick={toggleMobileSidebar}
-        aria-label="Open sidebar"
+        className="sidebar-menu-toggle"
+        onClick={() => {
+
+          if (window.innerWidth <= 768) {
+
+            setMobileOpen(!mobileOpen);
+
+          } else {
+
+            setCollapsed(!collapsed);
+
+          }
+
+        }}
+        aria-label="Toggle sidebar"
       >
-        <span></span>
-        <span></span>
-        <span></span>
+        {Icons.menu}
       </button>
 
 
-      {/* =====================================================
-          MOBILE OVERLAY
-      ===================================================== */}
+      {/* =================================================
+          MOBILE BACKDROP
+      ================================================= */}
 
       {mobileOpen && (
         <div
-          className="mobile-sidebar-overlay"
-          onClick={closeMobileSidebar}
+          className="sidebar-overlay"
+          onClick={() =>
+            setMobileOpen(false)
+          }
         />
       )}
 
 
-      {/* =====================================================
+      {/* =================================================
           SIDEBAR
-      ===================================================== */}
+      ================================================= */}
 
       <aside
         className={`
           sidebar
           ${collapsed ? 'sidebar-collapsed' : ''}
-          ${mobileOpen ? 'mobile-open' : ''}
+          ${mobileOpen ? 'sidebar-mobile-open' : ''}
         `}
       >
 
-        {/* ===================================================
+        {/* =================================================
             LOGO
-        =================================================== */}
+        ================================================= */}
 
         <div className="sidebar-logo">
-
-          {/* Desktop collapse button */}
-          <button
-            type="button"
-            className="sidebar-collapse-btn"
-            onClick={toggleCollapsed}
-            aria-label="Collapse sidebar"
-          >
-            <span></span>
-            <span></span>
-            <span></span>
-          </button>
 
           <img
             src="/LG.png"
@@ -482,9 +635,9 @@ const Sidebar = () => {
         </div>
 
 
-        {/* ===================================================
+        {/* =================================================
             USER
-        =================================================== */}
+        ================================================= */}
 
         <div
           className="sidebar-user-wrapper"
@@ -492,7 +645,6 @@ const Sidebar = () => {
         >
 
           <button
-            type="button"
             className="sidebar-user"
             onClick={openProfile}
           >
@@ -507,18 +659,15 @@ const Sidebar = () => {
               </p>
 
               <p className="user-role">
-                {getRoleDisplay(
-                  user?.role
-                )}
+                {getRoleDisplay(user?.role)}
               </p>
 
             </div>
 
             <span
-              className={`
-                user-caret
-                ${profileOpen ? 'open' : ''}
-              `}
+              className={`user-caret ${
+                profileOpen ? 'open' : ''
+              }`}
             >
               ▾
             </span>
@@ -531,9 +680,11 @@ const Sidebar = () => {
           ================================================= */}
 
           {profileOpen && (
+
             <div className="profile-popover">
 
               {!editing ? (
+
                 <>
                   <div className="profile-popover-header">
 
@@ -550,14 +701,13 @@ const Sidebar = () => {
                       </p>
 
                       <p className="profile-popover-role">
-                        {getRoleDisplay(
-                          user?.role
-                        )}
+                        {getRoleDisplay(user?.role)}
                       </p>
 
                     </div>
 
                   </div>
+
 
                   {user?.email && (
                     <p className="profile-popover-email">
@@ -565,14 +715,16 @@ const Sidebar = () => {
                     </p>
                   )}
 
+
                   <button
-                    type="button"
                     className="profile-popover-btn"
                     onClick={startEditing}
                   >
                     Edit Profile
                   </button>
+
                 </>
+
               ) : (
 
                 <form
@@ -676,17 +828,19 @@ const Sidebar = () => {
                   </div>
 
                 </form>
+
               )}
 
             </div>
+
           )}
 
         </div>
 
 
-        {/* ===================================================
+        {/* =================================================
             NAVIGATION
-        =================================================== */}
+        ================================================= */}
 
         <nav className="sidebar-nav">
 
@@ -695,15 +849,17 @@ const Sidebar = () => {
             <NavLink
               key={item.path}
               to={item.path}
-              onClick={closeMobileSidebar}
+              onClick={handleNavigation}
+              title={
+                collapsed
+                  ? item.label
+                  : undefined
+              }
               className={({ isActive }) =>
                 `nav-item ${
-                  isActive
-                    ? 'active'
-                    : ''
+                  isActive ? 'active' : ''
                 }`
               }
-              title={item.label}
             >
 
               <span className="nav-icon">
@@ -717,9 +873,11 @@ const Sidebar = () => {
               {item.label ===
                 'Notifications' &&
                 unreadCount > 0 && (
+
                   <span className="nav-badge">
                     {unreadCount}
                   </span>
+
                 )}
 
             </NavLink>
@@ -729,19 +887,22 @@ const Sidebar = () => {
         </nav>
 
 
-        {/* ===================================================
+        {/* =================================================
             LOGOUT
-        =================================================== */}
+        ================================================= */}
 
         <button
-          type="button"
           className="sidebar-logout"
           onClick={handleLogout}
-          title="Logout"
+          title={
+            collapsed
+              ? 'Logout'
+              : undefined
+          }
         >
 
-          <span className="logout-icon">
-            ⇥
+          <span className="nav-icon">
+            {Icons.logout}
           </span>
 
           <span className="logout-label">
