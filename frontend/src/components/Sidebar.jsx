@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import './Sidebar.css';
 
 const Icon = ({ type, size = 23 }) => {
@@ -120,10 +121,23 @@ const Icon = ({ type, size = 23 }) => {
 const Sidebar = ({ collapsed, onToggle }) => {
   const navigate = useNavigate();
 
+  /* =========================================================
+     AUTH CONTEXT — single source of truth for the logged-in
+     user. Previously this component kept its own copy of the
+     user by reading localStorage('user' / 'currentUser'), but
+     AuthContext actually saves under 'eventhub_user' /
+     'eventhub_token'. That mismatch meant this component's
+     user was always null, role always fell back to 'student',
+     and the sidebar showed the wrong menu for admins/dept
+     heads — which is why clicking a student-only link like
+     "My Events" tripped ProtectedRoute's role check and threw
+     Access Denied.
+  ========================================================= */
+
+  const { user, logout, updateUser } = useAuth();
+
   const [profileOpen, setProfileOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
-
-  const [user, setUser] = useState(null);
 
   const [editFirstName, setEditFirstName] = useState('');
   const [editLastName, setEditLastName] = useState('');
@@ -131,28 +145,6 @@ const Sidebar = ({ collapsed, onToggle }) => {
 
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
-
-  /* =========================================================
-     LOAD USER
-  ========================================================= */
-
-  const loadUser = () => {
-    try {
-      const storedUser =
-        localStorage.getItem('user') ||
-        localStorage.getItem('currentUser');
-
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
-      }
-    } catch (error) {
-      console.error('Unable to read user:', error);
-    }
-  };
-
-  useEffect(() => {
-    loadUser();
-  }, []);
 
 
   /* =========================================================
@@ -356,6 +348,10 @@ const Sidebar = ({ collapsed, onToggle }) => {
 
   /* =========================================================
      SAVE PROFILE
+     Now goes through AuthContext's updateUser(), which both
+     updates the in-memory user (so every component reading
+     useAuth() re-renders with the new name/photo) AND persists
+     it to the correct 'eventhub_user' localStorage key.
   ========================================================= */
 
   const handleSaveProfile = async () => {
@@ -367,39 +363,11 @@ const Sidebar = ({ collapsed, onToggle }) => {
     try {
       setSaving(true);
 
-      /*
-       * Update the local user first.
-       * This makes the new name/photo immediately appear.
-       */
-
-      const updatedUser = {
-        ...user,
+      updateUser({
         first_name: editFirstName.trim(),
         last_name: editLastName.trim(),
         profile_photo: editPhoto
-      };
-
-
-      /*
-       * SAVE TO LOCAL STORAGE
-       */
-
-      localStorage.setItem(
-        'user',
-        JSON.stringify(updatedUser)
-      );
-
-      localStorage.setItem(
-        'currentUser',
-        JSON.stringify(updatedUser)
-      );
-
-
-      /*
-       * Update Sidebar immediately
-       */
-
-      setUser(updatedUser);
+      });
 
       setEditOpen(false);
 
@@ -417,12 +385,13 @@ const Sidebar = ({ collapsed, onToggle }) => {
 
   /* =========================================================
      LOGOUT
+     Goes through AuthContext's logout() so it clears the same
+     keys AuthContext actually reads from, and resets user
+     state everywhere immediately (not just in this component).
   ========================================================= */
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('currentUser');
+    logout();
 
     navigate('/login', {
       replace: true
@@ -645,7 +614,8 @@ const Sidebar = ({ collapsed, onToggle }) => {
 
 
       {/* =====================================================
-          EDIT PROFILE MODAL
+          EDIT PROFILE PANEL — slides down from the top instead
+          of appearing as a centered popup dialog.
       ===================================================== */}
 
       {editOpen && (

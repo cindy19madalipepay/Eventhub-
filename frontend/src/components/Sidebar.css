@@ -43,6 +43,8 @@
 
 /* =========================================================
    HEADER
+   Was solid white — now transparent so the green gradient
+   from .sidebar shows through, matching the rest of the theme.
 ========================================================= */
 
 .sidebar-header {
@@ -54,9 +56,9 @@
 
   padding: 14px 12px;
 
-  background: #ffffff;
+  background: transparent;
 
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
 
   flex-shrink: 0;
 
@@ -100,19 +102,23 @@
   letter-spacing: -2px;
 
   box-shadow:
-    0 5px 15px rgba(0, 0, 0, 0.15);
+    0 5px 15px rgba(0, 0, 0, 0.25);
 }
 
 
 .eventhub-name {
   margin-left: 9px;
 
-  color: #1f3329;
+  /* Was dark green (#1f3329), invisible-ish against a white
+     header. Now white to read clearly on the green gradient. */
+  color: #ffffff;
 
   font-size: 24px;
   font-weight: 800;
 
   white-space: nowrap;
+
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
 
@@ -133,21 +139,23 @@
   border: none;
   border-radius: 10px;
 
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.92);
 
-  color: #000000;
+  color: #16052e;
 
   cursor: pointer;
 
   box-shadow:
-    0 4px 14px rgba(0, 0, 0, 0.08);
+    0 4px 14px rgba(0, 0, 0, 0.15);
 
   padding: 0;
+
+  transition: background 0.15s ease, transform 0.1s ease;
 }
 
 
 .sidebar-toggle:hover {
-  background: #f1f3f4;
+  background: #ffffff;
 }
 
 
@@ -193,6 +201,8 @@
   cursor: pointer;
 
   text-align: left;
+
+  transition: background 0.15s ease;
 }
 
 
@@ -226,6 +236,8 @@
   font-weight: 800;
 
   object-fit: cover;
+
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 
@@ -308,6 +320,20 @@
 
   box-shadow:
     0 10px 25px rgba(0, 0, 0, 0.18);
+
+  animation: dropdownIn 0.15s ease-out;
+}
+
+
+@keyframes dropdownIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 
@@ -372,6 +398,8 @@
   color: #ffffff;
 
   text-decoration: none;
+
+  transition: background 0.15s ease;
 }
 
 
@@ -405,13 +433,13 @@
 
   flex-shrink: 0;
 
-  color: #000000;
+  color: #ffffff;
 }
 
 
 .sidebar-icon svg {
-  color: #000000;
-  stroke: #000000;
+  color: #ffffff;
+  stroke: #ffffff;
 }
 
 
@@ -497,6 +525,8 @@
   cursor: pointer;
 
   text-align: left;
+
+  transition: background 0.15s ease;
 }
 
 
@@ -621,7 +651,10 @@
 
 
 /* =========================================================
-   EDIT PROFILE MODAL
+   EDIT PROFILE — SLIDE-DOWN PANEL
+   Was a centered popup dialog. Now it's a panel that drops
+   down from the very top of the screen, like a notification
+   tray, instead of appearing in the middle of the page.
 ========================================================= */
 
 .edit-profile-overlay {
@@ -633,10 +666,10 @@
 
   display: flex;
 
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
 
-  padding: 20px;
+  padding: 0;
 
   background:
     rgba(0, 0, 0, 0.45);
@@ -653,12 +686,29 @@
 
   padding: 24px;
 
-  border-radius: 18px;
+  /* Flush with the top of the viewport, rounded only at the
+     bottom so it reads as a panel sliding down, not a floating
+     dialog box. */
+  border-radius: 0 0 18px 18px;
 
   background: #ffffff;
 
   box-shadow:
     0 20px 50px rgba(0, 0, 0, 0.25);
+
+  animation: slideDownPanel 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+
+@keyframes slideDownPanel {
+  from {
+    transform: translateY(-100%);
+    opacity: 0.6;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 
@@ -700,6 +750,13 @@
   color: #111111;
 
   cursor: pointer;
+
+  transition: background 0.15s ease;
+}
+
+
+.edit-profile-close:hover {
+  background: #e5e9e6;
 }
 
 
@@ -822,6 +879,8 @@
   color: #1f3329;
 
   background: #ffffff;
+
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 
@@ -861,6 +920,8 @@
   font-weight: 700;
 
   cursor: pointer;
+
+  transition: opacity 0.15s ease, background 0.15s ease;
 }
 
 
@@ -871,10 +932,20 @@
 }
 
 
+.cancel-profile-button:hover {
+  background: #e2e6e3;
+}
+
+
 .save-profile-button {
   background: #1f3329;
 
   color: #ffffff;
+}
+
+
+.save-profile-button:hover:not(:disabled) {
+  background: #294436;
 }
 
 
@@ -1071,7 +1142,7 @@
   /* EDIT PROFILE */
 
   .edit-profile-overlay {
-    padding: 14px;
+    padding: 0;
   }
 
 
@@ -1080,7 +1151,7 @@
 
     padding: 20px;
 
-    border-radius: 16px;
+    border-radius: 0 0 16px 16px;
   }
 
 }
