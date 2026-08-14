@@ -7,6 +7,9 @@ import {
 
 const AuthContext = createContext(null);
 
+// Fields the user can edit locally that should survive logout/login
+const EDITABLE_FIELDS = ['firstName', 'lastName', 'avatar'];
+
 export const AuthProvider = ({ children }) => {
 
   const [user, setUser] = useState(null);
@@ -68,7 +71,44 @@ export const AuthProvider = ({ children }) => {
     tokenData
   ) => {
 
-    setUser(userData);
+    // Check if we have a locally-edited profile for this same user
+    // (saved before a previous logout) and re-apply those edits on
+    // top of the fresh server data, so edits aren't lost on re-login.
+    let mergedUserData = userData;
+
+    try {
+
+      const lastSavedRaw = localStorage.getItem(
+        'eventhub_last_edited_user'
+      );
+
+      if (lastSavedRaw) {
+
+        const lastSaved = JSON.parse(lastSavedRaw);
+
+        // Only re-apply if it's the same account
+        if (lastSaved && lastSaved.id === userData.id) {
+
+          mergedUserData = { ...userData };
+
+          EDITABLE_FIELDS.forEach((field) => {
+            if (lastSaved[field] !== undefined) {
+              mergedUserData[field] = lastSaved[field];
+            }
+          });
+        }
+      }
+
+    } catch (error) {
+
+      console.error(
+        'Could not restore saved profile edits:',
+        error
+      );
+
+    }
+
+    setUser(mergedUserData);
     setToken(tokenData);
 
     localStorage.setItem(
@@ -78,7 +118,7 @@ export const AuthProvider = ({ children }) => {
 
     localStorage.setItem(
       'eventhub_user',
-      JSON.stringify(userData)
+      JSON.stringify(mergedUserData)
     );
   };
 
@@ -99,6 +139,10 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem(
       'eventhub_user'
     );
+
+    // NOTE: 'eventhub_last_edited_user' is intentionally NOT removed here,
+    // so edited profile info (name/avatar) survives logout and is
+    // restored on the next login.
   };
 
 
@@ -126,6 +170,22 @@ export const AuthProvider = ({ children }) => {
         JSON.stringify(
           mergedUser
         )
+      );
+
+      // Persist just the editable fields separately, keyed by user id,
+      // so they can be restored on the next login even after logout
+      // clears 'eventhub_user'.
+      const editedSubset = { id: mergedUser.id };
+
+      EDITABLE_FIELDS.forEach((field) => {
+        if (mergedUser[field] !== undefined) {
+          editedSubset[field] = mergedUser[field];
+        }
+      });
+
+      localStorage.setItem(
+        'eventhub_last_edited_user',
+        JSON.stringify(editedSubset)
       );
 
       return mergedUser;
