@@ -28,7 +28,7 @@
 
   overflow: visible;
 
-  transition: width 0.25s ease;
+  transition: width 0.25s ease, transform 0.25s ease;
 }
 
 
@@ -43,9 +43,6 @@
 
 /* =========================================================
    HEADER
-   No more border line under it — it now blends straight into
-   the profile area below since both are transparent over the
-   same background gradient.
 ========================================================= */
 
 .sidebar-header {
@@ -121,9 +118,6 @@
 
 /* =========================================================
    HAMBURGER
-   Was a solid white rounded square. Now transparent so it
-   sits flush on the sidebar's own background, like the rest
-   of the icons — just a light hover/press state for feedback.
 ========================================================= */
 
 .sidebar-toggle {
@@ -163,10 +157,6 @@
 
 /* =========================================================
    PROFILE
-   No border line separating it from the header or the nav
-   below anymore, and the trigger itself is fully transparent
-   now instead of a whitish overlay box — it reads as part of
-   the same green gradient as the rest of the sidebar.
 ========================================================= */
 
 .sidebar-profile-area {
@@ -206,8 +196,6 @@
 
 /* =========================================================
    PROFILE AVATAR
-   Falls back to a black circle with an emoji instead of a
-   green circle with initials.
 ========================================================= */
 
 .profile-avatar {
@@ -242,8 +230,6 @@
 
 /* =========================================================
    PROFILE TEXT
-   White now instead of near-black, since the trigger
-   background is transparent over the dark-green gradient.
 ========================================================= */
 
 .profile-text {
@@ -295,9 +281,6 @@
 
 /* =========================================================
    PROFILE DROPDOWN
-   Stays a small floating white panel anchored to the avatar,
-   fully inside the sidebar's own width — never a full-page
-   overlay.
 ========================================================= */
 
 .profile-dropdown {
@@ -366,8 +349,6 @@
 
 /* =========================================================
    INLINE EDIT FORM
-   Renders inside .profile-dropdown, replacing the old
-   full-screen edit-profile-overlay/edit-profile-modal.
 ========================================================= */
 
 .inline-edit-form {
@@ -900,29 +881,35 @@
 
 /* =========================================================
    MOBILE
+
+   The sidebar no longer splits the screen 50/50 with the
+   content. Collapsed = a slim 78px icon rail (same idea as
+   desktop's collapsed state) that content is pushed over by.
+   Expanded = the sidebar becomes a fixed-width overlay that
+   floats ON TOP of the full-width content behind it, dimmed
+   by the .sidebar-backdrop element (see DashboardLayout.css) —
+   tap the backdrop, the hamburger, or any nav link to close it.
 ========================================================= */
 
 @media (max-width: 768px) {
 
-  /*
-     IMPORTANT:
-
-     Expanded:
-     Sidebar = 50vw
-     Content = 50vw
-
-     They NEVER stack.
-  */
-
   .sidebar {
-    width: 50vw;
+    /* Expanded width on mobile — a fixed-feeling overlay
+       rather than a vw-based split with the content. */
+    width: min(280px, 82vw);
 
     height: 100dvh;
+
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.3);
   }
 
 
   .sidebar.sidebar-is-collapsed {
     width: 78px;
+
+    /* Collapsed rail doesn't need the overlay shadow since
+       there's no backdrop behind it. */
+    box-shadow: none;
   }
 
 
@@ -983,7 +970,7 @@
 
 
   .profile-text strong {
-    max-width: calc(50vw - 105px);
+    max-width: 150px;
 
     font-size: 14px;
   }
@@ -1052,7 +1039,7 @@
 
 
   /* =====================================================
-     COLLAPSED MOBILE
+     COLLAPSED MOBILE (slim icon rail)
   ===================================================== */
 
   .sidebar.sidebar-is-collapsed
@@ -1081,7 +1068,7 @@
   }
 
 
-  /* PROFILE DROPDOWN on narrow (50vw) sidebar */
+  /* PROFILE DROPDOWN on the narrower mobile overlay width */
 
   .profile-dropdown {
     left: 8px;

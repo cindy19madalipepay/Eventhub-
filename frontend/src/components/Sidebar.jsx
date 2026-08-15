@@ -3,6 +3,8 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './Sidebar.css';
 
+const MOBILE_BREAKPOINT = 768;
+
 const Icon = ({ type, size = 23 }) => {
   const common = {
     width: size,
@@ -131,15 +133,7 @@ const Sidebar = ({ collapsed, onToggle }) => {
 
   /* =========================================================
      AUTH CONTEXT — single source of truth for the logged-in
-     user. Previously this component kept its own copy of the
-     user by reading localStorage('user' / 'currentUser'), but
-     AuthContext actually saves under 'eventhub_user' /
-     'eventhub_token'. That mismatch meant this component's
-     user was always null, role always fell back to 'student',
-     and the sidebar showed the wrong menu for admins/dept
-     heads — which is why clicking a student-only link like
-     "My Events" tripped ProtectedRoute's role check and threw
-     Access Denied.
+     user.
   ========================================================= */
 
   const { user, logout, updateUser } = useAuth();
@@ -279,10 +273,6 @@ const Sidebar = ({ collapsed, onToggle }) => {
 
   /* =========================================================
      PROFILE TRIGGER
-
-     Clicking the avatar/name toggles the small dropdown. If
-     the dropdown is closed, it always reopens on the "Edit
-     Profile" link view (not mid-edit) — editOpen resets too.
   ========================================================= */
 
   const toggleProfileDropdown = () => {
@@ -302,9 +292,6 @@ const Sidebar = ({ collapsed, onToggle }) => {
 
   /* =========================================================
      OPEN EDIT PROFILE
-     Now switches the SAME dropdown into edit mode, instead of
-     opening a separate full-screen modal. Everything stays
-     inside the sidebar's own dropdown panel.
   ========================================================= */
 
   const openEditProfile = () => {
@@ -386,12 +373,6 @@ const Sidebar = ({ collapsed, onToggle }) => {
 
   /* =========================================================
      SAVE PROFILE
-     Goes through AuthContext's updateUser(), which updates the
-     in-memory user (every component reading useAuth()
-     re-renders with the new name/photo) AND persists it to the
-     'eventhub_user' localStorage key, so it's still there the
-     next time this same account logs in — it only changes again
-     if you edit it again.
   ========================================================= */
 
   const handleSaveProfile = async () => {
@@ -424,9 +405,6 @@ const Sidebar = ({ collapsed, onToggle }) => {
 
   /* =========================================================
      LOGOUT
-     Goes through AuthContext's logout() so it clears the same
-     keys AuthContext actually reads from, and resets user
-     state everywhere immediately (not just in this component).
   ========================================================= */
 
   const handleLogout = () => {
@@ -439,366 +417,361 @@ const Sidebar = ({ collapsed, onToggle }) => {
 
 
   /* =========================================================
+     NAV LINK CLICK (MOBILE AUTO-CLOSE)
+
+     On mobile the sidebar opens as an overlay on top of the
+     page content. Without this, after tapping a link the
+     overlay would stay open on top of the new page until the
+     user separately tapped the backdrop or hamburger. This
+     closes it automatically, same as most mobile nav patterns.
+     Desktop behavior (push layout, stays as-is) is untouched.
+  ========================================================= */
+
+  const handleNavLinkClick = () => {
+    const isMobile =
+      window.innerWidth <= MOBILE_BREAKPOINT;
+
+    if (isMobile && !collapsed) {
+      onToggle();
+    }
+  };
+
+
+  /* =========================================================
      RENDER
   ========================================================= */
 
   return (
-    <>
+    <aside
+      className={`sidebar ${
+        collapsed
+          ? 'sidebar-is-collapsed'
+          : ''
+      }`}
+    >
 
       {/* =================================================
-          MOBILE BACKDROP
-          Only visible on mobile (see Sidebar.css) and only
-          while the sidebar is expanded/open. Sits behind the
-          sidebar and above the page content, dimming it and
-          closing the sidebar on tap — the same way most
-          mobile hamburger menus behave. On desktop it stays
-          hidden via CSS since the sidebar there just pushes
-          the layout instead of overlaying it.
+          HEADER
       ================================================= */}
 
-      {!collapsed && (
-        <div
-          className="sidebar-backdrop"
-          onClick={onToggle}
-          aria-hidden="true"
-        />
-      )}
+      <div className="sidebar-header">
 
-      <aside
-        className={`sidebar ${
-          collapsed
-            ? 'sidebar-is-collapsed'
-            : ''
-        }`}
-      >
+        <div className="eventhub-brand">
 
-        {/* =================================================
-            HEADER
-        ================================================= */}
-
-        <div className="sidebar-header">
-
-          <div className="eventhub-brand">
-
-            <div className="eventhub-logo">
-              EH
-            </div>
-
-            {!collapsed && (
-              <span className="eventhub-name">
-                EventHub
-              </span>
-            )}
-
+          <div className="eventhub-logo">
+            EH
           </div>
 
-
-          <button
-            type="button"
-            className="sidebar-toggle"
-            onClick={onToggle}
-            aria-label="Toggle sidebar"
-          >
-            <Icon
-              type="menu"
-              size={26}
-            />
-          </button>
-
-        </div>
-
-
-        {/* =================================================
-            PROFILE
-        ================================================= */}
-
-        <div className="sidebar-profile-area">
-
-          <button
-            type="button"
-            className="profile-trigger"
-            onClick={toggleProfileDropdown}
-          >
-
-            {profilePhoto ? (
-              <img
-                src={profilePhoto}
-                alt="Profile"
-                className="profile-avatar profile-photo"
-              />
-            ) : (
-              <div className="profile-avatar">
-                {AVATAR_EMOJI}
-              </div>
-            )}
-
-
-            {!collapsed && (
-              <div className="profile-text">
-
-                <strong>
-                  {fullName}
-                </strong>
-
-                <span>
-                  {roleName}
-                </span>
-
-              </div>
-            )}
-
-
-            {!collapsed && (
-              <span className="profile-arrow">
-                {profileOpen ? '⌃' : '⌄'}
-              </span>
-            )}
-
-          </button>
-
-
-          {/* =================================================
-              PROFILE DROPDOWN — lives entirely inside the
-              sidebar's own width. Shows either the "Edit
-              Profile" link, or (once clicked) the edit form
-              itself, in the same panel. Nothing ever opens as
-              a page-covering overlay anymore.
-          ================================================= */}
-
-          {profileOpen && !collapsed && (
-            <div className="profile-dropdown">
-
-              {!editOpen ? (
-
-                <button
-                  type="button"
-                  className="dropdown-edit-button"
-                  onClick={openEditProfile}
-                >
-                  Edit Profile
-                </button>
-
-              ) : (
-
-                <div className="inline-edit-form">
-
-                  <div className="inline-edit-header">
-
-                    <span>Edit Profile</span>
-
-                    <button
-                      type="button"
-                      className="inline-edit-close"
-                      onClick={closeEditProfile}
-                      aria-label="Close edit form"
-                    >
-                      <Icon type="close" size={16} />
-                    </button>
-
-                  </div>
-
-
-                  {/* PHOTO */}
-
-                  <div className="edit-photo-section">
-
-                    <div className="edit-photo-wrapper">
-
-                      {editPhoto ? (
-                        <img
-                          src={editPhoto}
-                          alt="Profile preview"
-                          className="edit-profile-photo"
-                        />
-                      ) : (
-                        <div className="edit-profile-photo edit-photo-placeholder">
-                          {AVATAR_EMOJI}
-                        </div>
-                      )}
-
-                      <label
-                        htmlFor="profile-photo-input"
-                        className="photo-upload-button"
-                        title="Change profile photo"
-                      >
-                        <Icon type="camera" size={16} />
-                      </label>
-
-                    </div>
-
-
-                    <input
-                      id="profile-photo-input"
-                      type="file"
-                      accept="image/*"
-                      onChange={handlePhotoChange}
-                      hidden
-                    />
-
-                    {uploading && (
-                      <span className="uploading-text">
-                        Uploading photo...
-                      </span>
-                    )}
-
-                  </div>
-
-
-                  {/* NAME */}
-
-                  <div className="edit-form-group">
-
-                    <label>First Name</label>
-
-                    <input
-                      type="text"
-                      value={editFirstName}
-                      onChange={event =>
-                        setEditFirstName(event.target.value)
-                      }
-                      placeholder="First name"
-                    />
-
-                  </div>
-
-
-                  <div className="edit-form-group">
-
-                    <label>Last Name</label>
-
-                    <input
-                      type="text"
-                      value={editLastName}
-                      onChange={event =>
-                        setEditLastName(event.target.value)
-                      }
-                      placeholder="Last name"
-                    />
-
-                  </div>
-
-
-                  <div className="edit-profile-actions">
-
-                    <button
-                      type="button"
-                      className="cancel-profile-button"
-                      onClick={closeEditProfile}
-                    >
-                      Cancel
-                    </button>
-
-                    <button
-                      type="button"
-                      className="save-profile-button"
-                      onClick={handleSaveProfile}
-                      disabled={uploading || saving}
-                    >
-                      {saving ? 'Saving...' : 'Save'}
-                    </button>
-
-                  </div>
-
-                </div>
-
-              )}
-
-            </div>
+          {!collapsed && (
+            <span className="eventhub-name">
+              EventHub
+            </span>
           )}
 
         </div>
 
 
-        {/* =================================================
-            NAVIGATION
-        ================================================= */}
+        <button
+          type="button"
+          className="sidebar-toggle"
+          onClick={onToggle}
+          aria-label="Toggle sidebar"
+        >
+          <Icon
+            type="menu"
+            size={26}
+          />
+        </button>
 
-        <nav className="sidebar-navigation">
+      </div>
 
-          {menuItems.map(item => (
 
-            <NavLink
-              key={item.path}
-              to={item.path}
-              className={({ isActive }) =>
-                `sidebar-link ${
-                  isActive
-                    ? 'sidebar-link-active'
-                    : ''
-                }`
-              }
-              title={
-                collapsed
-                  ? item.label
-                  : ''
-              }
-            >
+      {/* =================================================
+          PROFILE
+      ================================================= */}
 
-              <span className="sidebar-icon">
-                <Icon
-                  type={item.icon}
-                  size={23}
-                />
+      <div className="sidebar-profile-area">
+
+        <button
+          type="button"
+          className="profile-trigger"
+          onClick={toggleProfileDropdown}
+        >
+
+          {profilePhoto ? (
+            <img
+              src={profilePhoto}
+              alt="Profile"
+              className="profile-avatar profile-photo"
+            />
+          ) : (
+            <div className="profile-avatar">
+              {AVATAR_EMOJI}
+            </div>
+          )}
+
+
+          {!collapsed && (
+            <div className="profile-text">
+
+              <strong>
+                {fullName}
+              </strong>
+
+              <span>
+                {roleName}
               </span>
 
-
-              {!collapsed && (
-                <span className="sidebar-link-label">
-                  {item.label}
-                </span>
-              )}
+            </div>
+          )}
 
 
-              {!collapsed && item.badge && (
-                <span className="notification-badge">
-                  {item.badge}
-                </span>
-              )}
+          {!collapsed && (
+            <span className="profile-arrow">
+              {profileOpen ? '⌃' : '⌄'}
+            </span>
+          )}
 
-            </NavLink>
-
-          ))}
-
-        </nav>
+        </button>
 
 
         {/* =================================================
-            LOGOUT
+            PROFILE DROPDOWN
         ================================================= */}
 
-        <div className="sidebar-footer">
+        {profileOpen && !collapsed && (
+          <div className="profile-dropdown">
 
-          <button
-            type="button"
-            className="sidebar-logout"
-            onClick={handleLogout}
+            {!editOpen ? (
+
+              <button
+                type="button"
+                className="dropdown-edit-button"
+                onClick={openEditProfile}
+              >
+                Edit Profile
+              </button>
+
+            ) : (
+
+              <div className="inline-edit-form">
+
+                <div className="inline-edit-header">
+
+                  <span>Edit Profile</span>
+
+                  <button
+                    type="button"
+                    className="inline-edit-close"
+                    onClick={closeEditProfile}
+                    aria-label="Close edit form"
+                  >
+                    <Icon type="close" size={16} />
+                  </button>
+
+                </div>
+
+
+                {/* PHOTO */}
+
+                <div className="edit-photo-section">
+
+                  <div className="edit-photo-wrapper">
+
+                    {editPhoto ? (
+                      <img
+                        src={editPhoto}
+                        alt="Profile preview"
+                        className="edit-profile-photo"
+                      />
+                    ) : (
+                      <div className="edit-profile-photo edit-photo-placeholder">
+                        {AVATAR_EMOJI}
+                      </div>
+                    )}
+
+                    <label
+                      htmlFor="profile-photo-input"
+                      className="photo-upload-button"
+                      title="Change profile photo"
+                    >
+                      <Icon type="camera" size={16} />
+                    </label>
+
+                  </div>
+
+
+                  <input
+                    id="profile-photo-input"
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhotoChange}
+                    hidden
+                  />
+
+                  {uploading && (
+                    <span className="uploading-text">
+                      Uploading photo...
+                    </span>
+                  )}
+
+                </div>
+
+
+                {/* NAME */}
+
+                <div className="edit-form-group">
+
+                  <label>First Name</label>
+
+                  <input
+                    type="text"
+                    value={editFirstName}
+                    onChange={event =>
+                      setEditFirstName(event.target.value)
+                    }
+                    placeholder="First name"
+                  />
+
+                </div>
+
+
+                <div className="edit-form-group">
+
+                  <label>Last Name</label>
+
+                  <input
+                    type="text"
+                    value={editLastName}
+                    onChange={event =>
+                      setEditLastName(event.target.value)
+                    }
+                    placeholder="Last name"
+                  />
+
+                </div>
+
+
+                <div className="edit-profile-actions">
+
+                  <button
+                    type="button"
+                    className="cancel-profile-button"
+                    onClick={closeEditProfile}
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="button"
+                    className="save-profile-button"
+                    onClick={handleSaveProfile}
+                    disabled={uploading || saving}
+                  >
+                    {saving ? 'Saving...' : 'Save'}
+                  </button>
+
+                </div>
+
+              </div>
+
+            )}
+
+          </div>
+        )}
+
+      </div>
+
+
+      {/* =================================================
+          NAVIGATION
+      ================================================= */}
+
+      <nav className="sidebar-navigation">
+
+        {menuItems.map(item => (
+
+          <NavLink
+            key={item.path}
+            to={item.path}
+            onClick={handleNavLinkClick}
+            className={({ isActive }) =>
+              `sidebar-link ${
+                isActive
+                  ? 'sidebar-link-active'
+                  : ''
+              }`
+            }
             title={
               collapsed
-                ? 'Logout'
+                ? item.label
                 : ''
             }
           >
 
             <span className="sidebar-icon">
               <Icon
-                type="logout"
+                type={item.icon}
                 size={23}
               />
             </span>
 
+
             {!collapsed && (
-              <span>
-                Logout
+              <span className="sidebar-link-label">
+                {item.label}
               </span>
             )}
 
-          </button>
 
-        </div>
+            {!collapsed && item.badge && (
+              <span className="notification-badge">
+                {item.badge}
+              </span>
+            )}
 
-      </aside>
+          </NavLink>
 
-    </>
+        ))}
+
+      </nav>
+
+
+      {/* =================================================
+          LOGOUT
+      ================================================= */}
+
+      <div className="sidebar-footer">
+
+        <button
+          type="button"
+          className="sidebar-logout"
+          onClick={handleLogout}
+          title={
+            collapsed
+              ? 'Logout'
+              : ''
+          }
+        >
+
+          <span className="sidebar-icon">
+            <Icon
+              type="logout"
+              size={23}
+            />
+          </span>
+
+          {!collapsed && (
+            <span>
+              Logout
+            </span>
+          )}
+
+        </button>
+
+      </div>
+
+    </aside>
   );
 };
 

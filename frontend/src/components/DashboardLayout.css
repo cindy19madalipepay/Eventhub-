@@ -35,6 +35,10 @@
 
   --sidebar-width: 260px;
   --sidebar-collapsed-width: 78px;
+
+  /* Width of the sidebar when it's opened as a mobile overlay.
+     Matches the value used in Sidebar.css. */
+  --sidebar-mobile-width: min(280px, 82vw);
 }
 
 
@@ -127,12 +131,24 @@ body {
       );
   }
 
+
+  /* Backdrop is a mobile-only concept — never shown on desktop,
+     even if the sidebar happens to be expanded. */
+  .sidebar-backdrop {
+    display: none;
+  }
+
 }
 
 
 /* =========================================================
    MOBILE
-   ALWAYS SIDE-BY-SIDE
+
+   Content is now ALWAYS full width (minus the slim collapsed
+   rail), same as desktop. The sidebar no longer permanently
+   splits the screen 50/50 — when opened, it floats OVER the
+   content as a fixed overlay (see Sidebar.css) with a dimmed
+   backdrop behind it, instead of squeezing content into 50vw.
 ========================================================= */
 
 @media (max-width: 768px) {
@@ -142,86 +158,103 @@ body {
   #root {
     width: 100%;
 
-    height: 100%;
-
-    overflow: hidden;
+    overflow-x: hidden;
   }
 
 
   .dashboard-layout {
     position: relative;
 
-    width: 100vw;
-
-    height: 100dvh;
+    width: 100%;
 
     min-height: 100dvh;
-
-    overflow: hidden;
   }
 
 
   /*
     ========================================================
-    EXPANDED
+    DEFAULT (sidebar collapsed = slim 78px icon rail)
 
-    Sidebar = 50vw
-    Content = 50vw
+    Content takes the full remaining width, exactly like the
+    desktop collapsed state — just pushed over by 78px instead
+    of being cut down to half the screen.
     ========================================================
   */
 
   .dashboard-layout .main-content {
 
-    position: fixed;
+    position: relative;
 
-    top: 0;
-    right: 0;
+    margin-left: var(--sidebar-collapsed-width);
 
-    width: 50vw;
+    width:
+      calc(
+        100% -
+        var(--sidebar-collapsed-width)
+      );
 
-    min-width: 50vw;
-
-    height: 100dvh;
-
-    margin: 0;
+    min-height: 100dvh;
 
     padding: 24px 16px;
 
     background: var(--bg);
 
-    overflow-x: auto;
+    overflow-x: hidden;
     overflow-y: auto;
 
     -webkit-overflow-scrolling: touch;
 
-    transition:
-      width 0.25s ease;
+    transition: margin-left 0.25s ease, width 0.25s ease;
   }
 
 
   /*
     ========================================================
-    COLLAPSED
+    EXPANDED (sidebar opened as an overlay)
 
-    Sidebar = 78px
-    Content = remaining screen
+    Content goes full width and stays in place — the sidebar
+    floats on top of it (fixed position, high z-index) with a
+    dimmed backdrop, instead of the content getting squeezed.
     ========================================================
   */
 
-  .dashboard-layout.sidebar-collapsed
-  .main-content {
+  .dashboard-layout.sidebar-expanded .main-content {
 
-    width:
-      calc(
-        100vw -
-        var(--sidebar-collapsed-width)
-      );
+    margin-left: 0;
 
-    min-width:
-      calc(
-        100vw -
-        var(--sidebar-collapsed-width)
-      );
+    width: 100%;
+  }
+
+
+  /* ======================================================
+     BACKDROP
+
+     Dims the content behind the open sidebar overlay. Sits
+     just under the sidebar's z-index so the sidebar stays on
+     top; tapping it closes the sidebar (handled in JS).
+  ====================================================== */
+
+  .sidebar-backdrop {
+    display: block;
+
+    position: fixed;
+    inset: 0;
+
+    z-index: 1999;
+
+    background: rgba(15, 23, 41, 0.45);
+
+    animation: backdropFadeIn 0.2s ease;
+  }
+
+
+  @keyframes backdropFadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
 
 
