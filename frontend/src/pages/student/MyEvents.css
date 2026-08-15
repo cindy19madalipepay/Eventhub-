@@ -748,34 +748,150 @@
 
 /* ================================================================
    RESPONSIVE
+
+   Events grid now stays 2 columns on mobile (matching the
+   screenshot) instead of collapsing to 1. Card internals are
+   scaled down at this breakpoint so two per row actually fit
+   comfortably next to the sidebar's 78px collapsed rail.
    ================================================================ */
 
 @media (max-width: 768px) {
   .myevents-page {
-    padding: 16px;
+    padding: 14px;
   }
 
   .myevents-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 6px;
+    margin-bottom: 12px;
+  }
+
+  .myevents-title {
+    font-size: 18px;
+  }
+
+  .myevents-count {
+    font-size: 12px;
+  }
+
+  .filter-tabs {
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+
+  .filter-tab {
+    padding: 7px 10px;
+    font-size: 12px;
   }
 
   .events-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
   }
 
   .event-card {
     width: 100%;
+    border-radius: 12px;
+  }
+
+  .event-card-header {
+    padding: 8px 10px;
+    margin-top: 4px;
+  }
+
+  .event-sender {
+    font-size: 10px;
+  }
+
+  .status-badge {
+    font-size: 9px;
+    padding: 4px 8px;
+  }
+
+  .event-name {
+    margin: 10px 10px 2px;
+    font-size: 14px;
+  }
+
+  .event-description {
+    margin: 0 10px 8px;
+    font-size: 11px;
   }
 
   .event-info-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin: 0 10px 8px;
+  }
+
+  .event-info-item {
+    padding: 6px 8px;
+    border-radius: 8px;
+    gap: 2px;
+  }
+
+  .event-info-label {
+    font-size: 8px;
+  }
+
+  .event-info-value {
+    font-size: 11px;
+  }
+
+  .payment-info {
+    margin: 0 10px 8px;
+  }
+
+  .payment-amount {
+    font-size: 12px;
+  }
+
+  .program-flow {
+    margin: 0 10px 8px;
+  }
+
+  .program-flow-timeline {
+    max-height: 90px;
+    padding: 6px 8px;
+  }
+
+  .event-media-row {
+    margin: 8px 10px 10px;
     gap: 8px;
   }
 
+  .event-banner-label {
+    font-size: 8px;
+    margin: 0 0 4px;
+  }
+
   .event-banner {
-    width: 72px;
-    height: 72px;
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+  }
+
+  .notif-thumb,
+  .notif-thumb-pdf {
+    width: 48px;
+    height: 48px;
+  }
+
+  .event-actions {
+    margin: auto 10px 12px;
+    padding-top: 8px;
+  }
+
+  .action-btn {
+    padding: 9px;
+    font-size: 11px;
+    border-radius: 8px;
+  }
+
+  .completed-msg {
+    font-size: 11px;
+    padding: 6px;
   }
 
   .lightbox-overlay {
@@ -792,41 +908,23 @@
   }
 }
 
-@media (max-width: 480px) {
-  .myevents-title {
-    font-size: 20px;
-  }
-
-  .myevents-count {
-    font-size: 12px;
-  }
-
-  .filter-tabs {
-    width: 100%;
-  }
-
-  .filter-tab {
-    flex: 1;
-    padding: 8px 10px;
-  }
-
+@media (max-width: 380px) {
   .events-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .event-info-grid {
-    grid-template-columns: 1fr 1fr;
+    gap: 8px;
   }
 
   .event-name {
-    font-size: 18px;
+    font-size: 13px;
+  }
+
+  .event-banner,
+  .notif-thumb,
+  .notif-thumb-pdf {
+    width: 42px;
+    height: 42px;
   }
 
   .attendance-modal {
     width: calc(100% - 24px);
-  }
-
-  .event-media-row {
-    gap: 10px;
   }
 }

@@ -325,3 +325,144 @@
   align-items: center;
   justify-content: center;
 }
+
+
+/* ================================================================
+   RESPONSIVE
+
+   This page had no mobile rules at all before — stat cards and
+   rows would overflow next to the sidebar's 78px collapsed
+   rail. Stat cards stay 3-across but shrink to fit; history
+   rows (not a grid) get tighter padding/fonts to match.
+   ================================================================ */
+
+@media (max-width: 768px) {
+
+  .history-page {
+    padding: 16px;
+  }
+
+  .history-title {
+    font-size: 17px;
+    gap: 6px;
+  }
+
+  .stats-row {
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    padding: 14px 6px;
+    border-radius: 10px;
+    border-top-width: 3px;
+  }
+
+  .stat-number {
+    font-size: 20px;
+    margin-bottom: 4px;
+  }
+
+  .stat-label {
+    font-size: 9px;
+  }
+
+  .section-title {
+    font-size: 14px;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+  }
+
+  .history-section {
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .history-row {
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+  }
+
+  .row-icon {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+    border-radius: 8px;
+  }
+
+  .row-title {
+    font-size: 12px;
+    margin: 0 0 2px 0;
+  }
+
+  .row-meta {
+    font-size: 10px;
+  }
+
+  .payment-details {
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .payment-amount {
+    font-size: 11px;
+  }
+
+  .payment-status-badge {
+    font-size: 8px;
+    padding: 2px 7px;
+  }
+
+  .star-rating {
+    margin-top: 4px;
+  }
+
+  .star {
+    font-size: 12px;
+  }
+
+  .feedback-text {
+    font-size: 11px;
+    padding: 7px;
+    margin-top: 6px;
+  }
+
+  .view-btn {
+    padding: 6px 12px;
+    font-size: 11px;
+  }
+
+  .missed-badge {
+    font-size: 9px;
+    padding: 3px 9px;
+  }
+
+  .show-toggle-btn {
+    padding: 7px 16px;
+    font-size: 11px;
+  }
+
+  .preview-overlay {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 380px) {
+
+  .stats-row {
+    gap: 6px;
+  }
+
+  .stat-number {
+    font-size: 17px;
+  }
+
+  .stat-label {
+    font-size: 8px;
+  }
+
+  .history-row {
+    flex-wrap: wrap;
+  }
+}

@@ -434,3 +434,167 @@
   color: #666;
   cursor: not-allowed;
 }
+
+
+/* ================================================================
+   RESPONSIVE
+
+   Notification cards now stay 2 columns on mobile (matching
+   your screenshot) instead of collapsing to 1. Card internals
+   are scaled down at this breakpoint so two per row actually
+   fit comfortably next to the sidebar's 78px collapsed rail.
+   ================================================================ */
+
+@media (max-width: 768px) {
+
+  .notif-filter-tabs {
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+
+  .notif-tab {
+    padding: 7px 10px;
+    font-size: 12px;
+  }
+
+  .notif-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .notif-card {
+    padding: 10px;
+    border-radius: 12px;
+    gap: 2px;
+  }
+
+  .notif-card-top {
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+  }
+
+  .notif-sender {
+    font-size: 10px;
+  }
+
+  .notif-badge {
+    font-size: 9px;
+    padding: 4px 8px;
+  }
+
+  .notif-event-name {
+    font-size: 14px;
+    margin: 0 0 2px;
+  }
+
+  .notif-event-desc {
+    font-size: 11px;
+    margin: 0 0 8px;
+  }
+
+  .notif-info-grid {
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .notif-info-item {
+    padding: 6px 8px;
+    gap: 2px;
+    border-radius: 8px;
+  }
+
+  .notif-info-label {
+    font-size: 8px;
+  }
+
+  .notif-info-value {
+    font-size: 11px;
+  }
+
+  .payment-info {
+    margin: 0 0 8px;
+  }
+
+  .payment-amount {
+    font-size: 12px;
+  }
+
+  .program-flow {
+    margin-top: 8px;
+    padding-top: 8px;
+  }
+
+  .program-flow-timeline {
+    margin-top: 6px;
+  }
+
+  .program-flow-time {
+    font-size: 10px;
+  }
+
+  .program-flow-title {
+    font-size: 11px;
+  }
+
+  .program-flow-desc {
+    font-size: 10px;
+  }
+
+  .notif-media-stack {
+    gap: 8px;
+  }
+
+  .notif-thumb {
+    width: 48px;
+    height: 48px;
+  }
+
+  .notif-thumb-pdf-icon {
+    font-size: 20px;
+  }
+
+  .notif-action-btn {
+    padding: 9px;
+    font-size: 11px;
+    border-radius: 8px;
+  }
+
+  .notif-completed-msg {
+    padding: 8px;
+    font-size: 11px;
+  }
+
+  .unread-dot {
+    top: 10px;
+    right: 10px;
+  }
+
+  .lightbox-overlay {
+    padding: 15px;
+  }
+
+  .lightbox-img {
+    max-width: 95vw;
+    max-height: 80vh;
+  }
+
+  .lightbox-pdf {
+    height: 80vh;
+  }
+}
+
+@media (max-width: 380px) {
+
+  .notif-grid {
+    gap: 8px;
+  }
+
+  .notif-event-name {
+    font-size: 13px;
+  }
+
+  .notif-thumb {
+    width: 42px;
+    height: 42px;
+  }
+}
