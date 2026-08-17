@@ -736,7 +736,7 @@ const Sidebar = ({ collapsed, onToggle }) => {
           </span>
 
           {!collapsed && (
-            <span>
+            <span className="sidebar-logout-label">
               Logout
             </span>
           )}

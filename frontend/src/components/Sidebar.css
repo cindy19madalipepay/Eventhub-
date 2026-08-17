@@ -761,7 +761,7 @@
 }
 
 
-.sidebar-logout > span:last-child {
+.sidebar-logout-label {
   margin-left: 12px;
 }
 
@@ -872,7 +872,7 @@
 
 
 .sidebar.sidebar-is-collapsed
-.sidebar-logout > span:last-child {
+.sidebar-logout-label {
   display: none;
 }
 
