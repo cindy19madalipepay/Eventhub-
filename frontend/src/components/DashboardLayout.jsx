@@ -10,11 +10,11 @@ const DashboardLayout = () => {
   /* =========================================================
      INITIAL SIDEBAR STATE
 
-     On desktop we default to "expanded" (pushes content over),
-     same as before. On mobile we now default to "collapsed"
-     (the slim 78px icon rail) so the content area gets the
-     full screen width right away — matching desktop, instead
-     of being permanently squeezed into 50vw.
+     Desktop defaults to "expanded" (pushes content over), same
+     as before. Mobile now also just PUSHES content over — same
+     behavior as desktop, not an overlay — but starts collapsed
+     (the slim 78px icon rail) so the content gets the full
+     screen width on load, matching the screenshot you sent.
   ========================================================= */
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
@@ -27,13 +27,10 @@ const DashboardLayout = () => {
   /* =========================================================
      RESET ON BREAKPOINT CROSSING
 
-     If the window is resized across the mobile/desktop
+     Only resets when actually crossing the mobile/desktop
      breakpoint (e.g. rotating a tablet, resizing a browser),
-     reset to that layout's sane default instead of leaving the
-     sidebar stuck mid-overlay or mid-push. We only reset when
-     actually crossing the breakpoint, not on every resize
-     event, so manually toggling the sidebar on desktop isn't
-     undone by unrelated window resizes.
+     not on every resize event — so manually toggling the
+     sidebar isn't undone by unrelated window resizes.
   ========================================================= */
 
   useEffect(() => {
@@ -78,23 +75,6 @@ const DashboardLayout = () => {
         collapsed={sidebarCollapsed}
         onToggle={toggleSidebar}
       />
-
-      {/* =================================================
-          MOBILE BACKDROP
-
-          Only visible on mobile (hidden via CSS on desktop),
-          and only rendered while the sidebar is open. Dims the
-          content behind the sidebar overlay; tapping it closes
-          the sidebar the same as the hamburger does.
-      ================================================= */}
-
-      {!sidebarCollapsed && (
-        <div
-          className="sidebar-backdrop"
-          onClick={toggleSidebar}
-          aria-hidden="true"
-        />
-      )}
 
       <main className="main-content">
         <Outlet />

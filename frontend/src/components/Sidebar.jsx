@@ -3,8 +3,6 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './Sidebar.css';
 
-const MOBILE_BREAKPOINT = 768;
-
 const Icon = ({ type, size = 23 }) => {
   const common = {
     width: size,
@@ -417,27 +415,6 @@ const Sidebar = ({ collapsed, onToggle }) => {
 
 
   /* =========================================================
-     NAV LINK CLICK (MOBILE AUTO-CLOSE)
-
-     On mobile the sidebar opens as an overlay on top of the
-     page content. Without this, after tapping a link the
-     overlay would stay open on top of the new page until the
-     user separately tapped the backdrop or hamburger. This
-     closes it automatically, same as most mobile nav patterns.
-     Desktop behavior (push layout, stays as-is) is untouched.
-  ========================================================= */
-
-  const handleNavLinkClick = () => {
-    const isMobile =
-      window.innerWidth <= MOBILE_BREAKPOINT;
-
-    if (isMobile && !collapsed) {
-      onToggle();
-    }
-  };
-
-
-  /* =========================================================
      RENDER
   ========================================================= */
 
@@ -497,19 +474,6 @@ const Sidebar = ({ collapsed, onToggle }) => {
           className="profile-trigger"
           onClick={toggleProfileDropdown}
         >
-
-          {profilePhoto ? (
-            <img
-              src={profilePhoto}
-              alt="Profile"
-              className="profile-avatar profile-photo"
-            />
-          ) : (
-            <div className="profile-avatar">
-              {AVATAR_EMOJI}
-            </div>
-          )}
-
 
           {!collapsed && (
             <div className="profile-text">
@@ -694,7 +658,6 @@ const Sidebar = ({ collapsed, onToggle }) => {
           <NavLink
             key={item.path}
             to={item.path}
-            onClick={handleNavLinkClick}
             className={({ isActive }) =>
               `sidebar-link ${
                 isActive

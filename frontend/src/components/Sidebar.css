@@ -237,8 +237,6 @@
 
   display: flex;
   flex-direction: column;
-
-  margin-left: 12px;
 }
 
 
@@ -882,34 +880,28 @@
 /* =========================================================
    MOBILE
 
-   The sidebar no longer splits the screen 50/50 with the
-   content. Collapsed = a slim 78px icon rail (same idea as
-   desktop's collapsed state) that content is pushed over by.
-   Expanded = the sidebar becomes a fixed-width overlay that
-   floats ON TOP of the full-width content behind it, dimmed
-   by the .sidebar-backdrop element (see DashboardLayout.css) —
-   tap the backdrop, the hamburger, or any nav link to close it.
+   Same push-layout behavior as desktop — no overlay, no
+   backdrop. Collapsed = a slim 78px icon rail that content is
+   pushed over by (this is the default on load). Expanded =
+   the sidebar widens and content is pushed over further,
+   exactly like the desktop behavior, just with a narrower
+   expanded width sized for phone screens.
 ========================================================= */
 
 @media (max-width: 768px) {
 
   .sidebar {
-    /* Expanded width on mobile — a fixed-feeling overlay
-       rather than a vw-based split with the content. */
-    width: min(280px, 82vw);
+    /* Expanded width on mobile — narrower than desktop's
+       260px since phone screens are tighter, but still a
+       normal push layout, not an overlay. */
+    width: 210px;
 
     height: 100dvh;
-
-    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.3);
   }
 
 
   .sidebar.sidebar-is-collapsed {
     width: 78px;
-
-    /* Collapsed rail doesn't need the overlay shadow since
-       there's no backdrop behind it. */
-    box-shadow: none;
   }
 
 
@@ -961,11 +953,6 @@
     height: 44px;
 
     font-size: 20px;
-  }
-
-
-  .profile-text {
-    margin-left: 8px;
   }
 
 
