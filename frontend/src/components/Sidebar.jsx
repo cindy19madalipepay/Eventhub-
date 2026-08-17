@@ -118,14 +118,6 @@ const Icon = ({ type, size = 23 }) => {
 };
 
 
-/* =========================================================
-   AVATAR EMOJI
-   Used whenever the user has no uploaded profile photo, in
-   place of the old "initials letter on green circle" look.
-========================================================= */
-const AVATAR_EMOJI = '🙂';
-
-
 const Sidebar = ({ collapsed, onToggle }) => {
   const navigate = useNavigate();
 
@@ -569,7 +561,7 @@ const Sidebar = ({ collapsed, onToggle }) => {
                       />
                     ) : (
                       <div className="edit-profile-photo edit-photo-placeholder">
-                        {AVATAR_EMOJI}
+                        {nameInitial}
                       </div>
                     )}
 
