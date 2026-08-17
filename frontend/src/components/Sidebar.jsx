@@ -172,6 +172,12 @@ const Sidebar = ({ collapsed, onToggle }) => {
   const isAdmin = role === 'admin';
   const isDepartmentHead = role === 'department_head';
 
+  // Avatar initial — shown in the profile circle whenever there's no
+  // uploaded photo. Derived directly from firstName, so it updates
+  // automatically the moment the name is edited and saved.
+  const nameInitial =
+    firstName.trim().charAt(0).toUpperCase() || 'U';
+
 
   /* =========================================================
      ROLE
@@ -474,6 +480,19 @@ const Sidebar = ({ collapsed, onToggle }) => {
           className="profile-trigger"
           onClick={toggleProfileDropdown}
         >
+
+          {profilePhoto ? (
+            <img
+              src={profilePhoto}
+              alt="Profile"
+              className="profile-avatar profile-photo"
+            />
+          ) : (
+            <div className="profile-avatar">
+              {nameInitial}
+            </div>
+          )}
+
 
           {!collapsed && (
             <div className="profile-text">

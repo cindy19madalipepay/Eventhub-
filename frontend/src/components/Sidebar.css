@@ -237,6 +237,8 @@
 
   display: flex;
   flex-direction: column;
+
+  margin-left: 12px;
 }
 
 
@@ -953,6 +955,11 @@
     height: 44px;
 
     font-size: 20px;
+  }
+
+
+  .profile-text {
+    margin-left: 8px;
   }
 
 
