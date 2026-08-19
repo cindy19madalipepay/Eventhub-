@@ -87,15 +87,6 @@ const Icon = ({ type, size = 23 }) => {
         </svg>
       );
 
-    case 'menu':
-      return (
-        <svg {...common} strokeWidth="2.2">
-          <path d="M4 6h16" />
-          <path d="M4 12h16" />
-          <path d="M4 18h16" />
-        </svg>
-      );
-
     case 'close':
       return (
         <svg {...common}>
@@ -118,7 +109,7 @@ const Icon = ({ type, size = 23 }) => {
 };
 
 
-const Sidebar = ({ collapsed, onToggle }) => {
+const Sidebar = () => {
   const navigate = useNavigate();
 
   /* =========================================================
@@ -243,8 +234,7 @@ const Sidebar = ({ collapsed, onToggle }) => {
     {
       label: 'Notifications',
       path: '/student/notifications',
-      icon: 'bell',
-      badge: 1
+      icon: 'bell'
     },
     {
       label: 'My Events',
@@ -272,8 +262,6 @@ const Sidebar = ({ collapsed, onToggle }) => {
   ========================================================= */
 
   const toggleProfileDropdown = () => {
-    if (collapsed) return;
-
     setProfileOpen(prev => {
       const next = !prev;
 
@@ -417,13 +405,7 @@ const Sidebar = ({ collapsed, onToggle }) => {
   ========================================================= */
 
   return (
-    <aside
-      className={`sidebar ${
-        collapsed
-          ? 'sidebar-is-collapsed'
-          : ''
-      }`}
-    >
+    <aside className="sidebar">
 
       {/* =================================================
           HEADER
@@ -437,26 +419,11 @@ const Sidebar = ({ collapsed, onToggle }) => {
             EH
           </div>
 
-          {!collapsed && (
-            <span className="eventhub-name">
-              EventHub
-            </span>
-          )}
+          <span className="eventhub-name">
+            EventHub
+          </span>
 
         </div>
-
-
-        <button
-          type="button"
-          className="sidebar-toggle"
-          onClick={onToggle}
-          aria-label="Toggle sidebar"
-        >
-          <Icon
-            type="menu"
-            size={26}
-          />
-        </button>
 
       </div>
 
@@ -486,26 +453,22 @@ const Sidebar = ({ collapsed, onToggle }) => {
           )}
 
 
-          {!collapsed && (
-            <div className="profile-text">
+          <div className="profile-text">
 
-              <strong>
-                {fullName}
-              </strong>
+            <strong>
+              {fullName}
+            </strong>
 
-              <span>
-                {roleName}
-              </span>
-
-            </div>
-          )}
-
-
-          {!collapsed && (
-            <span className="profile-arrow">
-              {profileOpen ? '⌃' : '⌄'}
+            <span>
+              {roleName}
             </span>
-          )}
+
+          </div>
+
+
+          <span className="profile-arrow">
+            {profileOpen ? '⌃' : '⌄'}
+          </span>
 
         </button>
 
@@ -514,7 +477,7 @@ const Sidebar = ({ collapsed, onToggle }) => {
             PROFILE DROPDOWN
         ================================================= */}
 
-        {profileOpen && !collapsed && (
+        {profileOpen && (
           <div className="profile-dropdown">
 
             {!editOpen ? (
@@ -676,11 +639,6 @@ const Sidebar = ({ collapsed, onToggle }) => {
                   : ''
               }`
             }
-            title={
-              collapsed
-                ? item.label
-                : ''
-            }
           >
 
             <span className="sidebar-icon">
@@ -690,19 +648,9 @@ const Sidebar = ({ collapsed, onToggle }) => {
               />
             </span>
 
-
-            {!collapsed && (
-              <span className="sidebar-link-label">
-                {item.label}
-              </span>
-            )}
-
-
-            {!collapsed && item.badge && (
-              <span className="notification-badge">
-                {item.badge}
-              </span>
-            )}
+            <span className="sidebar-link-label">
+              {item.label}
+            </span>
 
           </NavLink>
 
@@ -721,11 +669,6 @@ const Sidebar = ({ collapsed, onToggle }) => {
           type="button"
           className="sidebar-logout"
           onClick={handleLogout}
-          title={
-            collapsed
-              ? 'Logout'
-              : ''
-          }
         >
 
           <span className="sidebar-icon">
@@ -735,11 +678,9 @@ const Sidebar = ({ collapsed, onToggle }) => {
             />
           </span>
 
-          {!collapsed && (
-            <span className="sidebar-logout-label">
-              Logout
-            </span>
-          )}
+          <span className="sidebar-logout-label">
+            Logout
+          </span>
 
         </button>
 

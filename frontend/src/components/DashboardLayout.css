@@ -34,7 +34,7 @@
     0 8px 24px -8px rgba(106, 143, 120, 0.25);
 
   --sidebar-width: 260px;
-  --sidebar-collapsed-width: 78px;
+  --sidebar-width-mobile: 210px;
 }
 
 
@@ -107,24 +107,6 @@ body {
 
     overflow-x: hidden;
     overflow-y: auto;
-
-    transition:
-      margin-left 0.25s ease,
-      width 0.25s ease;
-  }
-
-
-  .dashboard-layout.sidebar-collapsed
-  .main-content {
-
-    margin-left:
-      var(--sidebar-collapsed-width);
-
-    width:
-      calc(
-        100% -
-        var(--sidebar-collapsed-width)
-      );
   }
 
 }
@@ -133,10 +115,8 @@ body {
 /* =========================================================
    MOBILE
 
-   Same push-layout behavior as desktop — content is shifted
-   over by the sidebar's current width, no overlay/backdrop.
-   Defaults to the slim 78px collapsed rail (set in
-   DashboardLayout.jsx) so content gets the full width on load.
+   Sidebar is now always shown at full width (210px) — content
+   is always pushed over by that amount, no collapsed rail.
 ========================================================= */
 
 @media (max-width: 768px) {
@@ -163,12 +143,12 @@ body {
 
     position: relative;
 
-    margin-left: var(--sidebar-collapsed-width);
+    margin-left: var(--sidebar-width-mobile);
 
     width:
       calc(
         100% -
-        var(--sidebar-collapsed-width)
+        var(--sidebar-width-mobile)
       );
 
     min-height: 100dvh;
@@ -181,24 +161,6 @@ body {
     overflow-y: auto;
 
     -webkit-overflow-scrolling: touch;
-
-    transition: margin-left 0.25s ease, width 0.25s ease;
-  }
-
-
-  /* When the sidebar is expanded/opened on mobile, it pushes
-     the content over just like desktop does — just with a
-     narrower sidebar width sized for phone screens (see
-     Sidebar.css mobile rules for the actual expanded width). */
-
-  .dashboard-layout.sidebar-expanded .main-content {
-
-    /* Matches the mobile expanded sidebar width set in
-       Sidebar.css (210px) — keep these two in sync if you
-       change one. */
-    margin-left: 210px;
-
-    width: calc(100% - 210px);
   }
 
 
