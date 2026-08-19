@@ -195,11 +195,11 @@ body {
   .dashboard-layout.sidebar-expanded .main-content {
 
     /* Matches the mobile expanded sidebar width set in
-       Sidebar.css (210px) — keep these two in sync if you
-       change one. */
-    margin-left: 210px;
+       Sidebar.css (30vw) — keep these two in sync if you
+       change one. Sidebar 30%, content 70%. */
+    margin-left: 30vw;
 
-    width: calc(100% - 210px);
+    width: 70vw;
   }
 
 

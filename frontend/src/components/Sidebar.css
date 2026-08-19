@@ -852,10 +852,10 @@
 @media (max-width: 768px) {
 
   .sidebar {
-    /* Expanded width on mobile — narrower than desktop's
-       260px since phone screens are tighter, but still a
-       normal push layout, not an overlay. */
-    width: 210px;
+    /* Expanded width on mobile — 30% of the screen, so
+       content keeps the remaining 70%. Still a normal push
+       layout, not an overlay. */
+    width: 30vw;
 
     height: 100dvh;
   }
@@ -905,81 +905,87 @@
   .profile-trigger {
     min-height: 92px;
 
-    padding: 14px 10px;
+    padding: 10px 6px;
   }
 
 
   .profile-avatar {
-    width: 44px;
-    height: 44px;
+    width: 38px;
+    height: 38px;
 
-    font-size: 20px;
+    font-size: 17px;
   }
 
 
   .profile-text {
-    margin-left: 8px;
+    margin-left: 6px;
+
+    min-width: 0;
   }
 
 
   .profile-text strong {
-    max-width: 150px;
+    max-width: 90px;
 
-    font-size: 14px;
+    font-size: 12px;
   }
 
 
   .profile-text span {
-    font-size: 12px;
+    font-size: 10px;
   }
 
 
   .profile-arrow {
-    font-size: 12px;
+    display: none;
   }
 
 
   /* NAVIGATION */
 
   .sidebar-navigation {
-    padding: 14px 8px;
+    padding: 12px 6px;
 
     gap: 3px;
   }
 
 
   .sidebar-link {
-    min-height: 55px;
+    min-height: 50px;
 
-    padding: 0 7px;
+    padding: 0 5px;
   }
 
 
   .sidebar-link-label {
-    margin-left: 7px;
+    margin-left: 5px;
 
-    font-size: 13px;
+    font-size: 11px;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
   }
 
 
   .sidebar-icon {
-    width: 27px;
+    width: 22px;
   }
 
 
   /* LOGOUT */
 
   .sidebar-footer {
-    padding: 8px;
+    padding: 6px;
   }
 
 
   .sidebar-logout {
-    min-height: 52px;
+    min-height: 48px;
 
-    padding: 0 7px;
+    padding: 0 5px;
 
-    font-size: 13px;
+    font-size: 11px;
   }
 
 
