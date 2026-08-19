@@ -238,6 +238,13 @@ const Sidebar = ({ collapsed, isMobile, onToggle }) => {
       const uploadPreset =
         import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
+      // TEMPORARY DEBUG — remove once upload works.
+      // Open DevTools Console (F12) on the LIVE site and try
+      // uploading again; this prints exactly what the deployed
+      // build thinks these two values are.
+      console.log('DEBUG cloudName:', cloudName);
+      console.log('DEBUG uploadPreset:', uploadPreset);
+
       if (!cloudName || !uploadPreset) {
         alert('Cloudinary settings are missing. Check your .env file.');
         return;
