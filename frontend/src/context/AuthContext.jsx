@@ -7,10 +7,18 @@ import {
 
 const AuthContext = createContext(null);
 
-// Fields the user can edit locally that should survive logout/login.
-// NOTE: these must match the actual keys on the user object
-// (snake_case, same as what the backend / Sidebar.jsx use).
-const EDITABLE_FIELDS = ['first_name', 'last_name', 'profile_photo'];
+/*
+  These MUST match the actual fields returned by the backend/database.
+  Your backend uses:
+    first_name
+    last_name
+    profile_picture
+*/
+const EDITABLE_FIELDS = [
+  'first_name',
+  'last_name',
+  'profile_picture',
+];
 
 export const AuthProvider = ({ children }) => {
 
@@ -25,25 +33,22 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
 
-    const savedToken =
-      localStorage.getItem(
-        'eventhub_token'
-      );
+    const savedToken = localStorage.getItem(
+      'eventhub_token'
+    );
 
-    const savedUser =
-      localStorage.getItem(
-        'eventhub_user'
-      );
+    const savedUser = localStorage.getItem(
+      'eventhub_user'
+    );
 
     if (savedToken && savedUser) {
 
-      setToken(savedToken);
-
       try {
 
-        setUser(
-          JSON.parse(savedUser)
-        );
+        const parsedUser = JSON.parse(savedUser);
+
+        setToken(savedToken);
+        setUser(parsedUser);
 
       } catch (error) {
 
@@ -56,6 +61,9 @@ export const AuthProvider = ({ children }) => {
           'eventhub_user'
         );
 
+        localStorage.removeItem(
+          'eventhub_token'
+        );
       }
     }
 
@@ -73,32 +81,48 @@ export const AuthProvider = ({ children }) => {
     tokenData
   ) => {
 
-    // Check if we have a locally-edited profile for this same user
-    // (saved before a previous logout) and re-apply those edits on
-    // top of the fresh server data, so edits aren't lost on re-login.
-    let mergedUserData = userData;
+    let mergedUserData = {
+      ...userData,
+    };
 
     try {
 
-      const lastSavedRaw = localStorage.getItem(
-        'eventhub_last_edited_user'
-      );
+      const lastSavedRaw =
+        localStorage.getItem(
+          'eventhub_last_edited_user'
+        );
 
       if (lastSavedRaw) {
 
-        const lastSaved = JSON.parse(lastSavedRaw);
+        const lastSaved =
+          JSON.parse(lastSavedRaw);
 
-        // Only re-apply if it's the same account
-        if (lastSaved && lastSaved.id === userData.id) {
-
-          mergedUserData = { ...userData };
+        /*
+          Only restore the saved profile if it belongs
+          to the same user.
+        */
+        if (
+          lastSaved &&
+          String(lastSaved.id) ===
+            String(userData.user_id || userData.id)
+        ) {
 
           EDITABLE_FIELDS.forEach((field) => {
-            if (lastSaved[field] !== undefined) {
-              mergedUserData[field] = lastSaved[field];
+
+            if (
+              lastSaved[field] !== undefined &&
+              lastSaved[field] !== null
+            ) {
+
+              mergedUserData[field] =
+                lastSaved[field];
+
             }
+
           });
+
         }
+
       }
 
     } catch (error) {
@@ -109,6 +133,11 @@ export const AuthProvider = ({ children }) => {
       );
 
     }
+
+
+    /* =======================================================
+       SAVE LOGIN
+    ======================================================= */
 
     setUser(mergedUserData);
     setToken(tokenData);
@@ -142,9 +171,13 @@ export const AuthProvider = ({ children }) => {
       'eventhub_user'
     );
 
-    // NOTE: 'eventhub_last_edited_user' is intentionally NOT removed here,
-    // so edited profile info (name/avatar) survives logout and is
-    // restored on the next login.
+    /*
+      IMPORTANT:
+      We DO NOT remove eventhub_last_edited_user.
+
+      This allows the updated profile picture/name
+      to be restored after the next login.
+    */
   };
 
 
@@ -162,38 +195,67 @@ export const AuthProvider = ({ children }) => {
         return previousUser;
       }
 
+      /*
+        Always use profile_picture,
+        NOT profile_photo.
+      */
       const mergedUser = {
         ...previousUser,
         ...updatedFields,
       };
 
+
+      /* =====================================================
+         SAVE CURRENT USER
+      ===================================================== */
+
       localStorage.setItem(
         'eventhub_user',
-        JSON.stringify(
-          mergedUser
-        )
+        JSON.stringify(mergedUser)
       );
 
-      // Persist just the editable fields separately, keyed by user id,
-      // so they can be restored on the next login even after logout
-      // clears 'eventhub_user'.
-      const editedSubset = { id: mergedUser.id };
+
+      /* =====================================================
+         SAVE EDITABLE PROFILE DATA
+      ===================================================== */
+
+      const userId =
+        mergedUser.user_id ||
+        mergedUser.id;
+
+      const editedSubset = {
+        id: userId,
+      };
 
       EDITABLE_FIELDS.forEach((field) => {
-        if (mergedUser[field] !== undefined) {
-          editedSubset[field] = mergedUser[field];
+
+        if (
+          mergedUser[field] !== undefined
+        ) {
+
+          editedSubset[field] =
+            mergedUser[field];
+
         }
+
       });
+
 
       localStorage.setItem(
         'eventhub_last_edited_user',
         JSON.stringify(editedSubset)
       );
 
+
       return mergedUser;
+
     });
   };
 
+
+  /* =========================================================
+     CONTEXT
+  ========================================================= */
 
   return (
     <AuthContext.Provider
