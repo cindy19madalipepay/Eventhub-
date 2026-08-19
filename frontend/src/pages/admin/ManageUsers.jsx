@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import DashboardLayout from '../../components/DashboardLayout';
 import api from '../../utils/api';
 import toast from 'react-hot-toast';
 import './ManageUsers.css';
@@ -143,7 +142,7 @@ const ManageUsers = () => {
   };
 
   return (
-    <DashboardLayout>
+    <>
       <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
           <h2>Manage Users</h2>
@@ -373,7 +372,7 @@ const ManageUsers = () => {
           </div>
         </div>
       )}
-    </DashboardLayout>
+    </>
   );
 };
 
