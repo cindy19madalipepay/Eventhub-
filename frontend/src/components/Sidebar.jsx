@@ -199,7 +199,7 @@ const Sidebar = ({ collapsed, onToggle }) => {
     },
     {
       label: 'Departments',
-      path: '/admin/users',
+      path: '/admin/attendance',
       icon: 'building'
     },
     {
