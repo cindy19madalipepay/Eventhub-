@@ -1,22 +1,27 @@
 /* =========================================================
    EVENTHUB SIDEBAR
 
-   Width comes entirely from the --sidebar-w CSS variable,
-   which is set on the parent .dashboard-layout wrapper (in
-   DashboardLayout.jsx) based on React state. This file no
-   longer sets any width directly, so there is only ONE place
-   in the app deciding the sidebar's width — no more chance of
-   CSS media queries and JS state disagreeing.
+   The sidebar is a flex ITEM inside .dashboard-layout (see
+   DashboardLayout.css), not a position:fixed element anymore.
+   Its width comes from --sidebar-w (set in DashboardLayout.jsx)
+   and flex-shrink:0 stops it from ever being squeezed by
+   .main-content. position:sticky keeps it pinned to the
+   viewport while the page scrolls, without any of the old
+   margin-left / calc() math.
 ========================================================= */
 
 .sidebar {
-  position: fixed;
+  position: sticky;
   top: 0;
-  left: 0;
-  bottom: 0;
+
+  flex-shrink: 0;
 
   width: var(--sidebar-w, 260px);
+  min-width: var(--sidebar-w, 260px);
+  max-width: var(--sidebar-w, 260px);
+
   height: 100vh;
+  align-self: flex-start;
 
   z-index: 2000;
 
@@ -604,6 +609,7 @@
   padding: 18px 10px;
 
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 
@@ -681,6 +687,10 @@
   font-weight: 500;
 
   white-space: nowrap;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
 }
 
 
@@ -736,13 +746,19 @@
 
 .sidebar-logout-label {
   margin-left: 12px;
+
+  white-space: nowrap;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
 }
 
 
 /* =========================================================
-   COLLAPSED — applies at any screen size, since width is
-   already handled by the --sidebar-w variable. These rules
-   just handle what to hide/center when collapsed.
+   COLLAPSED — applies at any screen size. Width itself is
+   already handled by --sidebar-w; these rules just center /
+   hide content for the narrow icon-rail state.
 ========================================================= */
 
 .sidebar.sidebar-is-collapsed .sidebar-header {
@@ -842,9 +858,9 @@
 /* =========================================================
    MOBILE
 
-   Width is already handled by --sidebar-w — these rules only
-   adjust spacing/font sizes so things fit comfortably on a
-   smaller physical screen, both expanded and collapsed.
+   Width is handled by --sidebar-w (30% expanded, 78px
+   collapsed) — these rules only adjust spacing/font sizes to
+   fit that narrower physical screen.
 ========================================================= */
 
 @media (max-width: 768px) {
@@ -859,68 +875,68 @@
   .sidebar-header {
     height: 96px;
 
-    padding: 12px 8px;
+    padding: 10px 6px;
 
-    gap: 5px;
+    gap: 4px;
   }
 
 
   .eventhub-logo {
-    width: 44px;
-    height: 44px;
+    width: 40px;
+    height: 40px;
 
-    font-size: 18px;
+    font-size: 16px;
 
-    border-radius: 10px;
+    border-radius: 9px;
   }
 
 
   .eventhub-name {
-    margin-left: 6px;
+    margin-left: 5px;
 
-    font-size: 18px;
+    font-size: 15px;
   }
 
 
   .sidebar-toggle {
-    width: 38px;
-    height: 38px;
+    width: 34px;
+    height: 34px;
   }
 
 
   /* PROFILE */
 
   .profile-trigger {
-    min-height: 92px;
+    min-height: 88px;
 
-    padding: 10px 6px;
+    padding: 10px 5px;
   }
 
 
   .profile-avatar {
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
 
-    font-size: 17px;
+    font-size: 15px;
   }
 
 
   .profile-text {
-    margin-left: 6px;
+    margin-left: 5px;
 
     min-width: 0;
   }
 
 
   .profile-text strong {
-    max-width: 130px;
+    max-width: 100%;
 
-    font-size: 13px;
+    font-size: 11px;
   }
 
 
   .profile-text span {
-    font-size: 11px;
+    font-size: 9px;
   }
 
 
@@ -929,56 +945,52 @@
   }
 
 
-  /* NAVIGATION — bigger tap targets on mobile */
+  /* NAVIGATION */
 
   .sidebar-navigation {
-    padding: 12px 6px;
+    padding: 10px 5px;
 
     gap: 4px;
   }
 
 
   .sidebar-link {
-    min-height: 52px;
+    min-height: 50px;
 
-    padding: 0 10px;
+    padding: 0 6px;
   }
 
 
   .sidebar-link-label {
-    margin-left: 10px;
+    margin-left: 6px;
 
-    font-size: 14px;
-
-    overflow: hidden;
-
-    text-overflow: ellipsis;
+    font-size: 11px;
   }
 
 
   .sidebar-icon {
-    width: 24px;
+    width: 20px;
   }
 
 
   /* LOGOUT */
 
   .sidebar-footer {
-    padding: 8px 6px;
+    padding: 6px 5px;
   }
 
 
   .sidebar-logout {
-    min-height: 50px;
+    min-height: 46px;
 
-    padding: 0 10px;
+    padding: 0 6px;
 
-    font-size: 14px;
+    font-size: 11px;
   }
 
 
   /* =====================================================
-     COLLAPSED MOBILE (slim icon rail)
+     COLLAPSED MOBILE (78px icon rail)
   ===================================================== */
 
   .sidebar.sidebar-is-collapsed
@@ -1010,23 +1022,23 @@
   /* PROFILE DROPDOWN on the narrower mobile expanded width */
 
   .profile-dropdown {
-    left: 8px;
+    left: 6px;
 
-    width: calc(100% - 16px);
+    width: calc(100% - 12px);
   }
 
 
   .edit-photo-wrapper {
-    width: 60px;
-    height: 60px;
+    width: 56px;
+    height: 56px;
   }
 
 
   .edit-profile-photo {
-    width: 60px;
-    height: 60px;
+    width: 56px;
+    height: 56px;
 
-    font-size: 22px;
+    font-size: 20px;
   }
 
 }
@@ -1039,18 +1051,12 @@
 @media (max-width: 380px) {
 
   .eventhub-name {
-    font-size: 16px;
-  }
-
-
-  .sidebar-toggle {
-    width: 35px;
-    height: 35px;
+    font-size: 13px;
   }
 
 
   .sidebar-link-label {
-    font-size: 12px;
+    font-size: 10px;
   }
 
 }

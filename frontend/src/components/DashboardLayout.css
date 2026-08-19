@@ -1,5 +1,12 @@
 /* =========================================================
    EVENTHUB DASHBOARD LAYOUT
+
+   This uses FLEXBOX, not position:fixed + margin-left. The
+   sidebar and main-content are flex siblings: the sidebar
+   takes exactly --sidebar-w, and .main-content (flex: 1)
+   automatically fills whatever space is left. There is no
+   calc(), no margin-left, and nothing that can go out of sync
+   between the two — the browser does the math.
 ========================================================= */
 
 :root {
@@ -65,16 +72,12 @@ body {
 
 
 /* =========================================================
-   MAIN LAYOUT
-
-   --sidebar-w is set inline on this wrapper from React
-   (DashboardLayout.jsx), based on collapsed/mobile state.
-   Both the sidebar and .main-content read from this single
-   variable, so they can never disagree on width.
+   MAIN LAYOUT — flex container
 ========================================================= */
 
 .dashboard-layout {
-  position: relative;
+  display: flex;
+  align-items: stretch;
 
   width: 100%;
   min-height: 100vh;
@@ -82,15 +85,14 @@ body {
   background: var(--bg);
 
   text-align: left;
+
+  overflow-x: hidden;
 }
 
 
 .dashboard-layout .main-content {
-  min-height: 100vh;
-
-  margin-left: var(--sidebar-w, 260px);
-
-  width: calc(100% - var(--sidebar-w, 260px));
+  flex: 1 1 0%;
+  min-width: 0;
 
   padding: 30px;
 
@@ -98,14 +100,8 @@ body {
 
   text-align: left;
 
-  display: block;
-
   overflow-x: hidden;
   overflow-y: auto;
-
-  transition:
-    margin-left 0.25s ease,
-    width 0.25s ease;
 }
 
 
@@ -125,26 +121,14 @@ body {
 
 
   .dashboard-layout {
-    position: relative;
-
-    width: 100%;
-
     min-height: 100dvh;
   }
 
 
   .dashboard-layout .main-content {
-
-    position: relative;
-
-    min-height: 100dvh;
-
     padding: 24px 16px;
 
     -webkit-overflow-scrolling: touch;
-
-    /* margin-left / width still come from --sidebar-w above —
-       no separate override needed here anymore. */
   }
 
 

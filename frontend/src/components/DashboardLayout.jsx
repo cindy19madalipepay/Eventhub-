@@ -7,22 +7,6 @@ const MOBILE_BREAKPOINT = 768;
 
 const DashboardLayout = () => {
 
-  /* =========================================================
-     RESPONSIVE STATE
-
-     isMobile         -> are we currently under the breakpoint
-     sidebarCollapsed -> is the sidebar showing the slim icon
-                         rail (true) or the full labeled view
-                         (false)
-
-     Both are driven from JS only. The actual pixel width of
-     the sidebar is computed once, below, and passed down as a
-     single CSS variable (--sidebar-w) that both the sidebar
-     and the main content read from. This means there is only
-     ONE place deciding the width — no more chance of CSS
-     media queries and JS state disagreeing with each other.
-  ========================================================= */
-
   const getIsMobile = () =>
     typeof window !== 'undefined' &&
     window.innerWidth <= MOBILE_BREAKPOINT;
@@ -32,17 +16,6 @@ const DashboardLayout = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     () => getIsMobile()
   );
-
-
-  /* =========================================================
-     RESET ON BREAKPOINT CROSSING
-
-     Only resets sidebarCollapsed when actually crossing the
-     mobile/desktop breakpoint (e.g. rotating a tablet,
-     resizing a browser window) — not on every resize event —
-     so manually toggling the sidebar isn't undone by
-     unrelated window resizes.
-  ========================================================= */
 
   useEffect(() => {
 
@@ -67,26 +40,28 @@ const DashboardLayout = () => {
 
   }, []);
 
-
   const toggleSidebar = () => {
     setSidebarCollapsed(prev => !prev);
   };
 
 
   /* =========================================================
-     SIDEBAR WIDTH — single source of truth
+     SIDEBAR WIDTH
 
-     Fixed px values only (no vw units, which behave
-     inconsistently across mobile browsers). This value is
-     handed to both the sidebar and the main content via a CSS
-     variable on the shared wrapper, so they can never fall out
-     of sync with each other.
+     Collapsed         -> 78px icon rail (desktop AND mobile)
+     Expanded, mobile  -> 30% of the viewport. Content gets the
+                          remaining 70% AUTOMATICALLY because
+                          the layout below is flexbox, not
+                          margin/calc-based — there is nothing
+                          for these two numbers to fall out of
+                          sync on.
+     Expanded, desktop -> 260px fixed
   ========================================================= */
 
   const sidebarWidth = sidebarCollapsed
     ? '78px'
     : isMobile
-      ? '240px'
+      ? '30%'
       : '260px';
 
 

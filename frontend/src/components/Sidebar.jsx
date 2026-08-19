@@ -121,16 +121,8 @@ const Icon = ({ type, size = 23 }) => {
 const Sidebar = ({ collapsed, isMobile, onToggle }) => {
   const navigate = useNavigate();
 
-  /* =========================================================
-     AUTH CONTEXT — single source of truth for the logged-in
-     user.
-  ========================================================= */
-
   const { user, logout, updateUser } = useAuth();
 
-  // profileOpen = the small dropdown under the avatar is open
-  // editOpen    = inside that same dropdown, showing the edit
-  //               form instead of just the "Edit Profile" link
   const [profileOpen, setProfileOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
 
@@ -141,10 +133,6 @@ const Sidebar = ({ collapsed, isMobile, onToggle }) => {
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-
-  /* =========================================================
-     USER INFORMATION
-  ========================================================= */
 
   const firstName = user?.first_name || 'User';
   const lastName = user?.last_name || '';
@@ -164,16 +152,9 @@ const Sidebar = ({ collapsed, isMobile, onToggle }) => {
   const isAdmin = role === 'admin';
   const isDepartmentHead = role === 'department_head';
 
-  // Avatar initial — shown in the profile circle whenever there's no
-  // uploaded photo. Derived directly from firstName, so it updates
-  // automatically the moment the name is edited and saved.
   const nameInitial =
     firstName.trim().charAt(0).toUpperCase() || 'U';
 
-
-  /* =========================================================
-     ROLE
-  ========================================================= */
 
   const roleName = isAdmin
     ? 'Admin'
@@ -182,79 +163,27 @@ const Sidebar = ({ collapsed, isMobile, onToggle }) => {
       : 'Student';
 
 
-  /* =========================================================
-     MENU
-  ========================================================= */
-
   const adminItems = [
-    {
-      label: 'Overview',
-      path: '/admin/dashboard',
-      icon: 'grid'
-    },
-    {
-      label: 'Create Event',
-      path: '/admin/create-event',
-      icon: 'calendar'
-    },
-    {
-      label: 'Departments',
-      path: '/admin/attendance',
-      icon: 'building'
-    },
-    {
-      label: 'Receipts',
-      path: '/admin/receipts',
-      icon: 'receipt'
-    },
-    {
-      label: 'Evaluation Results',
-      path: '/admin/evaluation',
-      icon: 'chart'
-    }
+    { label: 'Overview', path: '/admin/dashboard', icon: 'grid' },
+    { label: 'Create Event', path: '/admin/create-event', icon: 'calendar' },
+    { label: 'Departments', path: '/admin/attendance', icon: 'building' },
+    { label: 'Receipts', path: '/admin/receipts', icon: 'receipt' },
+    { label: 'Evaluation Results', path: '/admin/evaluation', icon: 'chart' }
   ];
 
 
   const departmentItems = [
-    {
-      label: 'Overview',
-      path: '/dept/dashboard',
-      icon: 'grid'
-    },
-    {
-      label: 'Attendance',
-      path: '/dept/attendance',
-      icon: 'calendar'
-    },
-    {
-      label: 'Reports',
-      path: '/dept/reports',
-      icon: 'chart'
-    },
-    {
-      label: 'Evaluation',
-      path: '/dept/evaluation',
-      icon: 'receipt'
-    }
+    { label: 'Overview', path: '/dept/dashboard', icon: 'grid' },
+    { label: 'Attendance', path: '/dept/attendance', icon: 'calendar' },
+    { label: 'Reports', path: '/dept/reports', icon: 'chart' },
+    { label: 'Evaluation', path: '/dept/evaluation', icon: 'receipt' }
   ];
 
 
   const studentItems = [
-    {
-      label: 'Notifications',
-      path: '/student/notifications',
-      icon: 'bell'
-    },
-    {
-      label: 'My Events',
-      path: '/student/my-events',
-      icon: 'calendar'
-    },
-    {
-      label: 'History',
-      path: '/student/history',
-      icon: 'history'
-    }
+    { label: 'Notifications', path: '/student/notifications', icon: 'bell' },
+    { label: 'My Events', path: '/student/my-events', icon: 'calendar' },
+    { label: 'History', path: '/student/history', icon: 'history' }
   ];
 
 
@@ -265,10 +194,6 @@ const Sidebar = ({ collapsed, isMobile, onToggle }) => {
         ? departmentItems
         : studentItems;
 
-
-  /* =========================================================
-     PROFILE TRIGGER
-  ========================================================= */
 
   const toggleProfileDropdown = () => {
     if (collapsed) return;
@@ -285,10 +210,6 @@ const Sidebar = ({ collapsed, isMobile, onToggle }) => {
   };
 
 
-  /* =========================================================
-     OPEN EDIT PROFILE
-  ========================================================= */
-
   const openEditProfile = () => {
     setEditFirstName(firstName);
     setEditLastName(lastName);
@@ -302,10 +223,6 @@ const Sidebar = ({ collapsed, isMobile, onToggle }) => {
     setEditOpen(false);
   };
 
-
-  /* =========================================================
-     CLOUDINARY UPLOAD
-  ========================================================= */
 
   const handlePhotoChange = async (event) => {
     const file = event.target.files?.[0];
@@ -322,10 +239,7 @@ const Sidebar = ({ collapsed, isMobile, onToggle }) => {
         import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
       if (!cloudName || !uploadPreset) {
-        alert(
-          'Cloudinary settings are missing. Check your .env file.'
-        );
-
+        alert('Cloudinary settings are missing. Check your .env file.');
         return;
       }
 
@@ -356,19 +270,12 @@ const Sidebar = ({ collapsed, isMobile, onToggle }) => {
     } catch (error) {
       console.error('Cloudinary upload error:', error);
 
-      alert(
-        error.message ||
-        'Unable to upload profile photo.'
-      );
+      alert(error.message || 'Unable to upload profile photo.');
     } finally {
       setUploading(false);
     }
   };
 
-
-  /* =========================================================
-     SAVE PROFILE
-  ========================================================= */
 
   const handleSaveProfile = async () => {
     if (!editFirstName.trim()) {
@@ -398,42 +305,22 @@ const Sidebar = ({ collapsed, isMobile, onToggle }) => {
   };
 
 
-  /* =========================================================
-     LOGOUT
-  ========================================================= */
-
   const handleLogout = () => {
     logout();
 
-    navigate('/login', {
-      replace: true
-    });
+    navigate('/login', { replace: true });
   };
 
 
-  /* =========================================================
-     NAV ITEM CLICK (mobile)
-
-     On mobile, once a user taps a nav link, auto-collapse the
+  /* On mobile, once a user taps a nav link, auto-collapse the
      sidebar back to the icon rail so they land on the content
-     right away instead of needing a second tap.
-  ========================================================= */
-
+     right away. */
   const handleNavClick = () => {
     if (isMobile && !collapsed) {
       onToggle();
     }
   };
 
-
-  /* =========================================================
-     RENDER
-
-     Note: width is NOT set here. It comes entirely from the
-     --sidebar-w CSS variable set on the parent .dashboard-layout
-     wrapper in DashboardLayout.jsx, so there is only one place
-     in the whole app deciding the sidebar's width.
-  ========================================================= */
 
   return (
     <aside
@@ -444,9 +331,7 @@ const Sidebar = ({ collapsed, isMobile, onToggle }) => {
       }`}
     >
 
-      {/* =================================================
-          HEADER
-      ================================================= */}
+      {/* HEADER */}
 
       <div className="sidebar-header">
 
@@ -471,18 +356,13 @@ const Sidebar = ({ collapsed, isMobile, onToggle }) => {
           onClick={onToggle}
           aria-label="Toggle sidebar"
         >
-          <Icon
-            type="menu"
-            size={26}
-          />
+          <Icon type="menu" size={26} />
         </button>
 
       </div>
 
 
-      {/* =================================================
-          PROFILE
-      ================================================= */}
+      {/* PROFILE */}
 
       <div className="sidebar-profile-area">
 
@@ -507,15 +387,8 @@ const Sidebar = ({ collapsed, isMobile, onToggle }) => {
 
           {!collapsed && (
             <div className="profile-text">
-
-              <strong>
-                {fullName}
-              </strong>
-
-              <span>
-                {roleName}
-              </span>
-
+              <strong>{fullName}</strong>
+              <span>{roleName}</span>
             </div>
           )}
 
@@ -528,10 +401,6 @@ const Sidebar = ({ collapsed, isMobile, onToggle }) => {
 
         </button>
 
-
-        {/* =================================================
-            PROFILE DROPDOWN
-        ================================================= */}
 
         {profileOpen && !collapsed && (
           <div className="profile-dropdown">
@@ -551,7 +420,6 @@ const Sidebar = ({ collapsed, isMobile, onToggle }) => {
               <div className="inline-edit-form">
 
                 <div className="inline-edit-header">
-
                   <span>Edit Profile</span>
 
                   <button
@@ -562,11 +430,8 @@ const Sidebar = ({ collapsed, isMobile, onToggle }) => {
                   >
                     <Icon type="close" size={16} />
                   </button>
-
                 </div>
 
-
-                {/* PHOTO */}
 
                 <div className="edit-photo-section">
 
@@ -594,7 +459,6 @@ const Sidebar = ({ collapsed, isMobile, onToggle }) => {
 
                   </div>
 
-
                   <input
                     id="profile-photo-input"
                     type="file"
@@ -612,12 +476,8 @@ const Sidebar = ({ collapsed, isMobile, onToggle }) => {
                 </div>
 
 
-                {/* NAME */}
-
                 <div className="edit-form-group">
-
                   <label>First Name</label>
-
                   <input
                     type="text"
                     value={editFirstName}
@@ -626,14 +486,11 @@ const Sidebar = ({ collapsed, isMobile, onToggle }) => {
                     }
                     placeholder="First name"
                   />
-
                 </div>
 
 
                 <div className="edit-form-group">
-
                   <label>Last Name</label>
-
                   <input
                     type="text"
                     value={editLastName}
@@ -642,7 +499,6 @@ const Sidebar = ({ collapsed, isMobile, onToggle }) => {
                     }
                     placeholder="Last name"
                   />
-
                 </div>
 
 
@@ -677,9 +533,7 @@ const Sidebar = ({ collapsed, isMobile, onToggle }) => {
       </div>
 
 
-      {/* =================================================
-          NAVIGATION
-      ================================================= */}
+      {/* NAVIGATION */}
 
       <nav className="sidebar-navigation">
 
@@ -690,26 +544,14 @@ const Sidebar = ({ collapsed, isMobile, onToggle }) => {
             to={item.path}
             onClick={handleNavClick}
             className={({ isActive }) =>
-              `sidebar-link ${
-                isActive
-                  ? 'sidebar-link-active'
-                  : ''
-              }`
+              `sidebar-link ${isActive ? 'sidebar-link-active' : ''}`
             }
-            title={
-              collapsed
-                ? item.label
-                : ''
-            }
+            title={collapsed ? item.label : ''}
           >
 
             <span className="sidebar-icon">
-              <Icon
-                type={item.icon}
-                size={23}
-              />
+              <Icon type={item.icon} size={23} />
             </span>
-
 
             {!collapsed && (
               <span className="sidebar-link-label">
@@ -724,9 +566,7 @@ const Sidebar = ({ collapsed, isMobile, onToggle }) => {
       </nav>
 
 
-      {/* =================================================
-          LOGOUT
-      ================================================= */}
+      {/* LOGOUT */}
 
       <div className="sidebar-footer">
 
@@ -734,18 +574,11 @@ const Sidebar = ({ collapsed, isMobile, onToggle }) => {
           type="button"
           className="sidebar-logout"
           onClick={handleLogout}
-          title={
-            collapsed
-              ? 'Logout'
-              : ''
-          }
+          title={collapsed ? 'Logout' : ''}
         >
 
           <span className="sidebar-icon">
-            <Icon
-              type="logout"
-              size={23}
-            />
+            <Icon type="logout" size={23} />
           </span>
 
           {!collapsed && (
