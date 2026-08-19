@@ -1,6 +1,5 @@
 /* =========================================================
    EVENTHUB SIDEBAR
-   SAME DESIGN FOR DESKTOP + MOBILE
 ========================================================= */
 
 .sidebar {
@@ -36,17 +35,19 @@
 
 
 /* =========================================================
-   DESKTOP COLLAPSED
+   COLLAPSED DESKTOP
 ========================================================= */
 
-.sidebar.sidebar-is-collapsed.sidebar-desktop {
+.sidebar.sidebar-is-collapsed {
   width: 78px;
   min-width: 78px;
 }
 
 
 /* =========================================================
-   HEADER
+   SIDEBAR HEADER
+   SAME/BLEnded WITH SIDEBAR
+   NO LINE
 ========================================================= */
 
 .sidebar-header {
@@ -54,29 +55,23 @@
 
   display: flex;
   align-items: center;
-  justify-content: space-between;
 
   width: 100%;
-  min-height: 96px;
 
-  padding: 16px;
+  min-height: 82px;
 
-  background:
-    linear-gradient(
-      180deg,
-      #a8c9b5 0%,
-      #1f594b 100%
-    );
+  padding: 16px 14px;
 
-  border-bottom:
-    1px solid rgba(255, 255, 255, 0.12);
+  /* BLEND WITH SIDEBAR */
+  background: transparent;
 
-  flex-shrink: 0;
+  /* REMOVE LINE */
+  border-bottom: none;
 }
 
 
 /* =========================================================
-   BRAND
+   EVENTHUB BRAND
 ========================================================= */
 
 .eventhub-brand {
@@ -114,45 +109,20 @@
 }
 
 
-.eventhub-brand-text {
-  min-width: 0;
-
-  display: flex;
-  flex-direction: column;
-
-  margin-left: 10px;
-}
-
-
 .eventhub-name {
+  margin-left: 10px;
+
   color: #ffffff;
 
   font-size: 21px;
   font-weight: 800;
-
-  line-height: 1.1;
-
-  white-space: nowrap;
-}
-
-
-.eventhub-role {
-  margin-top: 4px;
-
-  color:
-    rgba(255, 255, 255, 0.78);
-
-  font-size: 12px;
-  font-weight: 500;
 
   white-space: nowrap;
 }
 
 
 /* =========================================================
-   HAMBURGER / CLOSE
-   NO BACKGROUND
-   BLACK ICON
+   SIDEBAR TOGGLE
 ========================================================= */
 
 .sidebar-toggle {
@@ -165,18 +135,16 @@
   align-items: center;
   justify-content: center;
 
-  padding: 0;
+  border: none;
+  border-radius: 9px;
 
-  border: none !important;
-  border-radius: 0;
+  /* NO BACKGROUND */
+  background: transparent;
 
-  background: transparent !important;
-
-  color: #000000 !important;
+  /* BLACK HAMBURGER */
+  color: #000000;
 
   cursor: pointer;
-
-  box-shadow: none !important;
 
   transition:
     transform 0.2s ease;
@@ -184,79 +152,74 @@
 
 
 .sidebar-toggle svg {
-  color: #000000 !important;
-
-  stroke: #000000 !important;
+  color: #000000;
+  stroke: #000000;
 }
 
 
 .sidebar-toggle:hover {
-  background: transparent !important;
+  background: transparent;
 
-  transform: scale(1.05);
-
-  box-shadow: none !important;
+  transform: scale(1.03);
 }
 
 
 /* =========================================================
-   COLLAPSED HEADER
+   COLLAPSED DESKTOP HEADER
 ========================================================= */
 
-.sidebar.sidebar-is-collapsed.sidebar-desktop
-.sidebar-header {
-  justify-content: center;
-
-  padding: 12px 8px;
-}
-
-
-.sidebar.sidebar-is-collapsed.sidebar-desktop
-.eventhub-brand-text {
+.sidebar.sidebar-is-collapsed
+.eventhub-name {
   display: none;
 }
 
 
-.sidebar.sidebar-is-collapsed.sidebar-desktop
+.sidebar.sidebar-is-collapsed
+.sidebar-header {
+  justify-content: center;
+
+  padding: 12px 8px;
+
+  background: transparent;
+
+  border-bottom: none;
+}
+
+
+.sidebar.sidebar-is-collapsed
 .eventhub-brand {
   flex: 0;
 }
 
 
-.sidebar.sidebar-is-collapsed.sidebar-desktop
+.sidebar.sidebar-is-collapsed
 .sidebar-toggle {
   position: absolute;
 
   right: -13px;
-  top: 55px;
+  top: 58px;
 
   width: 30px;
   height: 30px;
 
-  background: transparent !important;
+  border-radius: 50%;
 
-  color: #000000 !important;
+  /* NO BACKGROUND */
+  background: transparent;
 
-  border: none !important;
+  border: none;
 
-  box-shadow: none !important;
+  box-shadow: none;
+
+  color: #000000;
 }
 
 
-/* =========================================================
-   SIDEBAR CONTENT
-========================================================= */
+.sidebar.sidebar-is-collapsed
+.sidebar-toggle svg {
+  color: #000000;
 
-.sidebar-content {
-  flex: 1;
-
-  min-height: 0;
-
-  display: flex;
-  flex-direction: column;
-
-  overflow-y: auto;
-  overflow-x: visible;
+  stroke: #000000;
 }
 
 
@@ -270,8 +233,6 @@
   width: 100%;
 
   padding: 14px 10px 8px;
-
-  flex-shrink: 0;
 }
 
 
@@ -380,6 +341,10 @@
 }
 
 
+/* =========================================================
+   PROFILE ARROW
+========================================================= */
+
 .profile-arrow {
   margin-left: 6px;
 
@@ -387,33 +352,6 @@
     rgba(255, 255, 255, 0.85);
 
   font-size: 16px;
-}
-
-
-/* =========================================================
-   COLLAPSED PROFILE
-========================================================= */
-
-.sidebar.sidebar-is-collapsed.sidebar-desktop
-.sidebar-profile-area {
-  padding-left: 9px;
-  padding-right: 9px;
-}
-
-
-.sidebar.sidebar-is-collapsed.sidebar-desktop
-.profile-trigger {
-  justify-content: center;
-
-  padding: 9px 0;
-}
-
-
-.sidebar.sidebar-is-collapsed.sidebar-desktop
-.profile-text,
-.sidebar.sidebar-is-collapsed.sidebar-desktop
-.profile-arrow {
-  display: none;
 }
 
 
@@ -729,6 +667,8 @@
 ========================================================= */
 
 .sidebar-navigation {
+  flex: 1;
+
   display: flex;
   flex-direction: column;
 
@@ -737,6 +677,8 @@
   width: 100%;
 
   padding: 10px;
+
+  overflow-y: auto;
 }
 
 
@@ -806,17 +748,17 @@
 
 
 /* =========================================================
-   COLLAPSED NAVIGATION
+   COLLAPSED DESKTOP NAVIGATION
 ========================================================= */
 
-.sidebar.sidebar-is-collapsed.sidebar-desktop
+.sidebar.sidebar-is-collapsed
 .sidebar-navigation {
   padding-left: 9px;
   padding-right: 9px;
 }
 
 
-.sidebar.sidebar-is-collapsed.sidebar-desktop
+.sidebar.sidebar-is-collapsed
 .sidebar-link {
   justify-content: center;
 
@@ -824,7 +766,7 @@
 }
 
 
-.sidebar.sidebar-is-collapsed.sidebar-desktop
+.sidebar.sidebar-is-collapsed
 .sidebar-link-label {
   display: none;
 }
@@ -838,8 +780,6 @@
   width: 100%;
 
   padding: 10px;
-
-  flex-shrink: 0;
 }
 
 
@@ -884,10 +824,10 @@
 
 
 /* =========================================================
-   COLLAPSED LOGOUT
+   COLLAPSED DESKTOP LOGOUT
 ========================================================= */
 
-.sidebar.sidebar-is-collapsed.sidebar-desktop
+.sidebar.sidebar-is-collapsed
 .sidebar-logout {
   justify-content: center;
 
@@ -895,45 +835,30 @@
 }
 
 
-.sidebar.sidebar-is-collapsed.sidebar-desktop
+.sidebar.sidebar-is-collapsed
 .sidebar-logout-label {
   display: none;
 }
 
 
 /* =========================================================
-   MOBILE OVERLAY
-========================================================= */
-
-.sidebar-overlay {
-  position: fixed;
-
-  inset: 0;
-
-  background:
-    rgba(0, 0, 0, 0.35);
-
-  z-index: 1999;
-}
-
-
-/* =========================================================
-   MOBILE
-   SAME DESIGN AS DESKTOP
+   MOBILE SIDEBAR
 ========================================================= */
 
 @media (max-width: 768px) {
 
-  .sidebar.sidebar-mobile {
+  .sidebar {
 
     position: fixed;
 
     top: 0;
     left: 0;
 
+    z-index: 2000;
+
     width: 78%;
     min-width: 78%;
-    max-width: 360px;
+    max-width: 78%;
 
     height: 100dvh;
 
@@ -941,22 +866,23 @@
 
     overflow: hidden;
 
-    box-shadow:
-      8px 0 25px rgba(0, 0, 0, 0.20);
-
     transition:
       transform 0.25s ease;
+
+    box-shadow:
+      8px 0 25px rgba(0, 0, 0, 0.20);
   }
 
 
-  /* =======================================================
+  /* =====================================================
      MOBILE CLOSED
-  ======================================================= */
+  ===================================================== */
 
-  .sidebar.sidebar-mobile.sidebar-is-collapsed {
+  .sidebar.sidebar-is-collapsed {
 
     width: 78%;
     min-width: 78%;
+    max-width: 78%;
 
     transform: translateX(-105%);
 
@@ -964,69 +890,75 @@
   }
 
 
-  /* =======================================================
+  /* =====================================================
      MOBILE HEADER
-  ======================================================= */
+     SAME SIDEBAR COLOR
+     NO LINE
+  ===================================================== */
 
-  .sidebar.sidebar-mobile
   .sidebar-header {
 
-    min-height: 96px;
+    height: 118px;
+    min-height: 118px;
 
-    height: 96px;
+    padding: 20px;
 
-    padding: 16px;
+    /* BLEND WITH SIDEBAR */
+    background: transparent;
+
+    /* REMOVE LINE */
+    border-bottom: none;
   }
 
 
-  .sidebar.sidebar-mobile
   .eventhub-logo {
 
-    width: 48px;
-    height: 48px;
+    width: 52px;
+    height: 52px;
 
-    font-size: 20px;
+    border-radius: 12px;
+
+    font-size: 22px;
   }
 
 
-  .sidebar.sidebar-mobile
   .eventhub-name {
 
-    font-size: 21px;
+    display: block;
+
+    margin-left: 11px;
+
+    font-size: 22px;
   }
 
 
-  .sidebar.sidebar-mobile
-  .eventhub-role {
+  /* =====================================================
+     MOBILE CLOSE BUTTON
+  ===================================================== */
 
-    font-size: 12px;
-  }
-
-
-  /* =======================================================
-     MOBILE HAMBURGER/CLOSE
-     BLACK + NO BACKGROUND
-  ======================================================= */
-
-  .sidebar.sidebar-mobile
   .sidebar-toggle {
 
-    position: static;
+    width: 45px;
+    height: 45px;
 
-    width: 40px;
-    height: 40px;
+    border-radius: 0;
 
+    /* REMOVE BACKGROUND */
     background: transparent !important;
 
-    color: #000000 !important;
-
+    /* REMOVE BORDER */
     border: none !important;
 
+    /* REMOVE SHADOW */
     box-shadow: none !important;
+
+    /* BLACK ICON */
+    color: #000000 !important;
+
+    cursor: pointer;
   }
 
 
-  .sidebar.sidebar-mobile
   .sidebar-toggle svg {
 
     color: #000000 !important;
@@ -1035,117 +967,152 @@
   }
 
 
-  .sidebar.sidebar-mobile
   .sidebar-toggle:hover {
 
     background: transparent !important;
 
-    transform: scale(1.05);
+    box-shadow: none !important;
+
+    transform: none;
   }
 
 
-  /* =======================================================
+  /* =====================================================
      MOBILE PROFILE
-  ======================================================= */
+  ===================================================== */
 
-  .sidebar.sidebar-mobile
   .sidebar-profile-area {
 
     padding: 14px 16px 8px;
   }
 
 
-  .sidebar.sidebar-mobile
   .profile-trigger {
 
-    min-height: 66px;
+    min-height: 72px;
 
-    padding: 9px 10px;
+    padding: 10px 12px;
+
+    border-radius: 10px;
   }
 
 
-  .sidebar.sidebar-mobile
   .profile-avatar {
 
-    width: 48px;
-    height: 48px;
+    width: 50px;
+    height: 50px;
+
+    font-size: 21px;
   }
 
 
-  /* =======================================================
-     MOBILE NAV
-  ======================================================= */
+  .profile-text {
 
-  .sidebar.sidebar-mobile
+    margin-left: 12px;
+  }
+
+
+  .profile-text strong {
+
+    font-size: 16px;
+  }
+
+
+  .profile-text span {
+
+    font-size: 13px;
+  }
+
+
+  .profile-arrow {
+
+    display: block;
+  }
+
+
+  /* =====================================================
+     MOBILE NAVIGATION
+  ===================================================== */
+
   .sidebar-navigation {
 
     padding:
-      10px 16px;
+      12px 16px;
+
+    gap: 4px;
+
+    overflow-y: auto;
   }
 
 
-  .sidebar.sidebar-mobile
   .sidebar-link {
 
-    min-height: 52px;
+    min-height: 56px;
 
-    padding: 0 12px;
+    padding: 0 16px;
+
+    border-radius: 10px;
   }
 
 
-  .sidebar.sidebar-mobile
   .sidebar-link-label {
 
     display: block;
 
-    margin-left: 10px;
+    margin-left: 12px;
+
+    font-size: 16px;
+  }
+
+
+  .sidebar-icon {
+
+    width: 32px;
+  }
+
+
+  .sidebar-link-active {
+
+    background:
+      rgba(255, 255, 255, 0.13);
+
+    box-shadow:
+      inset 3px 0 0 #a8c9b5;
+  }
+
+
+  /* =====================================================
+     MOBILE FOOTER
+  ===================================================== */
+
+  .sidebar-footer {
+
+    padding: 12px 16px 18px;
+  }
+
+
+  .sidebar-logout {
+
+    min-height: 54px;
+
+    padding: 0 16px;
 
     font-size: 15px;
   }
 
 
-  .sidebar.sidebar-mobile
-  .sidebar-icon {
-
-    width: 30px;
-  }
-
-
-  /* =======================================================
-     MOBILE FOOTER
-  ======================================================= */
-
-  .sidebar.sidebar-mobile
-  .sidebar-footer {
-
-    padding:
-      10px 16px 18px;
-  }
-
-
-  .sidebar.sidebar-mobile
-  .sidebar-logout {
-
-    min-height: 50px;
-
-    padding: 0 12px;
-  }
-
-
-  .sidebar.sidebar-mobile
   .sidebar-logout-label {
 
     display: block;
 
-    margin-left: 10px;
+    margin-left: 12px;
   }
 
 
-  /* =======================================================
+  /* =====================================================
      MOBILE PROFILE DROPDOWN
-  ======================================================= */
+  ===================================================== */
 
-  .sidebar.sidebar-mobile
   .profile-dropdown {
 
     position: relative;
@@ -1156,6 +1123,9 @@
     width: 100%;
 
     margin-top: 6px;
+
+    box-shadow:
+      0 8px 20px rgba(0, 0, 0, 0.18);
   }
 
 }
@@ -1167,86 +1137,80 @@
 
 @media (max-width: 380px) {
 
-  .sidebar.sidebar-mobile {
+  .sidebar {
 
     width: 84%;
     min-width: 84%;
+    max-width: 84%;
   }
 
 
-  .sidebar.sidebar-mobile
   .sidebar-header {
 
-    min-height: 88px;
-    height: 88px;
+    height: 105px;
+    min-height: 105px;
 
-    padding: 14px;
+    padding: 16px;
+
+    background: transparent;
+
+    border-bottom: none;
   }
 
 
-  .sidebar.sidebar-mobile
   .eventhub-logo {
 
-    width: 44px;
-    height: 44px;
+    width: 46px;
+    height: 46px;
 
-    font-size: 18px;
+    font-size: 19px;
   }
 
 
-  .sidebar.sidebar-mobile
   .eventhub-name {
 
     font-size: 19px;
   }
 
 
-  .sidebar.sidebar-mobile
-  .eventhub-role {
+  .sidebar-toggle {
 
-    font-size: 11px;
+    width: 41px;
+    height: 41px;
+
+    background: transparent !important;
+
+    border: none !important;
+
+    box-shadow: none !important;
+
+    color: #000000 !important;
   }
 
 
-  .sidebar.sidebar-mobile
+  .sidebar-toggle svg {
+
+    color: #000000 !important;
+
+    stroke: #000000 !important;
+  }
+
+
+  .profile-trigger {
+
+    min-height: 66px;
+  }
+
+
   .sidebar-link {
 
-    min-height: 50px;
+    min-height: 53px;
   }
 
 
-  .sidebar.sidebar-mobile
   .sidebar-link-label {
 
-    font-size: 14px;
+    font-size: 15px;
   }
 
-}
-
-
-/* =========================================================
-   SCROLLBAR
-========================================================= */
-
-.sidebar-content::-webkit-scrollbar {
-  width: 5px;
-}
-
-
-.sidebar-content::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-
-.sidebar-content::-webkit-scrollbar-thumb {
-  background:
-    rgba(255, 255, 255, 0.20);
-
-  border-radius: 10px;
-}
-
-
-.sidebar-content::-webkit-scrollbar-thumb:hover {
-  background:
-    rgba(255, 255, 255, 0.35);
 }
