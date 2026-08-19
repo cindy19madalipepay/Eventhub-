@@ -46,8 +46,6 @@
 
 /* =========================================================
    SIDEBAR HEADER
-   SAME/BLEnded WITH SIDEBAR
-   NO LINE
 ========================================================= */
 
 .sidebar-header {
@@ -62,11 +60,17 @@
 
   padding: 16px 14px;
 
-  /* BLEND WITH SIDEBAR */
-  background: transparent;
-
-  /* REMOVE LINE */
+  /* No line */
   border-bottom: none;
+
+  /* Blend with sidebar */
+  background:
+    linear-gradient(
+      180deg,
+      #a8c9b5 0%,
+      #83ad99 55%,
+      #6d9c89 100%
+    );
 }
 
 
@@ -138,27 +142,20 @@
   border: none;
   border-radius: 9px;
 
-  /* NO BACKGROUND */
   background: transparent;
 
-  /* BLACK HAMBURGER */
   color: #000000;
 
   cursor: pointer;
 
   transition:
+    background 0.2s ease,
     transform 0.2s ease;
 }
 
 
-.sidebar-toggle svg {
-  color: #000000;
-  stroke: #000000;
-}
-
-
 .sidebar-toggle:hover {
-  background: transparent;
+  background: rgba(0, 0, 0, 0.06);
 
   transform: scale(1.03);
 }
@@ -166,60 +163,123 @@
 
 /* =========================================================
    COLLAPSED DESKTOP HEADER
+   LOGO ON TOP
+   HAMBURGER DIRECTLY BELOW LOGO
 ========================================================= */
 
-.sidebar.sidebar-is-collapsed
-.eventhub-name {
-  display: none;
-}
+.sidebar.sidebar-is-collapsed .sidebar-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
 
+  width: 100%;
 
-.sidebar.sidebar-is-collapsed
-.sidebar-header {
-  justify-content: center;
+  min-height: 92px;
+  height: 92px;
 
-  padding: 12px 8px;
+  padding: 10px 8px 5px;
 
-  background: transparent;
+  gap: 3px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #a8c9b5 0%,
+      #83ad99 60%,
+      #6d9c89 100%
+    );
 
   border-bottom: none;
 }
 
 
-.sidebar.sidebar-is-collapsed
-.eventhub-brand {
+/* =========================================================
+   COLLAPSED BRAND
+========================================================= */
+
+.sidebar.sidebar-is-collapsed .eventhub-brand {
   flex: 0;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
 }
 
 
-.sidebar.sidebar-is-collapsed
-.sidebar-toggle {
-  position: absolute;
+.sidebar.sidebar-is-collapsed .eventhub-logo {
+  width: 48px;
+  height: 48px;
 
-  right: -13px;
-  top: 58px;
+  border-radius: 11px;
 
-  width: 30px;
-  height: 30px;
+  font-size: 20px;
+}
 
-  border-radius: 50%;
 
-  /* NO BACKGROUND */
-  background: transparent;
+.sidebar.sidebar-is-collapsed .eventhub-name {
+  display: none;
+}
+
+
+/* =========================================================
+   COLLAPSED HAMBURGER
+   INSIDE SIDEBAR
+   BELOW LOGO
+========================================================= */
+
+.sidebar.sidebar-is-collapsed .sidebar-toggle {
+  position: static;
+
+  width: 28px;
+  height: 24px;
+
+  margin: 0;
+
+  padding: 0;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
 
   border: none;
 
-  box-shadow: none;
+  border-radius: 0;
 
-  color: #000000;
+  background: transparent !important;
+
+  color: #000000 !important;
+
+  box-shadow: none !important;
+
+  cursor: pointer;
+
+  transform: none;
 }
 
 
-.sidebar.sidebar-is-collapsed
-.sidebar-toggle svg {
-  color: #000000;
+.sidebar.sidebar-is-collapsed .sidebar-toggle svg {
+  width: 25px;
+  height: 25px;
 
-  stroke: #000000;
+  color: #000000 !important;
+
+  stroke: #000000 !important;
+}
+
+
+.sidebar.sidebar-is-collapsed .sidebar-toggle:hover {
+  background: transparent !important;
+
+  box-shadow: none !important;
+
+  transform: none;
 }
 
 
@@ -892,22 +952,41 @@
 
   /* =====================================================
      MOBILE HEADER
-     SAME SIDEBAR COLOR
-     NO LINE
   ===================================================== */
 
   .sidebar-header {
+
+    display: flex;
+    flex-direction: row;
+
+    align-items: center;
+
+    justify-content: space-between;
 
     height: 118px;
     min-height: 118px;
 
     padding: 20px;
 
-    /* BLEND WITH SIDEBAR */
-    background: transparent;
+    background:
+      linear-gradient(
+        180deg,
+        #a8c9b5 0%,
+        #83ad99 55%,
+        #6d9c89 100%
+      );
 
-    /* REMOVE LINE */
     border-bottom: none;
+  }
+
+
+  .eventhub-brand {
+
+    display: flex;
+
+    align-items: center;
+
+    flex: 1;
   }
 
 
@@ -938,21 +1017,23 @@
 
   .sidebar-toggle {
 
+    position: static;
+
     width: 45px;
     height: 45px;
 
+    margin: 0;
+
+    padding: 0;
+
     border-radius: 0;
 
-    /* REMOVE BACKGROUND */
     background: transparent !important;
 
-    /* REMOVE BORDER */
     border: none !important;
 
-    /* REMOVE SHADOW */
     box-shadow: none !important;
 
-    /* BLACK ICON */
     color: #000000 !important;
 
     cursor: pointer;
@@ -960,6 +1041,9 @@
 
 
   .sidebar-toggle svg {
+
+    width: 27px;
+    height: 27px;
 
     color: #000000 !important;
 
@@ -1151,10 +1235,6 @@
     min-height: 105px;
 
     padding: 16px;
-
-    background: transparent;
-
-    border-bottom: none;
   }
 
 
@@ -1177,22 +1257,6 @@
 
     width: 41px;
     height: 41px;
-
-    background: transparent !important;
-
-    border: none !important;
-
-    box-shadow: none !important;
-
-    color: #000000 !important;
-  }
-
-
-  .sidebar-toggle svg {
-
-    color: #000000 !important;
-
-    stroke: #000000 !important;
   }
 
 
