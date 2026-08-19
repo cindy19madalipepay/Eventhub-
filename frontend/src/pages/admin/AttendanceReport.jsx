@@ -301,9 +301,9 @@ const AttendanceReport = () => {
               i + 1,
               `${r.first_name} ${r.last_name}`,
               roleLabel(r.role, r.position),
-              formatTimeOnly(r.scanned_at),
-              formatTimeOnly(r.time_out || r.checkout_at),
-              formatDateOnly(r.scanned_at),
+              formatTimeOnly(r.checked_in_at),
+              formatTimeOnly(r.checkout_at),
+              formatDateOnly(r.checked_in_at),
             ].map(escapeCSVCell).join(','));
           });
           lines.push('');
@@ -346,7 +346,7 @@ const AttendanceReport = () => {
       `${a.year_level}-${a.block}`,
       roleLabel(a.role, a.position),
       formatTimeOnly(a.scanned_at),
-      formatTimeOnly(a.time_out || a.checkout_at),
+      formatTimeOnly(a.checkout_at),
       formatDateOnly(a.scanned_at),
     ]);
 
@@ -378,7 +378,7 @@ const AttendanceReport = () => {
       `${a.year_level}-${a.block}`,
       roleLabel(a.role, a.position),
       formatTimeOnly(a.scanned_at),
-      formatTimeOnly(a.time_out || a.checkout_at),
+      formatTimeOnly(a.checkout_at),
       formatDateOnly(a.scanned_at),
     ]);
 
@@ -747,7 +747,7 @@ const AttendanceReport = () => {
                               )}
                             </td>
                             <td>{formatDate(a.scanned_at)}</td>
-                            <td>{formatDate(a.time_out || a.checkout_at)}</td>
+                            <td>{formatDate(a.checkout_at)}</td>
                             <td>
                               {a.checkin_photo ? (
                                 <button

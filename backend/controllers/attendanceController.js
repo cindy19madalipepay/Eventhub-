@@ -402,6 +402,12 @@ const getOrgBreakdown = async (req, res) => {
 // role set used everywhere else (departments-overview, department-summary,
 // year-block-stats) so numbers agree across every view instead of the
 // block report undercounting relative to the dashboard.
+//
+// ── FIXED (checkout_at) ──────────────────────────────────────────────────
+// The attendance query only ever selected a.checked_in_at AS scanned_at —
+// a.checkout_at was never included, so the frontend's Time Out column had
+// nothing to read and always showed "—" even for records that do have a
+// checkout timestamp in the database. Now selected alongside scanned_at.
 const getBlockReport = async (req, res) => {
   try {
     const { department_id, year_level, block } = req.query;
@@ -435,10 +441,13 @@ const getBlockReport = async (req, res) => {
     // Attendance records for students in this exact year/block — includes
     // checkin_photo so the "View Photo" button has something to show, and
     // aliases checked_in_at as scanned_at to match what the frontend reads.
+    // checkout_at is selected as-is (real column name) for the Time Out
+    // column on the frontend.
     let attQuery = `
       SELECT
         a.attendance_id, a.event_id, a.checkin_photo,
         a.checked_in_at AS scanned_at,
+        a.checkout_at,
         u.first_name, u.last_name, u.year_level, u.block, u.role, u.position
       FROM attendance a
       JOIN users u ON a.user_id = u.user_id
