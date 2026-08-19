@@ -32,9 +32,6 @@
 
   --shadow-md:
     0 8px 24px -8px rgba(106, 143, 120, 0.25);
-
-  --sidebar-width: 260px;
-  --sidebar-collapsed-width: 78px;
 }
 
 
@@ -69,6 +66,11 @@ body {
 
 /* =========================================================
    MAIN LAYOUT
+
+   --sidebar-w is set inline on this wrapper from React
+   (DashboardLayout.jsx), based on collapsed/mobile state.
+   Both the sidebar and .main-content read from this single
+   variable, so they can never disagree on width.
 ========================================================= */
 
 .dashboard-layout {
@@ -83,67 +85,32 @@ body {
 }
 
 
-/* =========================================================
-   DESKTOP
-========================================================= */
+.dashboard-layout .main-content {
+  min-height: 100vh;
 
-@media (min-width: 769px) {
+  margin-left: var(--sidebar-w, 260px);
 
-  .dashboard-layout {
-    width: 100%;
-    min-height: 100vh;
-  }
+  width: calc(100% - var(--sidebar-w, 260px));
 
+  padding: 30px;
 
-  .dashboard-layout .main-content {
-    min-height: 100vh;
+  background: var(--bg);
 
-    margin-left: var(--sidebar-width);
+  text-align: left;
 
-    width:
-      calc(100% - var(--sidebar-width));
+  display: block;
 
-    padding: 30px;
+  overflow-x: hidden;
+  overflow-y: auto;
 
-    background: var(--bg);
-
-    text-align: left;
-
-    display: block;
-
-    overflow-x: hidden;
-    overflow-y: auto;
-
-    transition:
-      margin-left 0.25s ease,
-      width 0.25s ease;
-  }
-
-
-  .dashboard-layout.sidebar-collapsed
-  .main-content {
-
-    margin-left:
-      var(--sidebar-collapsed-width);
-
-    width:
-      calc(
-        100% -
-        var(--sidebar-collapsed-width)
-      );
-  }
-
+  transition:
+    margin-left 0.25s ease,
+    width 0.25s ease;
 }
 
 
 /* =========================================================
    MOBILE
-
-   Same push-layout behavior as desktop — content is shifted
-   over by the sidebar's current width, no overlay/backdrop.
-   Defaults to the slim 78px collapsed rail (set in
-   DashboardLayout.jsx) so content gets the full width on load,
-   matching the screenshot.
 ========================================================= */
 
 @media (max-width: 768px) {
@@ -170,46 +137,14 @@ body {
 
     position: relative;
 
-    margin-left: var(--sidebar-collapsed-width);
-
-    width:
-      calc(
-        100% -
-        var(--sidebar-collapsed-width)
-      );
-
     min-height: 100dvh;
 
     padding: 24px 16px;
 
-    background: var(--bg);
-
-    text-align: left;
-
-    display: block;
-
-    overflow-x: hidden;
-    overflow-y: auto;
-
     -webkit-overflow-scrolling: touch;
 
-    transition: margin-left 0.25s ease, width 0.25s ease;
-  }
-
-
-  /* When the sidebar is expanded/opened on mobile, it pushes
-     the content over just like desktop does — just with a
-     narrower sidebar width sized for phone screens (see
-     Sidebar.css mobile rules for the actual expanded width). */
-
-  .dashboard-layout.sidebar-expanded .main-content {
-
-    /* Matches the mobile expanded sidebar width set in
-       Sidebar.css (30vw) — keep these two in sync if you
-       change one. Sidebar 30%, content 70%. */
-    margin-left: 30vw;
-
-    width: 70vw;
+    /* margin-left / width still come from --sidebar-w above —
+       no separate override needed here anymore. */
   }
 
 

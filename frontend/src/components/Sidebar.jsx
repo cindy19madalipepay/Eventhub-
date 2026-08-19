@@ -118,7 +118,7 @@ const Icon = ({ type, size = 23 }) => {
 };
 
 
-const Sidebar = ({ collapsed, onToggle }) => {
+const Sidebar = ({ collapsed, isMobile, onToggle }) => {
   const navigate = useNavigate();
 
   /* =========================================================
@@ -412,7 +412,27 @@ const Sidebar = ({ collapsed, onToggle }) => {
 
 
   /* =========================================================
+     NAV ITEM CLICK (mobile)
+
+     On mobile, once a user taps a nav link, auto-collapse the
+     sidebar back to the icon rail so they land on the content
+     right away instead of needing a second tap.
+  ========================================================= */
+
+  const handleNavClick = () => {
+    if (isMobile && !collapsed) {
+      onToggle();
+    }
+  };
+
+
+  /* =========================================================
      RENDER
+
+     Note: width is NOT set here. It comes entirely from the
+     --sidebar-w CSS variable set on the parent .dashboard-layout
+     wrapper in DashboardLayout.jsx, so there is only one place
+     in the whole app deciding the sidebar's width.
   ========================================================= */
 
   return (
@@ -668,6 +688,7 @@ const Sidebar = ({ collapsed, onToggle }) => {
           <NavLink
             key={item.path}
             to={item.path}
+            onClick={handleNavClick}
             className={({ isActive }) =>
               `sidebar-link ${
                 isActive

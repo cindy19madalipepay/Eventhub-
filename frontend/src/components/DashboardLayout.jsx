@@ -8,44 +8,55 @@ const MOBILE_BREAKPOINT = 768;
 const DashboardLayout = () => {
 
   /* =========================================================
-     INITIAL SIDEBAR STATE
+     RESPONSIVE STATE
 
-     Desktop defaults to "expanded" (pushes content over), same
-     as before. Mobile also just PUSHES content over — same
-     behavior as desktop, not an overlay — but starts collapsed
-     (the slim 78px icon rail) so the content gets the full
-     screen width on load, matching the screenshot.
+     isMobile         -> are we currently under the breakpoint
+     sidebarCollapsed -> is the sidebar showing the slim icon
+                         rail (true) or the full labeled view
+                         (false)
+
+     Both are driven from JS only. The actual pixel width of
+     the sidebar is computed once, below, and passed down as a
+     single CSS variable (--sidebar-w) that both the sidebar
+     and the main content read from. This means there is only
+     ONE place deciding the width — no more chance of CSS
+     media queries and JS state disagreeing with each other.
   ========================================================= */
 
+  const getIsMobile = () =>
+    typeof window !== 'undefined' &&
+    window.innerWidth <= MOBILE_BREAKPOINT;
+
+  const [isMobile, setIsMobile] = useState(getIsMobile);
+
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
-    () =>
-      typeof window !== 'undefined' &&
-      window.innerWidth <= MOBILE_BREAKPOINT
+    () => getIsMobile()
   );
 
 
   /* =========================================================
      RESET ON BREAKPOINT CROSSING
 
-     Only resets when actually crossing the mobile/desktop
-     breakpoint (e.g. rotating a tablet, resizing a browser),
-     not on every resize event — so manually toggling the
-     sidebar isn't undone by unrelated window resizes.
+     Only resets sidebarCollapsed when actually crossing the
+     mobile/desktop breakpoint (e.g. rotating a tablet,
+     resizing a browser window) — not on every resize event —
+     so manually toggling the sidebar isn't undone by
+     unrelated window resizes.
   ========================================================= */
 
   useEffect(() => {
 
-    let wasMobile =
-      window.innerWidth <= MOBILE_BREAKPOINT;
+    let wasMobile = getIsMobile();
 
     const handleResize = () => {
 
-      const isMobile =
-        window.innerWidth <= MOBILE_BREAKPOINT;
+      const nowMobile = getIsMobile();
 
-      if (isMobile !== wasMobile) {
-        wasMobile = isMobile;
-        setSidebarCollapsed(isMobile);
+      setIsMobile(nowMobile);
+
+      if (nowMobile !== wasMobile) {
+        wasMobile = nowMobile;
+        setSidebarCollapsed(nowMobile);
       }
     };
 
@@ -62,6 +73,23 @@ const DashboardLayout = () => {
   };
 
 
+  /* =========================================================
+     SIDEBAR WIDTH — single source of truth
+
+     Fixed px values only (no vw units, which behave
+     inconsistently across mobile browsers). This value is
+     handed to both the sidebar and the main content via a CSS
+     variable on the shared wrapper, so they can never fall out
+     of sync with each other.
+  ========================================================= */
+
+  const sidebarWidth = sidebarCollapsed
+    ? '78px'
+    : isMobile
+      ? '240px'
+      : '260px';
+
+
   return (
     <div
       className={`dashboard-layout ${
@@ -69,10 +97,12 @@ const DashboardLayout = () => {
           ? 'sidebar-collapsed'
           : 'sidebar-expanded'
       }`}
+      style={{ '--sidebar-w': sidebarWidth }}
     >
 
       <Sidebar
         collapsed={sidebarCollapsed}
+        isMobile={isMobile}
         onToggle={toggleSidebar}
       />
 

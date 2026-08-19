@@ -1,5 +1,12 @@
 /* =========================================================
    EVENTHUB SIDEBAR
+
+   Width comes entirely from the --sidebar-w CSS variable,
+   which is set on the parent .dashboard-layout wrapper (in
+   DashboardLayout.jsx) based on React state. This file no
+   longer sets any width directly, so there is only ONE place
+   in the app deciding the sidebar's width — no more chance of
+   CSS media queries and JS state disagreeing.
 ========================================================= */
 
 .sidebar {
@@ -8,7 +15,7 @@
   left: 0;
   bottom: 0;
 
-  width: 260px;
+  width: var(--sidebar-w, 260px);
   height: 100vh;
 
   z-index: 2000;
@@ -30,15 +37,6 @@
   overflow: visible;
 
   transition: width 0.25s ease;
-}
-
-
-/* =========================================================
-   COLLAPSED
-========================================================= */
-
-.sidebar.sidebar-is-collapsed {
-  width: 78px;
 }
 
 
@@ -742,7 +740,9 @@
 
 
 /* =========================================================
-   COLLAPSED DESKTOP
+   COLLAPSED — applies at any screen size, since width is
+   already handled by the --sidebar-w variable. These rules
+   just handle what to hide/center when collapsed.
 ========================================================= */
 
 .sidebar.sidebar-is-collapsed .sidebar-header {
@@ -842,28 +842,15 @@
 /* =========================================================
    MOBILE
 
-   Same push-layout behavior as desktop — no overlay, no
-   backdrop. Collapsed = a slim 78px icon rail that content is
-   pushed over by (this is the default on load, matching the
-   screenshot). Expanded = the sidebar widens and content is
-   pushed over further, exactly like the desktop behavior,
-   just with a narrower expanded width sized for phone screens.
+   Width is already handled by --sidebar-w — these rules only
+   adjust spacing/font sizes so things fit comfortably on a
+   smaller physical screen, both expanded and collapsed.
 ========================================================= */
 
 @media (max-width: 768px) {
 
   .sidebar {
-    /* Expanded width on mobile — 30% of the screen, so
-       content keeps the remaining 70%. Still a normal push
-       layout, not an overlay. */
-    width: 30vw;
-
     height: 100dvh;
-  }
-
-
-  .sidebar.sidebar-is-collapsed {
-    width: 78px;
   }
 
 
@@ -926,14 +913,14 @@
 
 
   .profile-text strong {
-    max-width: 90px;
+    max-width: 130px;
 
-    font-size: 12px;
+    font-size: 13px;
   }
 
 
   .profile-text span {
-    font-size: 10px;
+    font-size: 11px;
   }
 
 
@@ -942,26 +929,26 @@
   }
 
 
-  /* NAVIGATION */
+  /* NAVIGATION — bigger tap targets on mobile */
 
   .sidebar-navigation {
     padding: 12px 6px;
 
-    gap: 3px;
+    gap: 4px;
   }
 
 
   .sidebar-link {
-    min-height: 50px;
+    min-height: 52px;
 
-    padding: 0 5px;
+    padding: 0 10px;
   }
 
 
   .sidebar-link-label {
-    margin-left: 5px;
+    margin-left: 10px;
 
-    font-size: 11px;
+    font-size: 14px;
 
     overflow: hidden;
 
@@ -970,28 +957,28 @@
 
 
   .sidebar-icon {
-    width: 22px;
+    width: 24px;
   }
 
 
   /* LOGOUT */
 
   .sidebar-footer {
-    padding: 6px;
+    padding: 8px 6px;
   }
 
 
   .sidebar-logout {
-    min-height: 48px;
+    min-height: 50px;
 
-    padding: 0 5px;
+    padding: 0 10px;
 
-    font-size: 11px;
+    font-size: 14px;
   }
 
 
   /* =====================================================
-     COLLAPSED MOBILE (slim icon rail — matches screenshot)
+     COLLAPSED MOBILE (slim icon rail)
   ===================================================== */
 
   .sidebar.sidebar-is-collapsed
@@ -1020,7 +1007,7 @@
   }
 
 
-  /* PROFILE DROPDOWN on the narrower mobile overlay width */
+  /* PROFILE DROPDOWN on the narrower mobile expanded width */
 
   .profile-dropdown {
     left: 8px;
