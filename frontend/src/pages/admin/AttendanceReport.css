@@ -376,6 +376,29 @@
   letter-spacing: 0.3px;
 }
 
+/* Clickable "View Photo" badges (check-in / check-out columns) get a hover
+   state so they read as interactive, unlike the plain method badge. */
+.photo-badge {
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.photo-badge:hover {
+  background: #d9ecdf;
+}
+
+.photo-badge:active {
+  transform: scale(0.97);
+}
+
+/* Dimmed placeholder for when there's no check-out photo yet (attendee
+   hasn't checked out). Distinct from the QR-scan method badge so it reads
+   as "not available" rather than "recorded via this method". */
+.method-badge-muted {
+  background: #f0f0f0;
+  color: #999;
+  text-transform: none;
+}
+
 /* ─── Responsive ─────────────────────────────────────────── */
 @media (max-width: 1024px) {
   .years-grid {

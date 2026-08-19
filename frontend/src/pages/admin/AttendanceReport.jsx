@@ -719,7 +719,8 @@ const AttendanceReport = () => {
                         <th>Role</th>
                         <th>Time In</th>
                         <th>Time Out</th>
-                        <th>Photo Proof</th>
+                        <th>Check-in Photo</th>
+                        <th>Check-out Photo</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -753,13 +754,27 @@ const AttendanceReport = () => {
                                 <button
                                   type="button"
                                   onClick={() => setViewingPhoto(a.checkin_photo)}
-                                  className="method-badge"
+                                  className="method-badge photo-badge"
                                   style={{ border: 'none', cursor: 'pointer' }}
                                 >
                                   View Photo
                                 </button>
                               ) : (
                                 <span className="method-badge">{a.method === 'qr_scan' ? 'QR Scan' : (a.method || '—')}</span>
+                              )}
+                            </td>
+                            <td>
+                              {a.checkout_photo ? (
+                                <button
+                                  type="button"
+                                  onClick={() => setViewingPhoto(a.checkout_photo)}
+                                  className="method-badge photo-badge"
+                                  style={{ border: 'none', cursor: 'pointer' }}
+                                >
+                                  View Photo
+                                </button>
+                              ) : (
+                                <span className="method-badge method-badge-muted">—</span>
                               )}
                             </td>
                           </tr>
