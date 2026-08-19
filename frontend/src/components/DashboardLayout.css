@@ -78,6 +78,8 @@ body {
   min-height: 100vh;
 
   background: var(--bg);
+
+  text-align: left;
 }
 
 
@@ -104,6 +106,10 @@ body {
     padding: 30px;
 
     background: var(--bg);
+
+    text-align: left;
+
+    display: block;
 
     overflow-x: hidden;
     overflow-y: auto;
@@ -177,6 +183,10 @@ body {
     padding: 24px 16px;
 
     background: var(--bg);
+
+    text-align: left;
+
+    display: block;
 
     overflow-x: hidden;
     overflow-y: auto;
