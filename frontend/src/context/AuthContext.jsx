@@ -7,8 +7,10 @@ import {
 
 const AuthContext = createContext(null);
 
-// Fields the user can edit locally that should survive logout/login
-const EDITABLE_FIELDS = ['firstName', 'lastName', 'avatar'];
+// Fields the user can edit locally that should survive logout/login.
+// NOTE: these must match the actual keys on the user object
+// (snake_case, same as what the backend / Sidebar.jsx use).
+const EDITABLE_FIELDS = ['first_name', 'last_name', 'profile_photo'];
 
 export const AuthProvider = ({ children }) => {
 
