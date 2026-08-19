@@ -28,7 +28,9 @@ const DashboardLayout = () => {
       setIsMobile(nowMobile);
 
       if (nowMobile !== wasMobile) {
+
         wasMobile = nowMobile;
+
         setSidebarCollapsed(nowMobile);
       }
     };
@@ -36,32 +38,32 @@ const DashboardLayout = () => {
     window.addEventListener('resize', handleResize);
 
     return () =>
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener(
+        'resize',
+        handleResize
+      );
 
   }, []);
+
 
   const toggleSidebar = () => {
     setSidebarCollapsed(prev => !prev);
   };
 
 
-  /* =========================================================
-     SIDEBAR WIDTH
-
-     Collapsed         -> 78px icon rail (desktop AND mobile)
-     Expanded, mobile  -> 30% of the viewport. Content gets the
-                          remaining 70% AUTOMATICALLY because
-                          the layout below is flexbox, not
-                          margin/calc-based — there is nothing
-                          for these two numbers to fall out of
-                          sync on.
-     Expanded, desktop -> 260px fixed
-  ========================================================= */
-
-  const sidebarWidth = sidebarCollapsed
-    ? '78px'
-    : isMobile
-      ? '30%'
+  /*
+   * DESKTOP:
+   * collapsed = 78px
+   * expanded  = 260px
+   *
+   * MOBILE:
+   * sidebar is either closed or opened.
+   * It is no longer a 78px icon rail.
+   */
+  const sidebarWidth = isMobile
+    ? '0px'
+    : sidebarCollapsed
+      ? '78px'
       : '260px';
 
 
@@ -71,15 +73,75 @@ const DashboardLayout = () => {
         sidebarCollapsed
           ? 'sidebar-collapsed'
           : 'sidebar-expanded'
+      } ${
+        isMobile
+          ? 'mobile-dashboard'
+          : ''
       }`}
-      style={{ '--sidebar-w': sidebarWidth }}
+      style={{
+        '--sidebar-w': sidebarWidth
+      }}
     >
+
+      {/* =================================================
+          MOBILE TOP BAR
+      ================================================= */}
+
+      {isMobile && (
+        <header className="mobile-topbar">
+
+          <button
+            type="button"
+            className="mobile-menu-button"
+            onClick={toggleSidebar}
+            aria-label="Open menu"
+          >
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+
+
+          <div className="mobile-brand">
+
+            <div className="mobile-brand-logo">
+              EH
+            </div>
+
+            <div className="mobile-brand-text">
+              <strong>
+                EventHub
+              </strong>
+
+              <span>
+                Student
+              </span>
+            </div>
+
+          </div>
+
+        </header>
+      )}
+
+
+      {/* =================================================
+          MOBILE OVERLAY
+      ================================================= */}
+
+      {isMobile && !sidebarCollapsed && (
+        <div
+          className="mobile-sidebar-overlay"
+          onClick={toggleSidebar}
+        />
+      )}
+
 
       <Sidebar
         collapsed={sidebarCollapsed}
         isMobile={isMobile}
         onToggle={toggleSidebar}
       />
+
 
       <main className="main-content">
         <Outlet />

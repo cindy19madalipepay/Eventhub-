@@ -3,7 +3,13 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './Sidebar.css';
 
+
+/* =========================================================
+   ICONS
+========================================================= */
+
 const Icon = ({ type, size = 23 }) => {
+
   const common = {
     width: size,
     height: size,
@@ -15,129 +21,286 @@ const Icon = ({ type, size = 23 }) => {
     strokeLinejoin: 'round'
   };
 
+
   switch (type) {
+
     case 'grid':
       return (
         <svg {...common}>
-          <rect x="3" y="3" width="7" height="7" rx="1" />
-          <rect x="14" y="3" width="7" height="7" rx="1" />
-          <rect x="3" y="14" width="7" height="7" rx="1" />
-          <rect x="14" y="14" width="7" height="7" rx="1" />
+          <rect
+            x="3"
+            y="3"
+            width="7"
+            height="7"
+            rx="1"
+          />
+
+          <rect
+            x="14"
+            y="3"
+            width="7"
+            height="7"
+            rx="1"
+          />
+
+          <rect
+            x="3"
+            y="14"
+            width="7"
+            height="7"
+            rx="1"
+          />
+
+          <rect
+            x="14"
+            y="14"
+            width="7"
+            height="7"
+            rx="1"
+          />
         </svg>
       );
+
 
     case 'calendar':
       return (
         <svg {...common}>
-          <rect x="3" y="4" width="18" height="17" rx="2" />
+
+          <rect
+            x="3"
+            y="4"
+            width="18"
+            height="17"
+            rx="2"
+          />
+
           <path d="M16 2v4M8 2v4M3 9h18" />
-          <path d="M12 13v5M9.5 15.5h5" />
+
+          <path d="M12 13v4M10 15h4" />
+
         </svg>
       );
+
 
     case 'building':
       return (
         <svg {...common}>
+
           <path d="M4 21V5l8-3 8 3v16" />
-          <path d="M8 9h1M15 9h1M8 13h1M15 13h1M8 17h1M15 17h1" />
+
+          <path
+            d="
+              M8 9h1
+              M15 9h1
+              M8 13h1
+              M15 13h1
+              M8 17h1
+              M15 17h1
+            "
+          />
+
           <path d="M10 21v-4h4v4" />
+
         </svg>
       );
+
 
     case 'receipt':
       return (
         <svg {...common}>
+
           <path d="M5 3h14v18l-3-2-4 2-4-2-3 2V3z" />
+
           <path d="M8 8h8M8 12h8M8 16h5" />
+
         </svg>
       );
+
 
     case 'chart':
       return (
         <svg {...common}>
+
           <path d="M4 19V5" />
+
           <path d="M4 19h17" />
+
           <path d="M7 15l4-4 3 2 5-7" />
+
         </svg>
       );
+
 
     case 'bell':
       return (
         <svg {...common}>
-          <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+
+          <path
+            d="
+              M18 8
+              a6 6 0 0 0-12 0
+              c0 7-3 7-3 9
+              h18
+              c0-2-3-2-3-9
+            "
+          />
+
           <path d="M10 21h4" />
+
         </svg>
       );
+
 
     case 'history':
       return (
         <svg {...common}>
+
           <path d="M3 12a9 9 0 1 0 3-6.7" />
+
           <path d="M3 4v5h5" />
+
           <path d="M12 7v5l3 2" />
+
         </svg>
       );
+
 
     case 'logout':
       return (
         <svg {...common}>
-          <path d="M10 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5" />
+
+          <path
+            d="
+              M10 4H5
+              a2 2 0 0 0-2 2
+              v12
+              a2 2 0 0 0 2 2
+              h5
+            "
+          />
+
           <path d="M14 8l4 4-4 4" />
+
           <path d="M8 12h10" />
+
         </svg>
       );
 
+
     case 'menu':
       return (
-        <svg {...common} strokeWidth="2.2">
+        <svg
+          {...common}
+          strokeWidth="2.2"
+        >
+
           <path d="M4 6h16" />
           <path d="M4 12h16" />
           <path d="M4 18h16" />
+
         </svg>
       );
+
 
     case 'close':
       return (
         <svg {...common}>
+
           <path d="M6 6l12 12" />
+
           <path d="M18 6L6 18" />
+
         </svg>
       );
+
 
     case 'camera':
       return (
         <svg {...common}>
+
           <path d="M4 7h4l2-2h4l2 2h4v11H4z" />
-          <circle cx="12" cy="13" r="3" />
+
+          <circle
+            cx="12"
+            cy="13"
+            r="3"
+          />
+
         </svg>
       );
+
 
     default:
       return null;
   }
 };
 
-const Sidebar = ({ collapsed, isMobile, onToggle }) => {
+
+/* =========================================================
+   SIDEBAR
+========================================================= */
+
+const Sidebar = ({
+  collapsed,
+  isMobile,
+  onToggle
+}) => {
+
   const navigate = useNavigate();
 
-  const { user, logout, updateUser } = useAuth();
+  const {
+    user,
+    logout,
+    updateUser
+  } = useAuth();
 
-  const [profileOpen, setProfileOpen] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
 
-  const [editFirstName, setEditFirstName] = useState('');
-  const [editLastName, setEditLastName] = useState('');
-  const [editPhoto, setEditPhoto] = useState('');
+  /* =======================================================
+     PROFILE STATES
+  ======================================================= */
 
-  const [uploading, setUploading] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [profileOpen, setProfileOpen] =
+    useState(false);
 
-  const firstName = user?.first_name || 'User';
-  const lastName = user?.last_name || '';
+  const [editOpen, setEditOpen] =
+    useState(false);
 
-  const fullName = `${firstName} ${lastName}`.trim();
 
-  const role = user?.role || 'student';
+  const [editFirstName, setEditFirstName] =
+    useState('');
+
+  const [editLastName, setEditLastName] =
+    useState('');
+
+  const [editPhoto, setEditPhoto] =
+    useState('');
+
+
+  const [uploading, setUploading] =
+    useState(false);
+
+  const [saving, setSaving] =
+    useState(false);
+
+
+  /* =======================================================
+     USER INFORMATION
+  ======================================================= */
+
+  const firstName =
+    user?.first_name || 'User';
+
+  const lastName =
+    user?.last_name || '';
+
+
+  const fullName =
+    `${firstName} ${lastName}`.trim();
+
+
+  const role =
+    user?.role || 'student';
+
 
   const profilePhoto =
     user?.profile_photo ||
@@ -146,86 +309,128 @@ const Sidebar = ({ collapsed, isMobile, onToggle }) => {
     user?.avatar ||
     '';
 
-  const isAdmin = role === 'admin';
-  const isDepartmentHead = role === 'department_head';
+
+  const isAdmin =
+    role === 'admin';
+
+
+  const isDepartmentHead =
+    role === 'department_head';
+
 
   const nameInitial =
-    firstName.trim().charAt(0).toUpperCase() || 'U';
+    firstName
+      .trim()
+      .charAt(0)
+      .toUpperCase() || 'U';
 
-  const roleName = isAdmin
-    ? 'Admin'
-    : isDepartmentHead
-      ? 'Department Head'
-      : 'Student';
+
+  const roleName =
+    isAdmin
+      ? 'Admin'
+      : isDepartmentHead
+        ? 'Department Head'
+        : 'Student';
+
+
+  /* =======================================================
+     ADMIN MENU
+  ======================================================= */
 
   const adminItems = [
+
     {
       label: 'Overview',
       path: '/admin/dashboard',
       icon: 'grid'
     },
+
     {
       label: 'Create Event',
       path: '/admin/create-event',
       icon: 'calendar'
     },
+
     {
       label: 'Departments',
       path: '/admin/attendance',
       icon: 'building'
     },
+
     {
       label: 'Receipts',
       path: '/admin/receipts',
       icon: 'receipt'
     },
+
     {
       label: 'Evaluation Results',
       path: '/admin/evaluation',
       icon: 'chart'
     }
+
   ];
 
+
+  /* =======================================================
+     DEPARTMENT HEAD MENU
+  ======================================================= */
+
   const departmentItems = [
+
     {
       label: 'Overview',
       path: '/dept/dashboard',
       icon: 'grid'
     },
+
     {
       label: 'Attendance',
       path: '/dept/attendance',
       icon: 'calendar'
     },
+
     {
       label: 'Reports',
       path: '/dept/reports',
       icon: 'chart'
     },
+
     {
       label: 'Evaluation',
       path: '/dept/evaluation',
       icon: 'receipt'
     }
+
   ];
 
+
+  /* =======================================================
+     STUDENT MENU
+  ======================================================= */
+
   const studentItems = [
+
     {
       label: 'Notifications',
       path: '/student/notifications',
       icon: 'bell'
     },
+
     {
       label: 'My Events',
       path: '/student/my-events',
       icon: 'calendar'
     },
+
     {
       label: 'History',
       path: '/student/history',
       icon: 'history'
     }
+
   ];
+
 
   const menuItems =
     isAdmin
@@ -234,221 +439,312 @@ const Sidebar = ({ collapsed, isMobile, onToggle }) => {
         ? departmentItems
         : studentItems;
 
+
+  /* =======================================================
+     PROFILE DROPDOWN
+  ======================================================= */
+
   const toggleProfileDropdown = () => {
+
+    /*
+     * On mobile the sidebar is fully expanded
+     * when opened, so Profile can still be clicked.
+     */
+
     if (collapsed) return;
 
+
     setProfileOpen(prev => {
+
       const next = !prev;
+
 
       if (!next) {
         setEditOpen(false);
       }
 
+
       return next;
+
     });
+
   };
 
+
+  /* =======================================================
+     OPEN EDIT PROFILE
+  ======================================================= */
+
   const openEditProfile = () => {
+
     setEditFirstName(firstName);
+
     setEditLastName(lastName);
+
     setEditPhoto(profilePhoto);
 
     setEditOpen(true);
+
   };
+
+
+  /* =======================================================
+     CLOSE EDIT PROFILE
+  ======================================================= */
 
   const closeEditProfile = () => {
+
     setEditOpen(false);
+
   };
 
-  /*
-   * PROFILE PHOTO UPLOAD
-   *
-   * Cloudinary is only needed when the user changes
-   * the profile photo.
-   */
-  const handlePhotoChange = async (event) => {
-    const file = event.target.files?.[0];
 
-    if (!file) {
-      return;
-    }
+  /* =======================================================
+     CLOUDINARY PHOTO UPLOAD
+  ======================================================= */
 
-    // Check file type
-    if (!file.type.startsWith('image/')) {
-      alert('Please select an image file.');
-      return;
-    }
+  const handlePhotoChange = async event => {
 
-    // Optional file size limit: 5 MB
-    if (file.size > 5 * 1024 * 1024) {
-      alert('Please select an image smaller than 5 MB.');
-      return;
-    }
+    const file =
+      event.target.files?.[0];
+
+
+    if (!file) return;
+
 
     try {
+
       setUploading(true);
 
+
       const cloudName =
-        import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+        import.meta.env
+          .VITE_CLOUDINARY_CLOUD_NAME;
+
 
       const uploadPreset =
-        import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+        import.meta.env
+          .VITE_CLOUDINARY_UPLOAD_PRESET;
+
 
       /*
-       * These values MUST exist in Vercel:
-       *
-       * VITE_CLOUDINARY_CLOUD_NAME
-       * VITE_CLOUDINARY_UPLOAD_PRESET
+       * DEBUG
        */
 
-      if (!cloudName) {
-        alert(
-          'Cloudinary cloud name is missing. Please check your Vercel environment variables.'
-        );
-        return;
-      }
-
-      if (!uploadPreset) {
-        alert(
-          'Cloudinary upload preset is missing. Please check your Vercel environment variables.'
-        );
-        return;
-      }
-
-      const formData = new FormData();
-
-      formData.append('file', file);
-      formData.append('upload_preset', uploadPreset);
-
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-        {
-          method: 'POST',
-          body: formData
-        }
+      console.log(
+        'DEBUG cloudName:',
+        cloudName
       );
 
-      const data = await response.json();
+
+      console.log(
+        'DEBUG uploadPreset:',
+        uploadPreset
+      );
+
+
+      if (
+        !cloudName ||
+        !uploadPreset
+      ) {
+
+        alert(
+          'Cloudinary settings are missing. Check your .env file.'
+        );
+
+        return;
+
+      }
+
+
+      const formData =
+        new FormData();
+
+
+      formData.append(
+        'file',
+        file
+      );
+
+
+      formData.append(
+        'upload_preset',
+        uploadPreset
+      );
+
+
+      const response =
+        await fetch(
+          `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+          {
+            method: 'POST',
+            body: formData
+          }
+        );
+
+
+      const data =
+        await response.json();
+
 
       if (!response.ok) {
+
         throw new Error(
           data?.error?.message ||
           'Cloudinary upload failed.'
         );
+
       }
 
-      if (!data?.secure_url) {
-        throw new Error(
-          'Cloudinary did not return an image URL.'
-        );
-      }
 
-      // Put uploaded image URL into profile preview
-      setEditPhoto(data.secure_url);
+      setEditPhoto(
+        data.secure_url
+      );
 
-      alert('Profile photo uploaded successfully.');
 
     } catch (error) {
+
       console.error(
         'Cloudinary upload error:',
         error
       );
 
+
       alert(
-        error?.message ||
+        error.message ||
         'Unable to upload profile photo.'
       );
+
+
     } finally {
+
       setUploading(false);
 
-      // Allow selecting the same file again
-      event.target.value = '';
     }
+
   };
 
-  /*
-   * SAVE PROFILE
-   *
-   * This saves the name and profile photo
-   * through your existing AuthContext updateUser().
-   */
+
+  /* =======================================================
+     SAVE PROFILE
+  ======================================================= */
+
   const handleSaveProfile = async () => {
-    const trimmedFirstName =
-      editFirstName.trim();
 
-    const trimmedLastName =
-      editLastName.trim();
+    if (!editFirstName.trim()) {
 
-    if (!trimmedFirstName) {
-      alert('First name is required.');
+      alert(
+        'First name is required.'
+      );
+
       return;
+
     }
 
+
     try {
+
       setSaving(true);
 
-      /*
-       * Keep using your existing updateUser()
-       * from AuthContext.
-       */
-      await updateUser({
-        first_name: trimmedFirstName,
-        last_name: trimmedLastName,
-        profile_photo: editPhoto
+
+      updateUser({
+
+        first_name:
+          editFirstName.trim(),
+
+        last_name:
+          editLastName.trim(),
+
+        profile_photo:
+          editPhoto
+
       });
 
-      /*
-       * Close the edit window only after
-       * updateUser() finishes.
-       */
+
       setEditOpen(false);
+
       setProfileOpen(false);
 
-      alert('Profile updated successfully.');
 
     } catch (error) {
+
       console.error(
         'Save profile error:',
         error
       );
 
+
       alert(
-        error?.message ||
         'Unable to save profile.'
       );
+
+
     } finally {
+
       setSaving(false);
+
     }
+
   };
+
+
+  /* =======================================================
+     LOGOUT
+  ======================================================= */
 
   const handleLogout = () => {
+
     logout();
 
-    navigate('/login', {
-      replace: true
-    });
+    navigate(
+      '/login',
+      {
+        replace: true
+      }
+    );
+
   };
 
-  /*
-   * On mobile, once a user taps a nav link,
-   * auto-collapse the sidebar.
-   */
+
+  /* =======================================================
+     MOBILE NAVIGATION
+  ======================================================= */
+
   const handleNavClick = () => {
-    if (isMobile && !collapsed) {
+
+    if (
+      isMobile &&
+      !collapsed
+    ) {
+
       onToggle();
+
     }
+
   };
+
+
+  /* =======================================================
+     SIDEBAR
+  ======================================================= */
 
   return (
+
     <aside
-      className={`sidebar ${
-        collapsed
+      className={`
+        sidebar
+        ${collapsed
           ? 'sidebar-is-collapsed'
-          : ''
-      }`}
+          : ''}
+        ${isMobile
+          ? 'sidebar-mobile'
+          : ''}
+      `}
     >
 
-      {/* HEADER */}
+      {/* =================================================
+          HEADER
+      ================================================= */}
 
       <div className="sidebar-header">
 
@@ -458,68 +754,120 @@ const Sidebar = ({ collapsed, isMobile, onToggle }) => {
             EH
           </div>
 
-          {!collapsed && (
-            <span className="eventhub-name">
-              EventHub
-            </span>
-          )}
+
+          <span className="eventhub-name">
+            EventHub
+          </span>
 
         </div>
+
+
+        {/* ===============================================
+            MOBILE = CLOSE BUTTON
+            DESKTOP = MENU BUTTON
+        =============================================== */}
 
         <button
           type="button"
           className="sidebar-toggle"
           onClick={onToggle}
-          aria-label="Toggle sidebar"
+          aria-label={
+            isMobile && !collapsed
+              ? 'Close sidebar'
+              : 'Toggle sidebar'
+          }
         >
-          <Icon
-            type="menu"
-            size={26}
-          />
+
+          {isMobile && !collapsed ? (
+
+            <Icon
+              type="close"
+              size={25}
+            />
+
+          ) : (
+
+            <Icon
+              type="menu"
+              size={26}
+            />
+
+          )}
+
         </button>
 
       </div>
 
 
-      {/* PROFILE */}
+      {/* =================================================
+          PROFILE
+      ================================================= */}
 
       <div className="sidebar-profile-area">
 
         <button
           type="button"
           className="profile-trigger"
-          onClick={toggleProfileDropdown}
+          onClick={
+            toggleProfileDropdown
+          }
         >
 
+          {/* PROFILE PHOTO */}
+
           {profilePhoto ? (
+
             <img
               src={profilePhoto}
               alt="Profile"
-              className="profile-avatar profile-photo"
+              className="
+                profile-avatar
+                profile-photo
+              "
             />
+
           ) : (
+
             <div className="profile-avatar">
               {nameInitial}
             </div>
+
           )}
 
-          {!collapsed && (
-            <div className="profile-text">
-              <strong>{fullName}</strong>
-              <span>{roleName}</span>
-            </div>
-          )}
 
-          {!collapsed && (
-            <span className="profile-arrow">
-              {profileOpen ? '⌃' : '⌄'}
+          {/* PROFILE NAME */}
+
+          <div className="profile-text">
+
+            <strong>
+              {fullName}
+            </strong>
+
+            <span>
+              {roleName}
             </span>
-          )}
+
+          </div>
+
+
+          {/* PROFILE ARROW */}
+
+          <span className="profile-arrow">
+
+            {profileOpen
+              ? '⌃'
+              : '⌄'}
+
+          </span>
 
         </button>
 
 
-        {profileOpen && !collapsed && (
+        {/* =================================================
+            PROFILE DROPDOWN
+        ================================================= */}
+
+        {profileOpen && (
 
           <div className="profile-dropdown">
 
@@ -528,14 +876,22 @@ const Sidebar = ({ collapsed, isMobile, onToggle }) => {
               <button
                 type="button"
                 className="dropdown-edit-button"
-                onClick={openEditProfile}
+                onClick={
+                  openEditProfile
+                }
               >
                 Edit Profile
               </button>
 
             ) : (
 
+              /* =========================================
+                 EDIT PROFILE FORM
+              ========================================= */
+
               <div className="inline-edit-form">
+
+                {/* HEADER */}
 
                 <div className="inline-edit-header">
 
@@ -543,22 +899,27 @@ const Sidebar = ({ collapsed, isMobile, onToggle }) => {
                     Edit Profile
                   </span>
 
+
                   <button
                     type="button"
                     className="inline-edit-close"
-                    onClick={closeEditProfile}
+                    onClick={
+                      closeEditProfile
+                    }
                     aria-label="Close edit form"
                   >
+
                     <Icon
                       type="close"
                       size={16}
                     />
+
                   </button>
 
                 </div>
 
 
-                {/* PROFILE PHOTO */}
+                {/* PHOTO */}
 
                 <div className="edit-photo-section">
 
@@ -569,26 +930,38 @@ const Sidebar = ({ collapsed, isMobile, onToggle }) => {
                       <img
                         src={editPhoto}
                         alt="Profile preview"
-                        className="edit-profile-photo"
+                        className="
+                          edit-profile-photo
+                        "
                       />
 
                     ) : (
 
-                      <div className="edit-profile-photo edit-photo-placeholder">
+                      <div
+                        className="
+                          edit-profile-photo
+                          edit-photo-placeholder
+                        "
+                      >
                         {nameInitial}
                       </div>
 
                     )}
 
+
                     <label
                       htmlFor="profile-photo-input"
-                      className="photo-upload-button"
+                      className="
+                        photo-upload-button
+                      "
                       title="Change profile photo"
                     >
+
                       <Icon
                         type="camera"
                         size={16}
                       />
+
                     </label>
 
                   </div>
@@ -597,16 +970,24 @@ const Sidebar = ({ collapsed, isMobile, onToggle }) => {
                   <input
                     id="profile-photo-input"
                     type="file"
-                    accept="image/png,image/jpeg,image/jpg,image/webp"
-                    onChange={handlePhotoChange}
+                    accept="image/*"
+                    onChange={
+                      handlePhotoChange
+                    }
                     hidden
                   />
 
 
                   {uploading && (
-                    <span className="uploading-text">
+
+                    <span
+                      className="
+                        uploading-text
+                      "
+                    >
                       Uploading photo...
                     </span>
+
                   )}
 
                 </div>
@@ -614,16 +995,21 @@ const Sidebar = ({ collapsed, isMobile, onToggle }) => {
 
                 {/* FIRST NAME */}
 
-                <div className="edit-form-group">
+                <div
+                  className="
+                    edit-form-group
+                  "
+                >
 
                   <label>
                     First Name
                   </label>
 
+
                   <input
                     type="text"
                     value={editFirstName}
-                    onChange={(event) =>
+                    onChange={event =>
                       setEditFirstName(
                         event.target.value
                       )
@@ -636,16 +1022,21 @@ const Sidebar = ({ collapsed, isMobile, onToggle }) => {
 
                 {/* LAST NAME */}
 
-                <div className="edit-form-group">
+                <div
+                  className="
+                    edit-form-group
+                  "
+                >
 
                   <label>
                     Last Name
                   </label>
 
+
                   <input
                     type="text"
                     value={editLastName}
-                    onChange={(event) =>
+                    onChange={event =>
                       setEditLastName(
                         event.target.value
                       )
@@ -658,13 +1049,20 @@ const Sidebar = ({ collapsed, isMobile, onToggle }) => {
 
                 {/* BUTTONS */}
 
-                <div className="edit-profile-actions">
+                <div
+                  className="
+                    edit-profile-actions
+                  "
+                >
 
                   <button
                     type="button"
-                    className="cancel-profile-button"
-                    onClick={closeEditProfile}
-                    disabled={saving || uploading}
+                    className="
+                      cancel-profile-button
+                    "
+                    onClick={
+                      closeEditProfile
+                    }
                   >
                     Cancel
                   </button>
@@ -672,13 +1070,22 @@ const Sidebar = ({ collapsed, isMobile, onToggle }) => {
 
                   <button
                     type="button"
-                    className="save-profile-button"
-                    onClick={handleSaveProfile}
-                    disabled={uploading || saving}
+                    className="
+                      save-profile-button
+                    "
+                    onClick={
+                      handleSaveProfile
+                    }
+                    disabled={
+                      uploading ||
+                      saving
+                    }
                   >
+
                     {saving
                       ? 'Saving...'
                       : 'Save'}
+
                   </button>
 
                 </div>
@@ -694,7 +1101,9 @@ const Sidebar = ({ collapsed, isMobile, onToggle }) => {
       </div>
 
 
-      {/* NAVIGATION */}
+      {/* =================================================
+          NAVIGATION
+      ================================================= */}
 
       <nav className="sidebar-navigation">
 
@@ -703,13 +1112,18 @@ const Sidebar = ({ collapsed, isMobile, onToggle }) => {
           <NavLink
             key={item.path}
             to={item.path}
-            onClick={handleNavClick}
+            onClick={
+              handleNavClick
+            }
             className={({ isActive }) =>
-              `sidebar-link ${
-                isActive
-                  ? 'sidebar-link-active'
-                  : ''
-              }`
+              `
+                sidebar-link
+                ${
+                  isActive
+                    ? 'sidebar-link-active'
+                    : ''
+                }
+              `
             }
             title={
               collapsed
@@ -719,17 +1133,20 @@ const Sidebar = ({ collapsed, isMobile, onToggle }) => {
           >
 
             <span className="sidebar-icon">
+
               <Icon
                 type={item.icon}
                 size={23}
               />
+
             </span>
 
-            {!collapsed && (
-              <span className="sidebar-link-label">
-                {item.label}
-              </span>
-            )}
+
+            <span className="sidebar-link-label">
+
+              {item.label}
+
+            </span>
 
           </NavLink>
 
@@ -738,14 +1155,18 @@ const Sidebar = ({ collapsed, isMobile, onToggle }) => {
       </nav>
 
 
-      {/* LOGOUT */}
+      {/* =================================================
+          LOGOUT
+      ================================================= */}
 
       <div className="sidebar-footer">
 
         <button
           type="button"
           className="sidebar-logout"
-          onClick={handleLogout}
+          onClick={
+            handleLogout
+          }
           title={
             collapsed
               ? 'Logout'
@@ -754,24 +1175,28 @@ const Sidebar = ({ collapsed, isMobile, onToggle }) => {
         >
 
           <span className="sidebar-icon">
+
             <Icon
               type="logout"
               size={23}
             />
+
           </span>
 
-          {!collapsed && (
-            <span className="sidebar-logout-label">
-              Logout
-            </span>
-          )}
+
+          <span className="sidebar-logout-label">
+            Logout
+          </span>
 
         </button>
 
       </div>
 
     </aside>
+
   );
+
 };
+
 
 export default Sidebar;
