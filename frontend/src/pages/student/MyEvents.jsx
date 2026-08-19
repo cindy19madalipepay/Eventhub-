@@ -213,6 +213,15 @@ const MyEvents = () => {
     return `${displayHour}:${m} ${ampm}`;
   };
 
+  // Combined "start – end" display, falling back to just start time when
+  // no end time is set on the event.
+  const formatTimeRange = (event) => {
+    const start = formatTime(event.time_start);
+    const end = formatTime(event.time_end);
+    if (!start) return '—';
+    return end ? `${start} – ${end}` : start;
+  };
+
   const handleRegister = async (event) => {
     setBusyEventId(event.event_id);
     try {
@@ -425,7 +434,7 @@ const MyEvents = () => {
                   </div>
                   <div className="event-info-item">
                     <span className="event-info-label">TIME</span>
-                    <span className="event-info-value">{formatTime(event.time_start)}</span>
+                    <span className="event-info-value">{formatTimeRange(event)}</span>
                   </div>
                   <div className="event-info-item">
                     <span className="event-info-label"> VENUE</span>

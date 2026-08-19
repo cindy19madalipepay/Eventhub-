@@ -272,6 +272,16 @@ const Notifications = () => {
     return `${displayHour}:${m} ${ampm}`;
   };
 
+  // Combined "start – end" display, falling back to just start time when
+  // no end time is set on the event.
+  const formatTimeRange = (event) => {
+    if (!event) return '—';
+    const start = formatTime(event.time_start);
+    const end = formatTime(event.time_end);
+    if (!start) return '—';
+    return end ? `${start} – ${end}` : start;
+  };
+
   const handleRegister = async (event) => {
     setBusyId(event.event_id);
     try {
@@ -509,7 +519,7 @@ const Notifications = () => {
                     </div>
                     <div className="notif-info-item">
                       <span className="notif-info-label">TIME</span>
-                      <span className="notif-info-value">{formatTime(n.event.time_start)}</span>
+                      <span className="notif-info-value">{formatTimeRange(n.event)}</span>
                     </div>
                     <div className="notif-info-item">
                       <span className="notif-info-label">VENUE</span>
