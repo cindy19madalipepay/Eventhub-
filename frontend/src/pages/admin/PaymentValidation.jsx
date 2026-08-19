@@ -46,6 +46,10 @@ const PaymentValidation = () => {
   const [loading, setLoading] = useState(true);
   const [actioningId, setActioningId] = useState(null);
   const [expanded, setExpanded] = useState(false);
+  // Full-size receipt image currently shown in the viewer modal, or null.
+  // Holds the resolved URL directly (not the raw payment_proof value) since
+  // that's all the modal needs to render.
+  const [viewingImage, setViewingImage] = useState(null);
 
   const VISIBLE_COUNT = 5;
 
@@ -141,11 +145,18 @@ const PaymentValidation = () => {
       <div key={p.ticket_id} className="receipt-item-card">
         <div className="receipt-item-left">
           {receiptImageUrl ? (
-            <img
-              src={receiptImageUrl}
-              alt="Receipt"
-              className="receipt-item-thumb"
-            />
+            <button
+              type="button"
+              className="receipt-item-thumb-btn"
+              onClick={() => setViewingImage(receiptImageUrl)}
+              aria-label="View receipt photo"
+            >
+              <img
+                src={receiptImageUrl}
+                alt="Receipt"
+                className="receipt-item-thumb"
+              />
+            </button>
           ) : (
             <div className="receipt-item-thumb-placeholder">
               📄
@@ -300,6 +311,34 @@ const PaymentValidation = () => {
           </>
         )}
       </div>
+
+      {/* Receipt photo viewer modal */}
+      {viewingImage && (
+        <div
+          className="modal-overlay"
+          onClick={() => setViewingImage(null)}
+        >
+          <div
+            className="modal-card receipt-photo-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="modal-close"
+              onClick={() => setViewingImage(null)}
+              aria-label="Close"
+            >
+              ✕
+            </button>
+
+            <img
+              src={viewingImage}
+              alt="Receipt full view"
+              className="detail-modal-image"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
