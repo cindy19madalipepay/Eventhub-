@@ -27,6 +27,17 @@
     );
 
   overflow: visible;
+
+  transition: width 0.25s ease, transform 0.25s ease;
+}
+
+
+/* =========================================================
+   COLLAPSED
+========================================================= */
+
+.sidebar.sidebar-is-collapsed {
+  width: 78px;
 }
 
 
@@ -102,6 +113,45 @@
   white-space: nowrap;
 
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+
+/* =========================================================
+   HAMBURGER
+========================================================= */
+
+.sidebar-toggle {
+  width: 42px;
+  height: 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  border: none;
+  border-radius: 10px;
+
+  background: transparent;
+
+  color: #ffffff;
+
+  cursor: pointer;
+
+  padding: 0;
+
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+
+.sidebar-toggle:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+
+.sidebar-toggle:active {
+  transform: scale(0.94);
 }
 
 
@@ -691,19 +741,128 @@
 
 
 /* =========================================================
+   COLLAPSED DESKTOP
+========================================================= */
+
+.sidebar.sidebar-is-collapsed .sidebar-header {
+  justify-content: center;
+
+  padding: 14px 10px;
+}
+
+
+.sidebar.sidebar-is-collapsed .eventhub-brand {
+  flex: 0;
+
+  justify-content: center;
+}
+
+
+.sidebar.sidebar-is-collapsed .eventhub-logo {
+  width: 46px;
+  height: 46px;
+
+  font-size: 19px;
+}
+
+
+.sidebar.sidebar-is-collapsed .sidebar-toggle {
+  position: absolute;
+
+  top: 64px;
+  left: 50%;
+
+  transform: translateX(-50%);
+
+  width: 40px;
+  height: 40px;
+
+  z-index: 10;
+}
+
+
+.sidebar.sidebar-is-collapsed .sidebar-profile-area {
+  margin-top: 30px;
+}
+
+
+.sidebar.sidebar-is-collapsed .profile-trigger {
+  justify-content: center;
+
+  padding: 16px 8px;
+}
+
+
+.sidebar.sidebar-is-collapsed .profile-avatar {
+  width: 44px;
+  height: 44px;
+
+  font-size: 20px;
+}
+
+
+.sidebar.sidebar-is-collapsed .sidebar-navigation {
+  padding: 16px 9px;
+}
+
+
+.sidebar.sidebar-is-collapsed .sidebar-link {
+  justify-content: center;
+
+  padding: 0;
+
+  min-height: 55px;
+}
+
+
+.sidebar.sidebar-is-collapsed .sidebar-link-label {
+  display: none;
+}
+
+
+.sidebar.sidebar-is-collapsed .sidebar-footer {
+  padding: 10px 9px;
+}
+
+
+.sidebar.sidebar-is-collapsed .sidebar-logout {
+  justify-content: center;
+
+  padding: 0;
+}
+
+
+.sidebar.sidebar-is-collapsed
+.sidebar-logout-label {
+  display: none;
+}
+
+
+/* =========================================================
    MOBILE
 
-   Sidebar is now always shown at full width — no collapsed
-   icon rail, no hamburger toggle. Only sizes shrink slightly
-   for narrower phone screens.
+   Same push-layout behavior as desktop — no overlay, no
+   backdrop. Collapsed = a slim 78px icon rail that content is
+   pushed over by (this is the default on load, matching the
+   screenshot). Expanded = the sidebar widens and content is
+   pushed over further, exactly like the desktop behavior,
+   just with a narrower expanded width sized for phone screens.
 ========================================================= */
 
 @media (max-width: 768px) {
 
   .sidebar {
+    /* Expanded width on mobile — narrower than desktop's
+       260px since phone screens are tighter, but still a
+       normal push layout, not an overlay. */
     width: 210px;
 
     height: 100dvh;
+  }
+
+
+  .sidebar.sidebar-is-collapsed {
+    width: 78px;
   }
 
 
@@ -732,6 +891,12 @@
     margin-left: 6px;
 
     font-size: 18px;
+  }
+
+
+  .sidebar-toggle {
+    width: 38px;
+    height: 38px;
   }
 
 
@@ -818,7 +983,37 @@
   }
 
 
-  /* PROFILE DROPDOWN on the narrower mobile width */
+  /* =====================================================
+     COLLAPSED MOBILE (slim icon rail — matches screenshot)
+  ===================================================== */
+
+  .sidebar.sidebar-is-collapsed
+  .sidebar-header {
+    height: 82px;
+
+    padding: 10px;
+  }
+
+
+  .sidebar.sidebar-is-collapsed
+  .eventhub-name {
+    display: none;
+  }
+
+
+  .sidebar.sidebar-is-collapsed
+  .sidebar-toggle {
+    top: 62px;
+  }
+
+
+  .sidebar.sidebar-is-collapsed
+  .sidebar-profile-area {
+    margin-top: 22px;
+  }
+
+
+  /* PROFILE DROPDOWN on the narrower mobile overlay width */
 
   .profile-dropdown {
     left: 8px;
@@ -851,6 +1046,12 @@
 
   .eventhub-name {
     font-size: 16px;
+  }
+
+
+  .sidebar-toggle {
+    width: 35px;
+    height: 35px;
   }
 
 

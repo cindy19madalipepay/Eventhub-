@@ -87,6 +87,15 @@ const Icon = ({ type, size = 23 }) => {
         </svg>
       );
 
+    case 'menu':
+      return (
+        <svg {...common} strokeWidth="2.2">
+          <path d="M4 6h16" />
+          <path d="M4 12h16" />
+          <path d="M4 18h16" />
+        </svg>
+      );
+
     case 'close':
       return (
         <svg {...common}>
@@ -109,7 +118,7 @@ const Icon = ({ type, size = 23 }) => {
 };
 
 
-const Sidebar = () => {
+const Sidebar = ({ collapsed, onToggle }) => {
   const navigate = useNavigate();
 
   /* =========================================================
@@ -262,6 +271,8 @@ const Sidebar = () => {
   ========================================================= */
 
   const toggleProfileDropdown = () => {
+    if (collapsed) return;
+
     setProfileOpen(prev => {
       const next = !prev;
 
@@ -405,7 +416,13 @@ const Sidebar = () => {
   ========================================================= */
 
   return (
-    <aside className="sidebar">
+    <aside
+      className={`sidebar ${
+        collapsed
+          ? 'sidebar-is-collapsed'
+          : ''
+      }`}
+    >
 
       {/* =================================================
           HEADER
@@ -419,11 +436,26 @@ const Sidebar = () => {
             EH
           </div>
 
-          <span className="eventhub-name">
-            EventHub
-          </span>
+          {!collapsed && (
+            <span className="eventhub-name">
+              EventHub
+            </span>
+          )}
 
         </div>
+
+
+        <button
+          type="button"
+          className="sidebar-toggle"
+          onClick={onToggle}
+          aria-label="Toggle sidebar"
+        >
+          <Icon
+            type="menu"
+            size={26}
+          />
+        </button>
 
       </div>
 
@@ -453,22 +485,26 @@ const Sidebar = () => {
           )}
 
 
-          <div className="profile-text">
+          {!collapsed && (
+            <div className="profile-text">
 
-            <strong>
-              {fullName}
-            </strong>
+              <strong>
+                {fullName}
+              </strong>
 
-            <span>
-              {roleName}
+              <span>
+                {roleName}
+              </span>
+
+            </div>
+          )}
+
+
+          {!collapsed && (
+            <span className="profile-arrow">
+              {profileOpen ? '⌃' : '⌄'}
             </span>
-
-          </div>
-
-
-          <span className="profile-arrow">
-            {profileOpen ? '⌃' : '⌄'}
-          </span>
+          )}
 
         </button>
 
@@ -477,7 +513,7 @@ const Sidebar = () => {
             PROFILE DROPDOWN
         ================================================= */}
 
-        {profileOpen && (
+        {profileOpen && !collapsed && (
           <div className="profile-dropdown">
 
             {!editOpen ? (
@@ -639,6 +675,11 @@ const Sidebar = () => {
                   : ''
               }`
             }
+            title={
+              collapsed
+                ? item.label
+                : ''
+            }
           >
 
             <span className="sidebar-icon">
@@ -648,9 +689,12 @@ const Sidebar = () => {
               />
             </span>
 
-            <span className="sidebar-link-label">
-              {item.label}
-            </span>
+
+            {!collapsed && (
+              <span className="sidebar-link-label">
+                {item.label}
+              </span>
+            )}
 
           </NavLink>
 
@@ -669,6 +713,11 @@ const Sidebar = () => {
           type="button"
           className="sidebar-logout"
           onClick={handleLogout}
+          title={
+            collapsed
+              ? 'Logout'
+              : ''
+          }
         >
 
           <span className="sidebar-icon">
@@ -678,9 +727,11 @@ const Sidebar = () => {
             />
           </span>
 
-          <span className="sidebar-logout-label">
-            Logout
-          </span>
+          {!collapsed && (
+            <span className="sidebar-logout-label">
+              Logout
+            </span>
+          )}
 
         </button>
 
