@@ -291,14 +291,20 @@ const AttendanceReport = () => {
         Object.keys(byEvent[eventName]).sort().forEach((blockKey) => {
           const blockLabel = blockKey === 'Unassigned' ? 'Unassigned Year/Block' : `Year ${blockKey.split('-')[0]} — Block ${blockKey.split('-')[1]}`;
           lines.push([blockLabel].map(escapeCSVCell).join(','));
-          lines.push(['#', 'Student Name', 'Role', 'Time In'].map(escapeCSVCell).join(','));
+          lines.push(['#', 'Student Name', 'Role', 'Time In', 'Time Out', 'Date'].map(escapeCSVCell).join(','));
 
           const sorted = [...byEvent[eventName][blockKey]].sort((a, b) =>
             `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`)
           );
           sorted.forEach((r, i) => {
-            lines.push([i + 1, `${r.first_name} ${r.last_name}`, roleLabel(r.role, r.position), formatDate(r.scanned_at)]
-              .map(escapeCSVCell).join(','));
+            lines.push([
+              i + 1,
+              `${r.first_name} ${r.last_name}`,
+              roleLabel(r.role, r.position),
+              formatTimeOnly(r.scanned_at),
+              formatTimeOnly(r.time_out || r.checkout_at),
+              formatDateOnly(r.scanned_at),
+            ].map(escapeCSVCell).join(','));
           });
           lines.push('');
         });
@@ -339,12 +345,14 @@ const AttendanceReport = () => {
       eventNameById[a.event_id] || '—',
       `${a.year_level}-${a.block}`,
       roleLabel(a.role, a.position),
-      formatDate(a.scanned_at),
+      formatTimeOnly(a.scanned_at),
+      formatTimeOnly(a.time_out || a.checkout_at),
+      formatDateOnly(a.scanned_at),
     ]);
 
     downloadCSV(
       `${selectedDept?.name}_${selectedYear}Year_Block${selectedBlock}.csv`,
-      ['#', 'Student Name', 'Event', 'Year/Block', 'Role', 'Time In'],
+      ['#', 'Student Name', 'Event', 'Year/Block', 'Role', 'Time In', 'Time Out', 'Date'],
       rows
     );
     toast.success('CSV exported!');
@@ -369,12 +377,14 @@ const AttendanceReport = () => {
       `${a.first_name} ${a.last_name}`,
       `${a.year_level}-${a.block}`,
       roleLabel(a.role, a.position),
-      formatDate(a.scanned_at),
+      formatTimeOnly(a.scanned_at),
+      formatTimeOnly(a.time_out || a.checkout_at),
+      formatDateOnly(a.scanned_at),
     ]);
 
     downloadCSV(
       `${ev.event_name}_${selectedDept?.name}_${selectedYear}Year_Block${selectedBlock}.csv`,
-      ['#', 'Student Name', 'Year/Block', 'Role', 'Time In'],
+      ['#', 'Student Name', 'Year/Block', 'Role', 'Time In', 'Time Out', 'Date'],
       rows
     );
     toast.success('CSV exported!');
@@ -407,6 +417,18 @@ const AttendanceReport = () => {
       percentage: parseFloat(pct.toFixed(1)),
       display: `${data.attended}/${data.total} attended`
     };
+  };
+
+  // Newest event first. Tries a few common date field names since the
+  // department-summary endpoint's exact field wasn't confirmed — if your
+  // backend uses a different name than date_start/event_date/created_at,
+  // swap it in here.
+  const getSortedSummary = () => {
+    return [...deptSummary].sort((a, b) => {
+      const dateA = new Date(a.date_start || a.event_date || a.created_at || 0);
+      const dateB = new Date(b.date_start || b.event_date || b.created_at || 0);
+      return dateB - dateA;
+    });
   };
 
   const renderBreadcrumb = () => {
@@ -481,7 +503,10 @@ const AttendanceReport = () => {
     </div>
   );
 
-  const renderYearBlocksView = () => (
+  const renderYearBlocksView = () => {
+    const sortedSummary = getSortedSummary();
+
+    return (
     <div className="dashboard-container">
       {renderBreadcrumb()}
       
@@ -500,10 +525,10 @@ const AttendanceReport = () => {
             </span>
           </div>
           <div className="summary-list">
-            {deptSummary.length === 0 ? (
+            {sortedSummary.length === 0 ? (
               <p className="empty-text">No events found for this department.</p>
             ) : (
-              (showAllSummary ? deptSummary : deptSummary.slice(0, 5)).map((event, idx) => {
+              (showAllSummary ? sortedSummary : sortedSummary.slice(0, 5)).map((event, idx) => {
                 const progress = getEventProgress(event.attended_count, event.total_students);
                 const isComplete = progress === 100;
                 
@@ -524,14 +549,14 @@ const AttendanceReport = () => {
               })
             )}
           </div>
-          {deptSummary.length > 5 && (
+          {sortedSummary.length > 5 && (
             <button
               type="button"
               className="breadcrumb-link"
               style={{ marginTop: 12 }}
               onClick={() => setShowAllSummary((prev) => !prev)}
             >
-              {showAllSummary ? '▲ Show less' : `▼ Show more (${deptSummary.length - 5} more)`}
+              {showAllSummary ? '▲ Show less' : `▼ Show more (${sortedSummary.length - 5} more)`}
             </button>
           )}
         </div>
@@ -605,7 +630,8 @@ const AttendanceReport = () => {
         ))}
       </div>
     </div>
-  );
+    );
+  };
 
   // ── Block-level report: one card per event, matching the reference design ──
   const renderReportView = () => (
@@ -692,6 +718,7 @@ const AttendanceReport = () => {
                         <th>Year/Block</th>
                         <th>Role</th>
                         <th>Time In</th>
+                        <th>Time Out</th>
                         <th>Photo Proof</th>
                       </tr>
                     </thead>
@@ -720,6 +747,7 @@ const AttendanceReport = () => {
                               )}
                             </td>
                             <td>{formatDate(a.scanned_at)}</td>
+                            <td>{formatDate(a.time_out || a.checkout_at)}</td>
                             <td>
                               {a.checkin_photo ? (
                                 <button
@@ -752,6 +780,22 @@ const AttendanceReport = () => {
     if (!dateStr) return '—';
     return new Date(dateStr).toLocaleString('en-PH', {
       dateStyle: 'medium',
+      timeStyle: 'short',
+    });
+  };
+
+  // Date-only, no time — used in CSV exports where Date is its own column.
+  const formatDateOnly = (dateStr) => {
+    if (!dateStr) return '—';
+    return new Date(dateStr).toLocaleDateString('en-PH', {
+      dateStyle: 'medium',
+    });
+  };
+
+  // Time-only, no date — used for the Time In / Time Out CSV columns.
+  const formatTimeOnly = (dateStr) => {
+    if (!dateStr) return '—';
+    return new Date(dateStr).toLocaleTimeString('en-PH', {
       timeStyle: 'short',
     });
   };
