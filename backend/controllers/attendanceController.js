@@ -446,6 +446,7 @@ const getBlockReport = async (req, res) => {
     let attQuery = `
       SELECT
         a.attendance_id, a.event_id, a.checkin_photo,
+        a.checkout_photo,
         a.checked_in_at AS scanned_at,
         a.checkout_at,
         u.first_name, u.last_name, u.year_level, u.block, u.role, u.position
