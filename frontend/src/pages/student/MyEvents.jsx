@@ -172,7 +172,7 @@ const MyEvents = () => {
     }
 
     if (event.requires_payment && (ticket.payment_status === 'pending' || ticket.payment_status === 'rejected')) {
-      return 'upload_receipt';
+      return hasEventEnded(event) ? 'missed' : 'upload_receipt';
     }
 
     if (ticket.status !== 'used') {
