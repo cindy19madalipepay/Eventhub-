@@ -25,6 +25,7 @@ const History = () => {
   const VISIBLE_LIMIT = 3;
 
   const attendanceRef = useRef(null);
+  const missedRef = useRef(null);
   const paymentsRef = useRef(null);
   const evaluationsRef = useRef(null);
 
@@ -88,18 +89,26 @@ const History = () => {
         <h2 className="history-title">My Activity History</h2>
       </div>
 
+      {/* ── STAT CARDS ─────────────────────────────────────────
+          4 small, uniformly-patterned cards ("Noun + past-tense verb"):
+          Events Attended / Events Missed / Payments Validated /
+          Evaluations Given — each clickable and scrolls to its section. */}
       <div className="stats-row">
         <div className="stat-card clickable" onClick={() => scrollToSection(attendanceRef)} role="button" tabIndex={0}>
           <div className="stat-number">{attendance.length}</div>
           <div className="stat-label">Events Attended</div>
         </div>
-        <div className="stat-card clickable" onClick={() => scrollToSection(evaluationsRef)} role="button" tabIndex={0}>
-          <div className="stat-number">{evaluations.length}</div>
-          <div className="stat-label">Evaluations Given</div>
+        <div className="stat-card clickable stat-card-missed" onClick={() => scrollToSection(missedRef)} role="button" tabIndex={0}>
+          <div className="stat-number">{missedEvents.length}</div>
+          <div className="stat-label">Events Missed</div>
         </div>
         <div className="stat-card clickable" onClick={() => scrollToSection(paymentsRef)} role="button" tabIndex={0}>
           <div className="stat-number">{paymentsValidatedCount}</div>
           <div className="stat-label">Payments Validated</div>
+        </div>
+        <div className="stat-card clickable" onClick={() => scrollToSection(evaluationsRef)} role="button" tabIndex={0}>
+          <div className="stat-number">{evaluations.length}</div>
+          <div className="stat-label">Evaluations Given</div>
         </div>
       </div>
 
@@ -116,14 +125,28 @@ const History = () => {
                   <h4 className="row-title">{record.event_name}</h4>
                   <span className="row-meta">{formatDate(record.checked_in_at)}</span>
                 </div>
-                {record.photo_url && (
-                  <button
-                    className="view-btn"
-                    onClick={() => setPreviewImage(resolveImageUrl(record.photo_url))}
-                  >
-                    View Photo
-                  </button>
-                )}
+                {/* Both login (check-in) and logout (checkout) photos, same
+                    naming pattern: "View Check-In Photo" / "View Check-Out
+                    Photo". Checkout button only appears once a checkout
+                    photo actually exists on the record. */}
+                <div className="row-actions">
+                  {record.photo_url && (
+                    <button
+                      className="view-btn"
+                      onClick={() => setPreviewImage(resolveImageUrl(record.photo_url))}
+                    >
+                      View Check-In Photo
+                    </button>
+                  )}
+                  {record.checkout_photo && (
+                    <button
+                      className="view-btn view-btn-secondary"
+                      onClick={() => setPreviewImage(resolveImageUrl(record.checkout_photo))}
+                    >
+                      View Check-Out Photo
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
             {attendance.length > VISIBLE_LIMIT && (
@@ -136,12 +159,7 @@ const History = () => {
       </div>
 
       {/* ── MISSED EVENTS ─────────────────────────────────────── */}
-      {/* Always rendered now (previously hidden entirely when the list was
-          empty), matching the pattern of every other section below, so an
-          empty result reads as "No missed events" rather than the whole
-          section silently vanishing — which was indistinguishable from a
-          real bug. */}
-      <h3 className="section-title">Missed Events</h3>
+      <h3 className="section-title" ref={missedRef}>Missed Events</h3>
       <div className="history-section">
         {missedEvents.length === 0 ? (
           <div className="empty-state">No missed events.</div>

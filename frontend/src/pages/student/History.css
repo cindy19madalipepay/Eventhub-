@@ -24,32 +24,38 @@
 }
 
 /* ── STAT CARDS ─────────────────────────────────────────── */
+/* 4 cards now (Attended / Missed / Payments / Evaluations). Kept small
+   and uniform so all 4 sit comfortably in one row on desktop. */
 .stats-row {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
   margin-bottom: 32px;
 }
 
 .stat-card {
   background: #fff;
-  border-radius: 14px;
+  border-radius: 12px;
   border-top: 4px solid #6a8f78;
-  padding: 28px 16px;
+  padding: 18px 10px;
   text-align: center;
   box-shadow: 0 1px 4px rgba(31, 51, 41, 0.06);
 }
 
+.stat-card-missed {
+  border-top-color: #a85c50;
+}
+
 .stat-number {
-  font-size: 34px;
+  font-size: 26px;
   font-weight: 800;
   color: #1f3329;
   line-height: 1;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .stat-label {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -152,6 +158,15 @@
   color: #8a968f;
 }
 
+/* Holds the check-in / check-out photo buttons together, stacked on
+   narrow rows instead of overflowing. */
+.row-actions {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .payment-details {
   display: flex;
   align-items: center;
@@ -224,10 +239,22 @@
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s ease;
+  white-space: nowrap;
 }
 
 .view-btn:hover {
   background: #d3e5d9;
+}
+
+/* Checkout/logout photo button — same shape as .view-btn, softer fill so
+   it visually pairs with (but doesn't compete with) the check-in button. */
+.view-btn-secondary {
+  background: #f1f4e9;
+  color: #6a8f78;
+}
+
+.view-btn-secondary:hover {
+  background: #e3ebd7;
 }
 
 .empty-state {
@@ -330,10 +357,10 @@
 /* ================================================================
    RESPONSIVE
 
-   This page had no mobile rules at all before — stat cards and
-   rows would overflow next to the sidebar's 78px collapsed
-   rail. Stat cards stay 3-across but shrink to fit; history
-   rows (not a grid) get tighter padding/fonts to match.
+   Stat cards go from 4-across on desktop to a 2x2 grid on mobile
+   (instead of squeezing 4 tiny columns into one row), staying small
+   and tappable. History rows (not a grid) get tighter padding/fonts
+   to match, and the two attendance photo buttons stack cleanly.
    ================================================================ */
 
 @media (max-width: 768px) {
@@ -348,6 +375,7 @@
   }
 
   .stats-row {
+    grid-template-columns: repeat(2, 1fr);
     gap: 8px;
     margin-bottom: 20px;
   }
@@ -398,6 +426,10 @@
 
   .row-meta {
     font-size: 10px;
+  }
+
+  .row-actions {
+    gap: 6px;
   }
 
   .payment-details {
@@ -451,6 +483,7 @@
 @media (max-width: 380px) {
 
   .stats-row {
+    grid-template-columns: repeat(2, 1fr);
     gap: 6px;
   }
 
@@ -463,6 +496,11 @@
   }
 
   .history-row {
+    flex-wrap: wrap;
+  }
+
+  .row-actions {
+    flex-direction: row;
     flex-wrap: wrap;
   }
 }

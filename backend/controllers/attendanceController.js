@@ -22,12 +22,18 @@ const getMyAttendance = async (req, res) => {
     const user_id = req.user?.user_id;
     if (!user_id) return res.status(401).json({ success: false, message: 'Unauthorized.' });
 
+    // ── FIXED (checkout_photo) ─────────────────────────────────────────
+    // Previously only selected a.checkin_photo AS photo_url — the History
+    // page had no way to show the checkout/logout photo even though it's
+    // captured during registerCheckout(). Now also selects a.checkout_photo
+    // as-is, so the frontend can render both photos per attendance record.
     const [attended] = await pool.query(
       `SELECT 
          a.attendance_id,
          a.ticket_id,
          a.event_id,
          a.checkin_photo AS photo_url,
+         a.checkout_photo,
          a.checked_in_at,
          a.checkout_at,
          e.event_name,
