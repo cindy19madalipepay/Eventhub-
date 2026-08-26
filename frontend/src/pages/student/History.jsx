@@ -98,7 +98,7 @@ const History = () => {
           <div className="stat-number">{attendance.length}</div>
           <div className="stat-label">Events Attended</div>
         </div>
-        <div className="stat-card clickable stat-card-missed" onClick={() => scrollToSection(missedRef)} role="button" tabIndex={0}>
+        <div className="stat-card clickable" onClick={() => scrollToSection(missedRef)} role="button" tabIndex={0}>
           <div className="stat-number">{missedEvents.length}</div>
           <div className="stat-label">Events Missed</div>
         </div>

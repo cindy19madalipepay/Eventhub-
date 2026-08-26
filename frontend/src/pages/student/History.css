@@ -42,10 +42,6 @@
   box-shadow: 0 1px 4px rgba(31, 51, 41, 0.06);
 }
 
-.stat-card-missed {
-  border-top-color: #a85c50;
-}
-
 .stat-number {
   font-size: 26px;
   font-weight: 800;
