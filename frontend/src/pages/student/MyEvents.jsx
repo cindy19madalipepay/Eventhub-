@@ -49,8 +49,6 @@ const getEventDateTime = (event) => {
   return new Date(`${datePart}T${event.time_start || '00:00'}`);
 };
 
-const REGISTRATION_GRACE_MINUTES = 30;
-
 const STATUS_CONFIG = {
   not_started:         { label: 'NOT YET OPEN',        theme: 'blue',   button: null },
   not_registered:      { label: 'NOT REGISTERED',      theme: 'blue',   button: 'Register Attendance' },
@@ -151,11 +149,11 @@ const MyEvents = () => {
 
   const hasEventStarted = (event) => new Date() >= getEventDateTime(event);
 
-  const isPastRegistrationWindow = (event) => {
-    const deadline = new Date(getEventDateTime(event).getTime() + REGISTRATION_GRACE_MINUTES * 60000);
-    return new Date() > deadline;
-  };
-
+  // Attendance can be registered any time the event is live — from start
+  // until it ends. An event is only "missed" once it has fully ended
+  // (date_end/time_end, falling back to date_start/time_start when no end
+  // is set) with no attendance recorded. Replaces the old 30-minute
+  // registration grace window.
   const hasEventEnded = (event) => {
     const endDateStr = String(event.date_end || event.date_start).split('T')[0];
     const endTime = event.time_end || event.time_start || '23:59';
@@ -169,7 +167,7 @@ const MyEvents = () => {
 
     if (!ticket) {
       if (!hasEventStarted(event)) return 'not_started';
-      if (isPastRegistrationWindow(event)) return 'missed';
+      if (hasEventEnded(event)) return 'missed';
       return 'not_registered';
     }
 
@@ -178,7 +176,7 @@ const MyEvents = () => {
     }
 
     if (ticket.status !== 'used') {
-      if (isPastRegistrationWindow(event)) return 'missed';
+      if (hasEventEnded(event)) return 'missed';
       return 'register_attendance';
     }
 

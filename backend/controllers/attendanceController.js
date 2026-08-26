@@ -48,6 +48,12 @@ const getMyAttendance = async (req, res) => {
     // that have clearly already started/ended still look "in the future"
     // to this comparison. DATE_ADD(NOW(), INTERVAL 8 HOUR) converts the
     // DB's UTC clock to PH local time before comparing.
+    //
+    // CHANGED: an event is now only "missed" once it has fully ENDED
+    // (date_end/time_end, falling back to date_start/time_start if no
+    // end is set) with no attendance recorded — replacing the old
+    // "30 minutes after start" cutoff. This gives students the whole
+    // event duration to check in.
     const [missed] = await pool.query(
       `SELECT 
          e.event_id,
@@ -59,9 +65,9 @@ const getMyAttendance = async (req, res) => {
        LEFT JOIN tickets t ON t.event_id = e.event_id AND t.user_id = ?
        LEFT JOIN attendance a ON a.ticket_id = t.ticket_id
        WHERE a.attendance_id IS NULL
-         AND TIMESTAMPADD(
-               MINUTE, 30,
-               CONCAT(e.date_start, ' ', COALESCE(e.time_start, '00:00:00'))
+         AND CONCAT(
+               COALESCE(e.date_end, e.date_start), ' ',
+               COALESCE(e.time_end, e.time_start, '23:59:59')
              ) < DATE_ADD(NOW(), INTERVAL 8 HOUR)
        ORDER BY e.date_start DESC`,
       [user_id]
