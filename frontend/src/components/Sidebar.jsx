@@ -391,7 +391,11 @@ const Sidebar = ({ collapsed, isMobile, onToggle }) => {
       <div className="sidebar-header">
 
         <div className="eventhub-brand">
-          <div className="eventhub-logo">EH</div>
+          <img
+            src="/LG.png"
+            alt="EventHub logo"
+            className="eventhub-logo"
+          />
 
           {!collapsed && (
             <span className="eventhub-name">EventHub</span>
