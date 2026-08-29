@@ -187,6 +187,13 @@ const Notifications = () => {
     const attendance = getAttendanceForEvent(event.event_id);
 
     if (!ticket) {
+      // Paid events: registration + payment upload open immediately when
+      // the event is created — no need to wait for the event to start.
+      if (event.requires_payment) {
+        return hasEventEnded(event) ? 'missed' : 'not_registered';
+      }
+      // Free events: registration still waits for the event to start,
+      // since "registering" IS the attendance check-in for these.
       if (!hasEventStarted(event)) return 'not_started';
       if (hasEventEnded(event)) return 'missed';
       return 'not_registered';
@@ -196,7 +203,10 @@ const Notifications = () => {
       return hasEventEnded(event) ? 'missed' : 'upload_receipt';
     }
 
+    // Ticket exists and payment (if any) is approved — this is the actual
+    // attendance check-in step, which waits for the event to start.
     if (ticket.status !== 'used') {
+      if (!hasEventStarted(event)) return 'not_started';
       if (hasEventEnded(event)) return 'missed';
       return 'register_attendance';
     }
