@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import api from '../../utils/api';
 import toast from 'react-hot-toast';
 import EvaluationModal from '../../components/EvaluationModal';
+import PdfViewer from '../../components/PdfViewer';
 import './Notifications.css';
 import '../student/MyEvents.css';
 
@@ -85,20 +86,6 @@ const Notifications = () => {
 
   const [evalEvent, setEvalEvent] = useState(null);
   const [lightbox, setLightbox] = useState(null);
-  const [pdfBlobUrl, setPdfBlobUrl] = useState(null);
-
-  useEffect(() => {
-    if (lightbox?.type === 'pdf') {
-      fetch(lightbox.src)
-        .then((res) => (res.ok ? res.blob() : Promise.reject()))
-        .then((blob) => setPdfBlobUrl(URL.createObjectURL(blob)))
-        .catch(() => setPdfBlobUrl(lightbox.src));
-    } else {
-      if (pdfBlobUrl && pdfBlobUrl.startsWith('blob:')) URL.revokeObjectURL(pdfBlobUrl);
-      setPdfBlobUrl(null);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lightbox]);
 
   const fetchAll = async () => {
     try {
@@ -756,15 +743,7 @@ const Notifications = () => {
           </button>
           {lightbox.type === 'pdf' ? (
             <div className="lightbox-pdf-wrap" onClick={(e) => e.stopPropagation()}>
-              {pdfBlobUrl ? (
-                <iframe
-                  src={`${pdfBlobUrl}#view=FitH&toolbar=1`}
-                  title="Program rules"
-                  className="lightbox-pdf"
-                />
-              ) : (
-                <div className="lightbox-pdf-loading">Loading PDF…</div>
-              )}
+              <PdfViewer src={lightbox.src} />
             </div>
           ) : (
             <img

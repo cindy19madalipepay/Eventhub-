@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import api from '../../utils/api';
 import toast from 'react-hot-toast';
 import EvaluationModal from '../../components/EvaluationModal';
+import PdfViewer from '../../components/PdfViewer';
 import './MyEvents.css';
 import './Notifications.css';
 
@@ -87,21 +88,6 @@ const MyEvents = () => {
   const [submittingCheckout, setSubmittingCheckout] = useState(false);
 
   const [lightbox, setLightbox] = useState(null);
-  const [pdfBlobUrl, setPdfBlobUrl] = useState(null);
-
-  // Fetch PDF as blob so it renders inline without embedding blocks
-  useEffect(() => {
-    if (lightbox?.type === 'pdf') {
-      fetch(lightbox.src)
-        .then((res) => (res.ok ? res.blob() : Promise.reject()))
-        .then((blob) => setPdfBlobUrl(URL.createObjectURL(blob)))
-        .catch(() => setPdfBlobUrl(lightbox.src));
-    } else {
-      if (pdfBlobUrl && pdfBlobUrl.startsWith('blob:')) URL.revokeObjectURL(pdfBlobUrl);
-      setPdfBlobUrl(null);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lightbox]);
 
   useEffect(() => {
     fetchAll();
@@ -675,15 +661,7 @@ const MyEvents = () => {
           </button>
           {lightbox.type === 'pdf' ? (
             <div className="lightbox-pdf-wrap" onClick={(e) => e.stopPropagation()}>
-              {pdfBlobUrl ? (
-                <iframe
-                  src={`${pdfBlobUrl}#view=FitH&toolbar=1`}
-                  title="Program rules"
-                  className="lightbox-pdf"
-                />
-              ) : (
-                <div className="lightbox-pdf-loading">Loading PDF…</div>
-              )}
+              <PdfViewer src={lightbox.src} />
             </div>
           ) : (
             <img
