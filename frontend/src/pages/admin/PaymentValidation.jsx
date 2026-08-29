@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../../utils/api';
 import toast from 'react-hot-toast';
-import Sidebar from '../../components/Sidebar';
 import './PaymentValidation.css';
 
 // Get the backend/server base URL from the existing API configuration.
@@ -238,79 +237,75 @@ const PaymentValidation = () => {
   const hiddenCount = payments.length - VISIBLE_COUNT;
 
   return (
-    <div className="app-layout">
-      <Sidebar />
-
-      <div className="main-content">
-        {/* Header with tabs */}
-        <div className="receipts-header">
-          <div className="receipts-title">
-            <h1>Payment Receipt Validation</h1>
-          </div>
-
-          <div className="receipts-tabs">
-            {TABS.map((tab) => (
-              <button
-                key={tab.key}
-                className={`tab-btn ${
-                  activeTab === tab.key ? 'active' : ''
-                }`}
-                onClick={() => setActiveTab(tab.key)}
-              >
-                <span className="tab-icon">{tab.icon}</span>
-
-                <span>{tab.label}</span>
-
-                <span className="tab-count">
-                  ({counts[tab.key] || 0})
-                </span>
-              </button>
-            ))}
-          </div>
+    <>
+      {/* Header with tabs */}
+      <div className="receipts-header">
+        <div className="receipts-title">
+          <h1>Payment Receipt Validation</h1>
         </div>
 
-        {/* Content */}
-        {loading ? (
-          <div className="receipts-content-card">
-            <p className="loading-text">
-              Loading receipts...
-            </p>
-          </div>
-        ) : payments.length === 0 ? (
-          renderEmptyState()
-        ) : (
-          <>
-            <div className="receipts-list">
-              {visiblePayments.map((p) =>
-                renderReceiptCard(p)
-              )}
-            </div>
+        <div className="receipts-tabs">
+          {TABS.map((tab) => (
+            <button
+              key={tab.key}
+              className={`tab-btn ${
+                activeTab === tab.key ? 'active' : ''
+              }`}
+              onClick={() => setActiveTab(tab.key)}
+            >
+              <span className="tab-icon">{tab.icon}</span>
 
-            {payments.length > VISIBLE_COUNT && (
-              <button
-                className="show-more-btn"
-                onClick={() =>
-                  setExpanded((prev) => !prev)
-                }
-              >
-                <span>
-                  {expanded
-                    ? 'Show Less'
-                    : `Show More (${hiddenCount} more)`}
-                </span>
+              <span>{tab.label}</span>
 
-                <span
-                  className={`show-more-caret ${
-                    expanded ? 'rotated' : ''
-                  }`}
-                >
-                  ⌄
-                </span>
-              </button>
-            )}
-          </>
-        )}
+              <span className="tab-count">
+                ({counts[tab.key] || 0})
+              </span>
+            </button>
+          ))}
+        </div>
       </div>
+
+      {/* Content */}
+      {loading ? (
+        <div className="receipts-content-card">
+          <p className="loading-text">
+            Loading receipts...
+          </p>
+        </div>
+      ) : payments.length === 0 ? (
+        renderEmptyState()
+      ) : (
+        <>
+          <div className="receipts-list">
+            {visiblePayments.map((p) =>
+              renderReceiptCard(p)
+            )}
+          </div>
+
+          {payments.length > VISIBLE_COUNT && (
+            <button
+              className="show-more-btn"
+              onClick={() =>
+                setExpanded((prev) => !prev)
+              }
+            >
+              <span>
+                {expanded
+                  ? 'Show Less'
+                  : `Show More (${hiddenCount} more)`}
+              </span>
+
+              <span
+                className={`show-more-caret ${
+                  expanded ? 'rotated' : ''
+                }`}
+              >
+                ⌄
+              </span>
+            </button>
+          )}
+        </>
+      )}
 
       {/* Receipt photo viewer modal */}
       {viewingImage && (
@@ -339,7 +334,7 @@ const PaymentValidation = () => {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 
