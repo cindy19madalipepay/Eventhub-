@@ -1,9 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-// Bundling the worker from the installed package (via Vite's ?url import)
-// guarantees the worker version always matches pdf.js itself, and serves it
-// from our own domain instead of depending on a CDN having this exact
-// version hosted.
-import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
 /**
  * Renders a PDF by drawing every page onto a <canvas> using pdf.js,
@@ -27,7 +22,8 @@ const PdfViewer = ({ src }) => {
 
       try {
         const pdfjsLib = await import('pdfjs-dist');
-        pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+        pdfjsLib.GlobalWorkerOptions.workerSrc =
+          `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
         const pdf = await pdfjsLib.getDocument(src).promise;
         if (cancelled) return;
