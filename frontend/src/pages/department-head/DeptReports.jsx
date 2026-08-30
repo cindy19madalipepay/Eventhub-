@@ -1,12 +1,14 @@
-import { useState, useEffect, Fragment } from 'react';
+import { useState, useEffect } from 'react';
 import api from '../../utils/api';
 import toast from 'react-hot-toast';
+
+const INITIAL_VISIBLE = 3;
 
 const DeptReports = () => {
   const [rows, setRows]           = useState([]);
   const [deptStats, setDeptStats] = useState(null);
   const [loading, setLoading]     = useState(true);
-  const [expandedId, setExpandedId] = useState(null);
+  const [showAll, setShowAll]     = useState(false);
 
   useEffect(() => {
     const buildReport = async () => {
@@ -39,7 +41,7 @@ const DeptReports = () => {
               const attended    = attendanceRes.data.count || 0;
               const missed      = Math.max(registered - attended, 0);
 
-              // Turnout is now based on attendance against the department's
+              // Turnout is based on attendance against the department's
               // total student headcount, not against event registrations.
               const rate = totalStudents > 0 ? Math.round((attended / totalStudents) * 100) : 0;
 
@@ -79,9 +81,8 @@ const DeptReports = () => {
   const totalAttended   = rows.reduce((sum, r) => sum + r.attended, 0);
   const overallRate     = totalRegistered > 0 ? Math.round((totalAttended / totalRegistered) * 100) : 0;
 
-  const toggleRow = (id) => {
-    setExpandedId((prev) => (prev === id ? null : id));
-  };
+  const visibleRows = showAll ? rows : rows.slice(0, INITIAL_VISIBLE);
+  const hasMore = rows.length > INITIAL_VISIBLE;
 
   return (
     <>
@@ -107,102 +108,104 @@ const DeptReports = () => {
 
       <div className="card">
         <h3 style={{ marginBottom: 16, color: '#1f3329' }}>Per-Event Breakdown</h3>
+
+        {deptStats?.by_year && Object.keys(deptStats.by_year).length > 0 && (
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontSize: 12, color: '#888', textTransform: 'uppercase', marginBottom: 6 }}>
+              Department headcount by year level
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {Object.entries(deptStats.by_year).map(([year, data]) => (
+                <span
+                  key={year}
+                  style={{
+                    background: '#e8f0ea', color: '#1f3329',
+                    padding: '4px 10px', borderRadius: 999,
+                    fontSize: 13, fontWeight: 600,
+                  }}
+                >
+                  Year {year}: {data.total}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
         {loading ? (
           <p>Building report...</p>
         ) : rows.length === 0 ? (
           <p style={{ color: '#aaa', textAlign: 'center', padding: 24 }}>No events yet.</p>
         ) : (
-          <div className="table-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th style={{ width: 28 }}></th>
-                  <th>Event</th><th>Date</th><th>Registered</th><th>Attended</th><th>Missed</th><th>Turnout</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((r) => {
-                  const isExpanded = expandedId === r.event_id;
-                  return (
-                    <Fragment key={r.event_id}>
-                      <tr
-                        onClick={() => toggleRow(r.event_id)}
-                        style={{ cursor: 'pointer' }}
-                        title="Click to view more details"
-                      >
-                        <td style={{ textAlign: 'center', color: '#888', userSelect: 'none' }}>
-                          {isExpanded ? '▾' : '▸'}
-                        </td>
-                        <td><strong>{r.event_name}</strong></td>
-                        <td>{new Date(r.date_start).toLocaleDateString()}</td>
-                        <td>{r.registered}/{totalStudents}</td>
-                        <td>{r.attended}/{totalStudents}</td>
-                        <td>{r.missed}/{totalStudents}</td>
-                        <td>
-                          <span style={{
-                            fontWeight: 700,
-                            color: r.rate >= 75 ? '#27ae60' : r.rate >= 40 ? '#f39c12' : '#e94560',
-                          }}>
-                            {r.rate}%
-                          </span>
-                        </td>
-                      </tr>
+          <>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {visibleRows.map((r) => (
+                <div
+                  key={r.event_id}
+                  style={{ border: '1px solid #e5e9e7', borderRadius: 10, padding: '14px 16px' }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{
+                        fontWeight: 700, color: '#1f3329',
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                      }}>
+                        {r.event_name}
+                      </div>
+                      <div style={{ fontSize: 13, color: '#888', marginTop: 2 }}>
+                        {new Date(r.date_start).toLocaleDateString()}
+                        {r.status ? <> · <span style={{ textTransform: 'capitalize' }}>{r.status}</span></> : null}
+                      </div>
+                    </div>
+                    <span style={{
+                      fontWeight: 700, fontSize: 14, flexShrink: 0,
+                      color: r.rate >= 75 ? '#27ae60' : r.rate >= 40 ? '#f39c12' : '#e94560',
+                    }}>
+                      {r.rate}%
+                    </span>
+                  </div>
 
-                      {isExpanded && (
-                        <tr>
-                          <td colSpan={7} style={{ background: '#f8faf9', padding: '16px 20px' }}>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, marginBottom: deptStats?.by_year ? 16 : 0 }}>
-                              <div>
-                                <div style={{ fontSize: 12, color: '#888', textTransform: 'uppercase', marginBottom: 4 }}>Status</div>
-                                <div style={{ fontWeight: 600, textTransform: 'capitalize' }}>{r.status || '—'}</div>
-                              </div>
-                              <div>
-                                <div style={{ fontSize: 12, color: '#888', textTransform: 'uppercase', marginBottom: 4 }}>Registered</div>
-                                <div style={{ fontWeight: 600 }}>{r.registered} of {totalStudents} department students</div>
-                              </div>
-                              <div>
-                                <div style={{ fontSize: 12, color: '#888', textTransform: 'uppercase', marginBottom: 4 }}>Attended</div>
-                                <div style={{ fontWeight: 600 }}>{r.attended} of {totalStudents} department students</div>
-                              </div>
-                              <div>
-                                <div style={{ fontSize: 12, color: '#888', textTransform: 'uppercase', marginBottom: 4 }}>Missed</div>
-                                <div style={{ fontWeight: 600 }}>{r.missed} of {totalStudents} department students</div>
-                              </div>
-                            </div>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(90px, 1fr))',
+                    gap: 10, marginTop: 12,
+                  }}>
+                    <div>
+                      <div style={{ fontSize: 12, color: '#888', textTransform: 'uppercase', marginBottom: 4 }}>Registered</div>
+                      <div style={{ fontWeight: 700 }}>{r.registered}/{totalStudents}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 12, color: '#888', textTransform: 'uppercase', marginBottom: 4 }}>Attended</div>
+                      <div style={{ fontWeight: 700 }}>{r.attended}/{totalStudents}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 12, color: '#888', textTransform: 'uppercase', marginBottom: 4 }}>Missed</div>
+                      <div style={{ fontWeight: 700 }}>{r.missed}/{totalStudents}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
 
-                            {deptStats?.by_year && Object.keys(deptStats.by_year).length > 0 && (
-                              <div>
-                                <div style={{ fontSize: 12, color: '#888', textTransform: 'uppercase', marginBottom: 6 }}>
-                                  Department headcount by year level
-                                </div>
-                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                                  {Object.entries(deptStats.by_year).map(([year, data]) => (
-                                    <span
-                                      key={year}
-                                      style={{
-                                        background: '#e8f0ea',
-                                        color: '#1f3329',
-                                        padding: '4px 10px',
-                                        borderRadius: 999,
-                                        fontSize: 13,
-                                        fontWeight: 600,
-                                      }}
-                                    >
-                                      Year {year}: {data.total}
-                                    </span>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                          </td>
-                        </tr>
-                      )}
-                    </Fragment>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+            {hasMore && (
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
+                <button
+                  onClick={() => setShowAll((prev) => !prev)}
+                  style={{
+                    padding: '10px 22px',
+                    borderRadius: 999,
+                    border: '1px solid #d7ded9',
+                    background: '#fff',
+                    color: '#1f3329',
+                    fontWeight: 600,
+                    fontSize: 14,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {showAll ? 'Show less ▴' : `Show all ${rows.length} events ▾`}
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </>
