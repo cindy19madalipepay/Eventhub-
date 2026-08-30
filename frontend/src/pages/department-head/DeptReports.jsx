@@ -1,16 +1,29 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import api from '../../utils/api';
 import toast from 'react-hot-toast';
 
 const DeptReports = () => {
-  const [rows, setRows]       = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [rows, setRows]           = useState([]);
+  const [deptStats, setDeptStats] = useState(null);
+  const [loading, setLoading]     = useState(true);
+  const [expandedId, setExpandedId] = useState(null);
 
   useEffect(() => {
     const buildReport = async () => {
       try {
-        const eventsRes = await api.get('/events');
+        const [eventsRes, statsRes] = await Promise.all([
+          api.get('/events'),
+          api.get('/users/department-stats'),
+        ]);
+
         const events = eventsRes.data.events || [];
+        const stats = statsRes.data;
+        setDeptStats(stats);
+
+        // Total number of students in this department (department-wide
+        // headcount) — used as the denominator for every fraction below,
+        // NOT the per-event registration count.
+        const totalStudents = stats.total_students || 0;
 
         // For each event, pull ticket count + attendance count for this department.
         // Small N (a department's own events), so sequential-ish Promise.all is fine.
@@ -24,7 +37,11 @@ const DeptReports = () => {
 
               const registered = ticketsRes.data.count || 0;
               const attended    = attendanceRes.data.count || 0;
-              const rate = registered > 0 ? Math.round((attended / registered) * 100) : 0;
+              const missed      = Math.max(registered - attended, 0);
+
+              // Turnout is now based on attendance against the department's
+              // total student headcount, not against event registrations.
+              const rate = totalStudents > 0 ? Math.round((attended / totalStudents) * 100) : 0;
 
               return {
                 event_id:   ev.event_id,
@@ -33,7 +50,7 @@ const DeptReports = () => {
                 status:     ev.status,
                 registered,
                 attended,
-                missed: Math.max(registered - attended, 0),
+                missed,
                 rate,
               };
             } catch {
@@ -57,9 +74,14 @@ const DeptReports = () => {
     buildReport();
   }, []);
 
+  const totalStudents   = deptStats?.total_students || 0;
   const totalRegistered = rows.reduce((sum, r) => sum + r.registered, 0);
   const totalAttended   = rows.reduce((sum, r) => sum + r.attended, 0);
   const overallRate     = totalRegistered > 0 ? Math.round((totalAttended / totalRegistered) * 100) : 0;
+
+  const toggleRow = (id) => {
+    setExpandedId((prev) => (prev === id ? null : id));
+  };
 
   return (
     <>
@@ -94,27 +116,90 @@ const DeptReports = () => {
             <table>
               <thead>
                 <tr>
+                  <th style={{ width: 28 }}></th>
                   <th>Event</th><th>Date</th><th>Registered</th><th>Attended</th><th>Missed</th><th>Turnout</th>
                 </tr>
               </thead>
               <tbody>
-                {rows.map((r) => (
-                  <tr key={r.event_id}>
-                    <td><strong>{r.event_name}</strong></td>
-                    <td>{new Date(r.date_start).toLocaleDateString()}</td>
-                    <td>{r.registered}</td>
-                    <td>{r.attended}</td>
-                    <td>{r.missed}</td>
-                    <td>
-                      <span style={{
-                        fontWeight: 700,
-                        color: r.rate >= 75 ? '#27ae60' : r.rate >= 40 ? '#f39c12' : '#e94560',
-                      }}>
-                        {r.rate}%
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                {rows.map((r) => {
+                  const isExpanded = expandedId === r.event_id;
+                  return (
+                    <Fragment key={r.event_id}>
+                      <tr
+                        onClick={() => toggleRow(r.event_id)}
+                        style={{ cursor: 'pointer' }}
+                        title="Click to view more details"
+                      >
+                        <td style={{ textAlign: 'center', color: '#888', userSelect: 'none' }}>
+                          {isExpanded ? '▾' : '▸'}
+                        </td>
+                        <td><strong>{r.event_name}</strong></td>
+                        <td>{new Date(r.date_start).toLocaleDateString()}</td>
+                        <td>{r.registered}/{totalStudents}</td>
+                        <td>{r.attended}/{totalStudents}</td>
+                        <td>{r.missed}/{totalStudents}</td>
+                        <td>
+                          <span style={{
+                            fontWeight: 700,
+                            color: r.rate >= 75 ? '#27ae60' : r.rate >= 40 ? '#f39c12' : '#e94560',
+                          }}>
+                            {r.rate}%
+                          </span>
+                        </td>
+                      </tr>
+
+                      {isExpanded && (
+                        <tr>
+                          <td colSpan={7} style={{ background: '#f8faf9', padding: '16px 20px' }}>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, marginBottom: deptStats?.by_year ? 16 : 0 }}>
+                              <div>
+                                <div style={{ fontSize: 12, color: '#888', textTransform: 'uppercase', marginBottom: 4 }}>Status</div>
+                                <div style={{ fontWeight: 600, textTransform: 'capitalize' }}>{r.status || '—'}</div>
+                              </div>
+                              <div>
+                                <div style={{ fontSize: 12, color: '#888', textTransform: 'uppercase', marginBottom: 4 }}>Registered</div>
+                                <div style={{ fontWeight: 600 }}>{r.registered} of {totalStudents} department students</div>
+                              </div>
+                              <div>
+                                <div style={{ fontSize: 12, color: '#888', textTransform: 'uppercase', marginBottom: 4 }}>Attended</div>
+                                <div style={{ fontWeight: 600 }}>{r.attended} of {totalStudents} department students</div>
+                              </div>
+                              <div>
+                                <div style={{ fontSize: 12, color: '#888', textTransform: 'uppercase', marginBottom: 4 }}>Missed</div>
+                                <div style={{ fontWeight: 600 }}>{r.missed} of {totalStudents} department students</div>
+                              </div>
+                            </div>
+
+                            {deptStats?.by_year && Object.keys(deptStats.by_year).length > 0 && (
+                              <div>
+                                <div style={{ fontSize: 12, color: '#888', textTransform: 'uppercase', marginBottom: 6 }}>
+                                  Department headcount by year level
+                                </div>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                                  {Object.entries(deptStats.by_year).map(([year, data]) => (
+                                    <span
+                                      key={year}
+                                      style={{
+                                        background: '#e8f0ea',
+                                        color: '#1f3329',
+                                        padding: '4px 10px',
+                                        borderRadius: 999,
+                                        fontSize: 13,
+                                        fontWeight: 600,
+                                      }}
+                                    >
+                                      Year {year}: {data.total}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
+                  );
+                })}
               </tbody>
             </table>
           </div>
