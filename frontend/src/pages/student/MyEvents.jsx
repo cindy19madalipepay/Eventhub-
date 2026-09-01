@@ -52,7 +52,7 @@ const getEventDateTime = (event) => {
 const STATUS_CONFIG = {
   not_started:         { label: 'NOT YET OPEN',        theme: 'blue',   button: null },
   not_registered:      { label: 'NOT REGISTERED',      theme: 'blue',   button: 'Register Attendance' },
-  upload_receipt:      { label: 'UPLOAD RECEIPT',      theme: 'orange', button: 'Pay Now' },
+  upload_receipt:      { label: 'UPLOAD RECEIPT',      theme: 'orange', button: 'Upload your stub here' },
   register_attendance: { label: 'REGISTER ATTENDANCE', theme: 'blue',   button: 'Upload Attendance Proof' },
   attending:            { label: 'EVENT ONGOING',       theme: 'blue',   button: null },
   checkout:            { label: 'CHECKOUT REQUIRED',   theme: 'orange', button: 'Checkout (Upload Proof)' },
@@ -236,7 +236,7 @@ const MyEvents = () => {
       await api.post('/tickets', { event_id: event.event_id });
       toast.success(
         event.requires_payment
-          ? 'Registered! Please upload your payment receipt next.'
+          ? 'Registered! Grab your stub at the SSC office, then upload it here.'
           : 'Registered successfully!'
       );
       fetchAll();
@@ -269,7 +269,7 @@ const MyEvents = () => {
         await api.post('/payments/upload', formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
-        toast.success('Receipt uploaded! Waiting for admin validation.');
+        toast.success('Stub uploaded! Waiting for admin validation.');
       }
       fetchAll();
     } catch (err) {
