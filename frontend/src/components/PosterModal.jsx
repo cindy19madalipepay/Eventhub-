@@ -6,10 +6,23 @@ import './PosterModal.css';
 const isMobileDevice = () =>
   typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
+// Facebook/Messenger/Instagram/Line in-app browsers — these sandboxed
+// webviews block the Web Share API AND often disable the native
+// long-press "Save Image" menu, as a deliberate restriction Facebook
+// enforces to keep people inside the app. No client-side JS can bypass
+// this; the only real fix is getting the user into an actual browser.
+const isInAppBrowser = () =>
+  typeof navigator !== 'undefined' &&
+  /FBAN|FBAV|FB_IAB|Instagram|Line|MessengerForiOS|MessengerLiteForiOS/i.test(navigator.userAgent);
+
+const isAndroid = () =>
+  typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent);
+
 const PosterModal = ({ event, onClose }) => {
   const canvasRef = useRef(null);
   const [posterURL, setPosterURL] = useState(null);
   const [generating, setGenerating] = useState(true);
+  const [showBrowserHint, setShowBrowserHint] = useState(false);
 
   useEffect(() => {
     if (!event) return;
@@ -220,31 +233,47 @@ const PosterModal = ({ event, onClose }) => {
     return end ? `${fmt(start)} – ${fmt(end)}` : fmt(start);
   };
 
+  const openInExternalBrowser = () => {
+    const url = window.location.href;
+    if (isAndroid()) {
+      // Android supports launching Chrome directly from inside a webview
+      // via an intent:// URL — this genuinely works, unlike iOS.
+      const bare = url.replace(/^https?:\/\//, '');
+      window.location.href = `intent://${bare}#Intent;scheme=https;package=com.android.chrome;end`;
+    } else {
+      // iOS: Facebook's webview blocks JS-triggered redirects into Safari
+      // (this used to be possible via URL schemes but Meta patched it),
+      // so on iPhone the only reliable path is the manual "•••" menu.
+      setShowBrowserHint(true);
+    }
+  };
+
   const handleDownload = async () => {
     if (!posterURL) return;
 
     const filename = `${(event?.event_name || 'event').replace(/\s+/g, '_')}_Poster.png`;
 
+    // Messenger/Instagram/Line's in-app browser blocks BOTH the Web Share
+    // API and (often) long-press saving — this is enforced by the host
+    // app itself, not something page JS can work around. Rather than
+    // trying and failing silently, go straight to guiding the user out
+    // of the in-app browser and into Safari/Chrome, where downloading
+    // already works fine.
+    if (isInAppBrowser()) {
+      setShowBrowserHint(true);
+      return;
+    }
+
     try {
-      // Convert the data: URL into an actual Blob/File.
       const res = await fetch(posterURL);
       const blob = await res.blob();
       const file = new File([blob], filename, { type: 'image/png' });
 
-      // Try the native "Save Image" / share sheet first — works on real
-      // mobile Safari/Chrome outside of restrictive in-app webviews.
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({ files: [file], title: filename });
         return;
       }
 
-      // On mobile, if Web Share isn't available (common inside in-app
-      // browsers like Messenger/Instagram), <a download> silently fails
-      // there too — it doesn't throw an error, it just does nothing, which
-      // would falsely make it look like it worked. Instead of guessing,
-      // point the user at the one thing that ALWAYS works on any mobile
-      // browser: long-pressing the poster image itself (rendered below as
-      // a real <img>, not just a canvas) to bring up "Save Image".
       if (isMobileDevice()) {
         toast('Long-press the poster image above, then tap "Save Image" to save it to your gallery.', {
           icon: '📷',
@@ -264,8 +293,6 @@ const PosterModal = ({ event, onClose }) => {
       URL.revokeObjectURL(blobUrl);
       toast.success('Poster downloaded!');
     } catch (err) {
-      // AbortError just means the user closed the native share sheet —
-      // not a real failure, so don't show an error toast for that.
       if (err?.name !== 'AbortError') {
         console.error('Download failed:', err);
         toast.error('Download failed — try long-pressing the poster image to save it.');
@@ -299,6 +326,16 @@ const PosterModal = ({ event, onClose }) => {
           <button className="poster-modal-close" onClick={onClose}>&times;</button>
         </div>
 
+        {isInAppBrowser() && (
+          <div style={{
+            background: '#fff4e5', border: '1px solid #ffd8a8', borderRadius: 8,
+            padding: '10px 14px', margin: '0 0 12px', fontSize: 13, color: '#7a4a00',
+          }}>
+            You're viewing this inside Messenger's browser, which blocks image downloads.
+            Tap <strong>Download PNG</strong> below for instructions to open this in your regular browser.
+          </div>
+        )}
+
         <div className="poster-preview-wrap">
           {generating && (
             <div className="poster-loading-overlay">
@@ -308,8 +345,8 @@ const PosterModal = ({ event, onClose }) => {
           )}
 
           {/* Canvas does the actual drawing but stays hidden — the visible
-              preview below is a real <img>, which is what lets mobile users
-              long-press to save regardless of browser/webview restrictions. */}
+              preview below is a real <img>, which lets mobile users
+              long-press to save when the browser allows it. */}
           <canvas
             ref={canvasRef}
             width={600}
@@ -326,7 +363,7 @@ const PosterModal = ({ event, onClose }) => {
           )}
         </div>
 
-        {posterURL && (
+        {posterURL && !isInAppBrowser() && (
           <p style={{ fontSize: 12, color: '#888', textAlign: 'center', margin: '8px 0 0' }}>
             Tip: on mobile, you can also press and hold the poster above and choose "Save Image."
           </p>
@@ -344,6 +381,46 @@ const PosterModal = ({ event, onClose }) => {
           </button>
         </div>
       </div>
+
+      {showBrowserHint && (
+        <div
+          className="poster-modal-overlay"
+          style={{ zIndex: 10000 }}
+          onClick={(e) => { e.stopPropagation(); setShowBrowserHint(false); }}
+        >
+          <div
+            className="poster-modal-content"
+            style={{ maxWidth: 360, textAlign: 'center', padding: 24 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{ marginBottom: 12 }}>Open in your browser to download</h3>
+            <p style={{ fontSize: 14, color: '#555', marginBottom: 20, lineHeight: 1.5 }}>
+              Messenger's built-in browser blocks saving images. To download the poster:
+            </p>
+            <ol style={{ textAlign: 'left', fontSize: 14, color: '#333', margin: '0 0 20px', paddingLeft: 20, lineHeight: 1.8 }}>
+              <li>Tap the <strong>•••</strong> menu at the top-right of this screen</li>
+              <li>Choose <strong>"Open in Browser"</strong> (Safari or Chrome)</li>
+              <li>Tap <strong>Download PNG</strong> again once there</li>
+            </ol>
+            {isAndroid() && (
+              <button
+                className="btn-download"
+                style={{ width: '100%', marginBottom: 10 }}
+                onClick={openInExternalBrowser}
+              >
+                Try opening in Chrome
+              </button>
+            )}
+            <button
+              className="btn-close-secondary"
+              style={{ width: '100%' }}
+              onClick={() => setShowBrowserHint(false)}
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
