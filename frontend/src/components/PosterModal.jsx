@@ -217,13 +217,48 @@ const PosterModal = ({ event, onClose }) => {
     return end ? `${fmt(start)} – ${fmt(end)}` : fmt(start);
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!posterURL) return;
-    const link = document.createElement('a');
-    link.download = `${(event?.event_name || 'event').replace(/\s+/g, '_')}_Poster.png`;
-    link.href = posterURL;
-    link.click();
-    toast.success('Poster downloaded!');
+
+    const filename = `${(event?.event_name || 'event').replace(/\s+/g, '_')}_Poster.png`;
+
+    try {
+      // Convert the data: URL into an actual Blob/File. Mobile browsers
+      // (Safari iOS, Messenger/Instagram in-app webviews, etc) frequently
+      // ignore the <a download> attribute entirely and just navigate to /
+      // display the image instead of saving it — that's the "shows but
+      // doesn't download" behavior on mobile.
+      const res = await fetch(posterURL);
+      const blob = await res.blob();
+      const file = new File([blob], filename, { type: 'image/png' });
+
+      // The Web Share API opens the native "Save Image" / share sheet,
+      // which mobile browsers DO honor reliably — this is the fix for
+      // mobile. Desktop browsers generally don't support file sharing here,
+      // so they fall through to the classic blob-download path below.
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: filename });
+        return;
+      }
+
+      // Desktop fallback: standard blob download via a temporary <a>.
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.download = filename;
+      link.href = blobUrl;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+      toast.success('Poster downloaded!');
+    } catch (err) {
+      // AbortError just means the user closed the native share sheet —
+      // not a real failure, so don't show an error toast for that.
+      if (err?.name !== 'AbortError') {
+        console.error('Download failed:', err);
+        toast.error('Download failed — try long-pressing the poster image to save it.');
+      }
+    }
   };
 
   const handlePrint = () => {
