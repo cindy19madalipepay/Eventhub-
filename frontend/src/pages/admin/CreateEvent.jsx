@@ -406,16 +406,15 @@ const CreateEvent = () => {
       }
 
       // ========================================================
-      // SUCCESS
+      // SUCCESS — go straight to the admin Overview instead of
+      // the poster page, since the poster page was showing blank.
       // ========================================================
 
       toast.success(
         'Event created successfully! 🎉'
       );
 
-      navigate(
-        `/admin/events/${eventId}/poster`
-      );
+      navigate('/admin/dashboard');
 
     } catch (err) {
       console.error(
