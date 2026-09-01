@@ -129,9 +129,9 @@ const PaymentValidation = () => {
   const renderEmptyState = () => (
     <div className="empty-card">
       <div className="empty-mailbox">📬</div>
-      <h3>No pending receipts</h3>
+      <h3>No pending stubs</h3>
       <p>
-        Student payment receipts awaiting validation will appear here
+        Student stub  awaiting validation will appear here
       </p>
     </div>
   );
@@ -241,7 +241,7 @@ const PaymentValidation = () => {
       {/* Header with tabs */}
       <div className="receipts-header">
         <div className="receipts-title">
-          <h1>STAB Validation</h1>
+          <h1>Stub Validation</h1>
         </div>
 
         <div className="receipts-tabs">
