@@ -236,7 +236,7 @@ const MyEvents = () => {
       await api.post('/tickets', { event_id: event.event_id });
       toast.success(
         event.requires_payment
-          ? 'Registered! Grab your stub at the SSC office, then upload it here.'
+          ? 'Registered! You may grab your STUB at SSC Office.'
           : 'Registered successfully!'
       );
       fetchAll();
