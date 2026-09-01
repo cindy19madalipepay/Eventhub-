@@ -1,11 +1,24 @@
 import { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
+import { useAuth } from '../context/AuthContext';
 import './DashboardLayout.css';
 
 const MOBILE_BREAKPOINT = 768;
 
 const DashboardLayout = () => {
+
+  const { user } = useAuth();
+
+  const role = user?.role || 'student';
+  const isAdmin = role === 'admin';
+  const isDepartmentHead = role === 'department_head';
+
+  const roleName = isAdmin
+    ? 'Admin'
+    : isDepartmentHead
+      ? 'Department Head'
+      : 'Student';
 
   const getIsMobile = () =>
     typeof window !== 'undefined' &&
@@ -104,9 +117,11 @@ const DashboardLayout = () => {
 
           <div className="mobile-brand">
 
-            <div className="mobile-brand-logo">
-              EH
-            </div>
+            <img
+              src="/LG.png"
+              alt="EventHub logo"
+              className="mobile-brand-logo"
+            />
 
             <div className="mobile-brand-text">
               <strong>
@@ -114,7 +129,7 @@ const DashboardLayout = () => {
               </strong>
 
               <span>
-                Student
+                {roleName}
               </span>
             </div>
 
