@@ -241,7 +241,7 @@ const PaymentValidation = () => {
       {/* Header with tabs */}
       <div className="receipts-header">
         <div className="receipts-title">
-          <h1>Payment Receipt Validation</h1>
+          <h1>STAB Validation</h1>
         </div>
 
         <div className="receipts-tabs">
