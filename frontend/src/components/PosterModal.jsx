@@ -3,6 +3,9 @@ import api from '../utils/api';
 import toast from 'react-hot-toast';
 import './PosterModal.css';
 
+const isMobileDevice = () =>
+  typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
 const PosterModal = ({ event, onClose }) => {
   const canvasRef = useRef(null);
   const [posterURL, setPosterURL] = useState(null);
@@ -223,25 +226,34 @@ const PosterModal = ({ event, onClose }) => {
     const filename = `${(event?.event_name || 'event').replace(/\s+/g, '_')}_Poster.png`;
 
     try {
-      // Convert the data: URL into an actual Blob/File. Mobile browsers
-      // (Safari iOS, Messenger/Instagram in-app webviews, etc) frequently
-      // ignore the <a download> attribute entirely and just navigate to /
-      // display the image instead of saving it — that's the "shows but
-      // doesn't download" behavior on mobile.
+      // Convert the data: URL into an actual Blob/File.
       const res = await fetch(posterURL);
       const blob = await res.blob();
       const file = new File([blob], filename, { type: 'image/png' });
 
-      // The Web Share API opens the native "Save Image" / share sheet,
-      // which mobile browsers DO honor reliably — this is the fix for
-      // mobile. Desktop browsers generally don't support file sharing here,
-      // so they fall through to the classic blob-download path below.
+      // Try the native "Save Image" / share sheet first — works on real
+      // mobile Safari/Chrome outside of restrictive in-app webviews.
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({ files: [file], title: filename });
         return;
       }
 
-      // Desktop fallback: standard blob download via a temporary <a>.
+      // On mobile, if Web Share isn't available (common inside in-app
+      // browsers like Messenger/Instagram), <a download> silently fails
+      // there too — it doesn't throw an error, it just does nothing, which
+      // previously caused us to falsely claim "Poster downloaded!". Instead
+      // of guessing, point the user at the one thing that ALWAYS works on
+      // any mobile browser: long-pressing the poster image itself (rendered
+      // below as a real <img>, not just a canvas) to bring up "Save Image".
+      if (isMobileDevice()) {
+        toast('Long-press the poster image above, then tap "Save Image" to save it to your gallery.', {
+          icon: '📷',
+          duration: 6000,
+        });
+        return;
+      }
+
+      // Desktop: standard blob download, which is reliable here.
       const blobUrl = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.download = filename;
@@ -294,13 +306,31 @@ const PosterModal = ({ event, onClose }) => {
               <p>Generating poster...</p>
             </div>
           )}
+
+          {/* Canvas does the actual drawing but stays hidden — the visible
+              preview below is a real <img>, which is what lets mobile users
+              long-press to save regardless of browser/webview restrictions. */}
           <canvas
             ref={canvasRef}
             width={600}
             height={320}
-            style={{ width: '600px', height: '320px', display: 'block' }}
+            style={{ display: 'none' }}
           />
+
+          {posterURL && (
+            <img
+              src={posterURL}
+              alt="Event poster"
+              style={{ width: '600px', maxWidth: '100%', height: 'auto', display: 'block', borderRadius: 8 }}
+            />
+          )}
         </div>
+
+        {posterURL && (
+          <p style={{ fontSize: 12, color: '#888', textAlign: 'center', margin: '8px 0 0' }}>
+            Tip: on mobile, you can also press and hold the poster above and choose "Save Image."
+          </p>
+        )}
 
         <div className="poster-modal-actions">
           <button className="btn-download" onClick={handleDownload} disabled={!posterURL}>
