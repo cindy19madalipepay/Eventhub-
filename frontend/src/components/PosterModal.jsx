@@ -241,10 +241,10 @@ const PosterModal = ({ event, onClose }) => {
       // On mobile, if Web Share isn't available (common inside in-app
       // browsers like Messenger/Instagram), <a download> silently fails
       // there too — it doesn't throw an error, it just does nothing, which
-      // previously caused us to falsely claim "Poster downloaded!". Instead
-      // of guessing, point the user at the one thing that ALWAYS works on
-      // any mobile browser: long-pressing the poster image itself (rendered
-      // below as a real <img>, not just a canvas) to bring up "Save Image".
+      // would falsely make it look like it worked. Instead of guessing,
+      // point the user at the one thing that ALWAYS works on any mobile
+      // browser: long-pressing the poster image itself (rendered below as
+      // a real <img>, not just a canvas) to bring up "Save Image".
       if (isMobileDevice()) {
         toast('Long-press the poster image above, then tap "Save Image" to save it to your gallery.', {
           icon: '📷',
