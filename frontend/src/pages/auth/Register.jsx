@@ -111,7 +111,8 @@ const Register = () => {
   const [form, setForm] = useState({
     first_name: '', last_name: '', email: '',
     password: '', role: '',
-    department_id: '', year_level: '', block: '', position: '', organization: ''
+    department_id: '', year_level: '', block: '', position: '', organization: '',
+    major: ''
   });
 
   useEffect(() => {
@@ -129,13 +130,17 @@ const Register = () => {
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
+  // Detect if the currently selected department is BSED
+  const selectedDept = departments.find(d => String(d.department_id) === String(form.department_id));
+  const isBSED = selectedDept?.department_code === 'BSED';
+
   const selectCategory = (cat) => {
     setCategory(cat);
-    setForm({ ...form, role: '', department_id: '', year_level: '', block: '', position: '', organization: '' });
+    setForm({ ...form, role: '', department_id: '', year_level: '', block: '', position: '', organization: '', major: '' });
   };
 
   const selectRole = (role) => {
-    setForm({ ...form, role, department_id: '', year_level: '', block: '', position: '', organization: '' });
+    setForm({ ...form, role, department_id: '', year_level: '', block: '', position: '', organization: '', major: '' });
   };
 
   const handleAcceptTerms = () => {
@@ -159,12 +164,14 @@ const Register = () => {
     // Validation based on role
     if (form.role === 'student') {
       if (!form.department_id) return toast.error('Please select a department.');
+      if (isBSED && !form.major) return toast.error('Please select your major.');
       if (!form.year_level || !form.block) return toast.error('Please select your year level and block.');
       if (!form.first_name || !form.last_name) return toast.error('Please enter your full name.');
     }
 
     if (form.role === 'student_leader') {
       if (!form.department_id) return toast.error('Please select a department.');
+      if (isBSED && !form.major) return toast.error('Please select your major.');
       if (!form.year_level || !form.block) return toast.error('Please select your year level and block.');
       if (!form.first_name || !form.last_name) return toast.error('Please enter your full name.');
       if (!form.position) return toast.error('Please enter your position or designation.');
@@ -173,6 +180,7 @@ const Register = () => {
 
     if (form.role === 'alumni') {
       if (!form.department_id) return toast.error('Please select a department.');
+      if (isBSED && !form.major) return toast.error('Please select your major.');
       if (!form.first_name || !form.last_name) return toast.error('Please enter your full name.');
     }
 
@@ -208,6 +216,9 @@ const Register = () => {
       if (form.role !== 'student_leader') {
         payload.position = null;
         payload.organization = null;
+      }
+      if (!isBSED) {
+        payload.major = null;
       }
 
       await api.post('/auth/register', payload);
@@ -331,6 +342,19 @@ const Register = () => {
                     {d.department_name} ({d.department_code})
                   </option>
                 ))}
+              </select>
+            </div>
+          )}
+
+          {/* Major — only when the selected department is BSED */}
+          {(form.role === 'student' || form.role === 'student_leader' || form.role === 'alumni' || form.role === 'department_head') && isBSED && (
+            <div className="form-group">
+              <label>Major</label>
+              <select name="major" value={form.major} onChange={handleChange} required>
+                <option value="">Select major</option>
+                <option value="English">English</option>
+                <option value="Filipino">Filipino</option>
+                <option value="Math">Math</option>
               </select>
             </div>
           )}

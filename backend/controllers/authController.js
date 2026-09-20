@@ -21,7 +21,7 @@ const generateToken = (user) => {
 // ─── REGISTER (public — all roles supported by the frontend) ───────────────
 const register = async (req, res) => {
   try {
-    const { first_name, last_name, email, password, role, department_id, year_level, block, position, organization } = req.body;
+    const { first_name, last_name, email, password, role, department_id, year_level, block, position, organization, major } = req.body;
 
     if (!first_name || !last_name || !email || !password || !role) {
       return res.status(400).json({ success: false, message: 'All fields are required.' });
@@ -53,6 +53,19 @@ const register = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Organization is required for student leaders.' });
     }
 
+    // Major is required when the selected department is BSED
+    // (rolesNeedingDept already covers who can even have a department)
+    if (rolesNeedingDept.includes(role) && department_id) {
+      const [deptRows] = await pool.query(
+        'SELECT department_code FROM departments WHERE department_id = ?',
+        [department_id]
+      );
+      const isBSED = deptRows.length > 0 && deptRows[0].department_code === 'BSED';
+      if (isBSED && !major) {
+        return res.status(400).json({ success: false, message: 'Major is required for BSED.' });
+      }
+    }
+
     // Check if email is already taken
     const [existing] = await pool.query('SELECT user_id FROM users WHERE email = ?', [email]);
     if (existing.length > 0) {
@@ -65,11 +78,12 @@ const register = async (req, res) => {
     // Insert user into DB
     const [result] = await pool.query(
       `INSERT INTO users 
-        (first_name, last_name, email, password_hash, role, department_id, year_level, block, position, organization, is_active)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
+        (first_name, last_name, email, password_hash, role, department_id, major, year_level, block, position, organization, is_active)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
       [
         first_name, last_name, email, password_hash, role,
         rolesNeedingDept.includes(role) ? department_id : null,
+        major || null,
         rolesNeedingYearBlock.includes(role) ? year_level : null,
         rolesNeedingYearBlock.includes(role) ? block      : null,
         role === 'student_leader' ? position     : null,
@@ -155,6 +169,7 @@ const login = async (req, res) => {
         department_id:   user.department_id,
         department_code: user.department_code,
         department_name: user.department_name,
+        major:           user.major,
         year_level:      user.year_level,
         block:           user.block,
         position:        user.position,
@@ -174,7 +189,7 @@ const getMe = async (req, res) => {
     const [rows] = await pool.query(
       `SELECT u.user_id, u.first_name, u.last_name, u.email, u.role, u.department_id,
               d.department_code, d.department_name,
-              u.year_level, u.block, u.position, u.organization
+              u.major, u.year_level, u.block, u.position, u.organization
        FROM users u
        LEFT JOIN departments d ON u.department_id = d.department_id
        WHERE u.user_id = ?`,
