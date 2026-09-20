@@ -278,18 +278,6 @@ const getAttendanceReport = async (req, res) => {
 
 const getDepartmentsOverview = async (req, res) => {
   try {
-    // Response key is `departments` (not `overview`) — both
-    // AdminDashboard.jsx and AttendanceReport.jsx read data.departments.
-    // Fields also match what those two components actually use:
-    //   - department_code: matched against the hardcoded BSIT/BSBA/etc
-    //     list in AttendanceReport.jsx
-    //   - student_count / student_leader_count: shown separately
-    //     ("12 students · 3 leaders")
-    //   - total_invited: denominator for the engagement % bar — every
-    //     student/student_leader in the department is "invited"
-    //   - attended_count / unique_attendees: distinct students from this
-    //     department with at least one attendance record (same number,
-    //     used in two different places in the UI)
     const [rows] = await pool.query(`
       SELECT
         d.department_id,
@@ -315,14 +303,6 @@ const getDepartmentsOverview = async (req, res) => {
   }
 };
 
-// ── FIXED ────────────────────────────────────────────────────────────────
-// Previously returned `attendance_count` and never sent `total_students` at
-// all, but AttendanceReport.jsx reads `event.attended_count` and
-// `event.total_students` for both the progress bar and the "3/12 (25.0%)"
-// label — so both always rendered as blank/undefined. total_students is
-// now every student + student_leader in the department (matching the
-// departments-overview denominator), and attended_count only counts
-// attendees who actually belong to this department.
 const getDepartmentSummary = async (req, res) => {
   try {
     const { deptId } = req.params;
@@ -353,27 +333,32 @@ const getDepartmentSummary = async (req, res) => {
   }
 };
 
-// ── FIXED ────────────────────────────────────────────────────────────────
-// Previously returned `stats` as a plain array of { year_level, block,
-// total, attended } rows, but AttendanceReport.jsx's getBlockStats() reads
-// it as a lookup map — yearBlockStats['1-A'] etc. Against an array that
-// lookup is always undefined, so every block card showed 0/0 regardless of
-// real data. Now returns an object keyed by "year-block". Also now counts
-// student_leader alongside student, matching the departments-overview and
-// department-summary totals so the numbers agree with each other.
+// ── NEW: optional ?major= filter ──────────────────────────────────────
+// When a major is provided, both totals and attended counts are scoped to
+// just that major's students — used once someone has drilled into a
+// specific major (e.g. BSED -> Math) on the frontend's major picker.
 const getYearBlockStats = async (req, res) => {
   try {
     const { deptId } = req.params;
+    const { major } = req.query;
+
+    const params = [deptId];
+    let majorClause = '';
+    if (major) {
+      majorClause = ' AND u.major = ?';
+      params.push(major);
+    }
+
     const [rows] = await pool.query(`
       SELECT u.year_level, u.block,
              COUNT(DISTINCT u.user_id) AS total,
              COUNT(DISTINCT a.user_id) AS attended
       FROM users u
       LEFT JOIN attendance a ON u.user_id = a.user_id
-      WHERE u.department_id = ? AND u.role IN ('student', 'student_leader')
+      WHERE u.department_id = ? AND u.role IN ('student', 'student_leader')${majorClause}
       GROUP BY u.year_level, u.block
       ORDER BY u.year_level, u.block
-    `, [deptId]);
+    `, params);
 
     const stats = {};
     rows.forEach((row) => {
@@ -409,10 +394,11 @@ const getOrgBreakdown = async (req, res) => {
   }
 };
 
-// ── NEW ──────────────────────────────────────────────────────────────────
 // Returns student counts per major (English / Filipino / Math) for a
 // department — only BSED students will have a non-null major, so this
-// naturally returns an empty array for every other department.
+// naturally returns an empty array for every other department. Drives the
+// "Select Major" picker on the frontend, which only appears at all when
+// this returns at least one row.
 const getMajorBreakdown = async (req, res) => {
   try {
     const { deptId } = req.params;
@@ -433,37 +419,33 @@ const getMajorBreakdown = async (req, res) => {
   }
 };
 
-// ── FIXED (role count) ─────────────────────────────────────────────────
-// total_students now counts student_leader alongside student, matching the
-// role set used everywhere else (departments-overview, department-summary,
-// year-block-stats) so numbers agree across every view instead of the
-// block report undercounting relative to the dashboard.
-//
-// ── FIXED (checkout_at) ──────────────────────────────────────────────────
-// The attendance query only ever selected a.checked_in_at AS scanned_at —
-// a.checkout_at was never included, so the frontend's Time Out column had
-// nothing to read and always showed "—" even for records that do have a
-// checkout timestamp in the database. Now selected alongside scanned_at.
+// ── NEW: optional ?major= filter ──────────────────────────────────────
+// When a major is provided (via the frontend's major picker), both the
+// total-students denominator and the attendance rows are scoped to just
+// that major — so a Math-major student never shows up while viewing the
+// English major's block report, and vice versa.
 const getBlockReport = async (req, res) => {
   try {
-    const { department_id, year_level, block } = req.query;
+    const { department_id, year_level, block, major } = req.query;
 
     if (!department_id || !year_level || !block) {
       return res.status(400).json({ success: false, message: 'department_id, year_level, and block are required.' });
     }
 
-    // Total students in this exact department/year/block — used as the
-    // denominator for each event's attendance percentage on the frontend.
+    const totalParams = [department_id, year_level, block];
+    let totalMajorClause = '';
+    if (major) {
+      totalMajorClause = ' AND major = ?';
+      totalParams.push(major);
+    }
     const [totalRows] = await pool.query(
       `SELECT COUNT(*) AS total
        FROM users
-       WHERE department_id = ? AND year_level = ? AND block = ? AND role IN ('student', 'student_leader')`,
-      [department_id, year_level, block]
+       WHERE department_id = ? AND year_level = ? AND block = ? AND role IN ('student', 'student_leader')${totalMajorClause}`,
+      totalParams
     );
     const total_students = totalRows[0]?.total || 0;
 
-    // Every event assigned to this department — each one becomes its own
-    // card in the block report view.
     const [events] = await pool.query(
       `SELECT e.event_id, e.event_name, e.date_start, e.time_start, e.venue
        FROM events e
@@ -474,12 +456,6 @@ const getBlockReport = async (req, res) => {
     );
     const eventsWithTotal = events.map((e) => ({ ...e, total_students }));
 
-    // Attendance records for students in this exact year/block — includes
-    // checkin_photo so the "View Photo" button has something to show, and
-    // aliases checked_in_at as scanned_at to match what the frontend reads.
-    // checkout_at is selected as-is (real column name) for the Time Out
-    // column on the frontend. u.major is included so BSED records can show
-    // which major (English / Filipino / Math) the student belongs to.
     let attQuery = `
       SELECT
         a.attendance_id, a.event_id, a.checkin_photo,
@@ -492,6 +468,11 @@ const getBlockReport = async (req, res) => {
       WHERE u.department_id = ? AND u.year_level = ? AND u.block = ?
     `;
     const params = [department_id, year_level, block];
+
+    if (major) {
+      attQuery += ' AND u.major = ?';
+      params.push(major);
+    }
 
     if (req.user?.role === 'department_head') {
       attQuery += ' AND u.department_id = ?';

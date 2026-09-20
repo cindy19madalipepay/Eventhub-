@@ -74,7 +74,8 @@ const AttendanceReport = () => {
   const linkedYear = Number(searchParams.get('year')) || null;
   // Supports links like /admin/attendance?dept=BSIT (from AdminDashboard's
   // "View Attendance →" buttons) — jumps straight into that department's
-  // year-blocks view instead of showing the department picker first.
+  // major picker (or year-blocks view, if it has no majors) instead of
+  // showing the department picker first.
   const linkedDeptCode = searchParams.get('dept');
   // Guards against setSearchParams({}) not being reflected in the very next
   // render: once the person manually goes back to "All Departments", we
@@ -93,9 +94,11 @@ const AttendanceReport = () => {
   // admin arriving via a "View Attendance →" link with ?dept= in the URL.
   // Without this, the picker grid flashes on screen for a moment before the
   // effect below jumps away from it, which reads as "it sent me to pick
-  // instead of going straight there."
+  // instead of going straight there." The exact landing view (majors vs.
+  // year-blocks) is decided once that department's major breakdown loads.
   const [view, setView] = useState((isDeptHead || linkedDeptCode) ? 'year-blocks' : 'departments');
   const [selectedDept, setSelectedDept] = useState(null);
+  const [selectedMajor, setSelectedMajor] = useState(null);
   const [selectedYear, setSelectedYear] = useState(null);
   const [selectedBlock, setSelectedBlock] = useState(null);
 
@@ -123,8 +126,9 @@ const AttendanceReport = () => {
     }
   }, [isDeptHead]);
 
-  // Department heads: auto-select their own department and jump straight to
-  // the year/block view, using what's already on their user profile.
+  // Department heads: auto-select their own department, load its summary,
+  // then land on the major picker if it has majors, else straight into
+  // the year/block view.
   useEffect(() => {
     if (isDeptHead && user?.department_id && !selectedDept) {
       const code = user.department_code || user.department_name || 'MY DEPT';
@@ -135,8 +139,9 @@ const AttendanceReport = () => {
         department_id: user.department_id,
       };
       setSelectedDept(deptObj);
-      fetchDepartmentSummary(deptObj.department_id);
-      setView('year-blocks');
+      fetchDepartmentSummary(deptObj.department_id).then((majors) => {
+        setView(majors.length > 0 ? 'majors' : 'year-blocks');
+      });
     }
   }, [isDeptHead, user, selectedDept]);
 
@@ -151,7 +156,8 @@ const AttendanceReport = () => {
 
   // Admins arriving via a "View Attendance →" link with ?dept=BSIT: once the
   // departments overview has loaded, auto-select that department and skip
-  // straight to its year-blocks view instead of showing the picker.
+  // straight to its major picker (or year-blocks view) instead of showing
+  // the department picker.
   useEffect(() => {
     if (
       !isDeptHead &&
@@ -180,6 +186,11 @@ const AttendanceReport = () => {
     }
   };
 
+  // Loads the department-level summary, org breakdown, unfiltered
+  // year/block stats, and major breakdown all at once. Returns the major
+  // breakdown array directly so callers can decide whether to land on the
+  // major picker or skip straight to year-blocks, without waiting on a
+  // second render for state to settle.
   const fetchDepartmentSummary = async (deptId) => {
     setLoading(true);
     setShowAllSummary(false);
@@ -193,19 +204,44 @@ const AttendanceReport = () => {
       setDeptSummary(summaryRes.data.summary || []);
       setYearBlockStats(statsRes.data.stats || {});
       setOrgBreakdown(orgRes.data.organizations || []);
-      setMajorBreakdown(majorRes.data.breakdown || []);
+      const majors = majorRes.data.breakdown || [];
+      setMajorBreakdown(majors);
+      return majors;
     } catch (err) {
       toast.error('Failed to load department data.');
+      return [];
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchBlockReport = async (departmentId, year, block) => {
+  // Re-fetches just the year/block stats, optionally scoped to one major —
+  // used when a major is picked, without re-loading the whole department
+  // summary again.
+  const fetchYearBlockStats = async (deptId, major = null) => {
+    setLoading(true);
+    try {
+      const res = await api.get(`/attendance/year-block-stats/${deptId}`, {
+        params: major ? { major } : {},
+      });
+      setYearBlockStats(res.data.stats || {});
+    } catch (err) {
+      toast.error('Failed to load year/block stats.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchBlockReport = async (departmentId, year, block, major = null) => {
     setLoading(true);
     try {
       const res = await api.get('/attendance/block-report', {
-        params: { department_id: departmentId, year_level: year, block },
+        params: {
+          department_id: departmentId,
+          year_level: year,
+          block,
+          ...(major ? { major } : {}),
+        },
       });
       setBlockEvents(res.data.events || []);
       setBlockAttendance(res.data.attendance || []);
@@ -216,47 +252,80 @@ const AttendanceReport = () => {
     }
   };
 
-  const handleSelectDepartment = (dept) => {
+  const handleSelectDepartment = async (dept) => {
     // departmentsData was already loaded via departments-overview; look up
     // the numeric department_id that matches this department's code, since
     // the report endpoints filter on the numeric ID.
     const matched = departmentsData.find(d => d.department_code === dept.id);
     const enrichedDept = { ...dept, department_id: matched?.department_id ?? null };
     setSelectedDept(enrichedDept);
-    fetchDepartmentSummary(enrichedDept.department_id);
+    setSelectedMajor(null);
+    const majors = await fetchDepartmentSummary(enrichedDept.department_id);
+    setView(majors.length > 0 ? 'majors' : 'year-blocks');
+  };
+
+  const handleSelectMajor = (majorName) => {
+    setSelectedMajor(majorName);
+    setSelectedYear(null);
+    setSelectedBlock(null);
+    fetchYearBlockStats(selectedDept.department_id, majorName);
     setView('year-blocks');
   };
 
   const handleSelectYearBlock = (year, block) => {
     setSelectedYear(year);
     setSelectedBlock(block);
-    fetchBlockReport(selectedDept.department_id, year, block);
+    fetchBlockReport(selectedDept.department_id, year, block, selectedMajor);
     setView('report');
+  };
+
+  // ── Breadcrumb navigation targets ───────────────────────────────
+  const goToDepartments = () => {
+    dismissedDeptRef.current = linkedDeptCode;
+    setView('departments');
+    setSelectedDept(null);
+    setSelectedMajor(null);
+    setDeptSummary([]);
+    setYearBlockStats({});
+    setMajorBreakdown([]);
+    setSearchParams({});
+  };
+
+  const goToMajors = () => {
+    setSelectedMajor(null);
+    setSelectedYear(null);
+    setSelectedBlock(null);
+    setView('majors');
+  };
+
+  const goToYearBlocks = () => {
+    setSelectedYear(null);
+    setSelectedBlock(null);
+    setBlockEvents([]);
+    setBlockAttendance([]);
+    setView('year-blocks');
   };
 
   const handleBack = () => {
     if (view === 'report') {
-      setView('year-blocks');
-      setSelectedYear(null);
-      setSelectedBlock(null);
-      setBlockEvents([]);
-      setBlockAttendance([]);
-    } else if (view === 'year-blocks' && !isDeptHead) {
-      // Department heads have nowhere to go "back" to — they only have
-      // the one department, so this step is skipped entirely for them.
-      dismissedDeptRef.current = linkedDeptCode;
-      setView('departments');
-      setSelectedDept(null);
-      setDeptSummary([]);
-      setYearBlockStats({});
-      setSearchParams({});
+      goToYearBlocks();
+    } else if (view === 'year-blocks') {
+      if (majorBreakdown.length > 0) {
+        goToMajors();
+      } else if (!isDeptHead) {
+        // Department heads have nowhere to go "back" to here — they only
+        // have the one department and it has no majors to step back to.
+        goToDepartments();
+      }
+    } else if (view === 'majors' && !isDeptHead) {
+      goToDepartments();
     }
   };
 
   // ── Exports ──────────────────────────────────────────────────
 
   // "Export All {dept} Attendance" — everything for the whole department,
-  // across every year/block/event.
+  // across every year/block/event/major.
   const handleExportDepartment = async () => {
     if (!selectedDept?.department_id) {
       toast.error('Department ID not found.');
@@ -325,8 +394,9 @@ const AttendanceReport = () => {
     }
   };
 
-  // "Export to CSV" on the block-level screen — just this year/block,
-  // reusing data already loaded (no extra request needed).
+  // "Export to CSV" on the block-level screen — just this year/block
+  // (and major, if one is selected), reusing data already loaded (no
+  // extra request needed).
   const handleExportBlock = () => {
     if (blockAttendance.length === 0) {
       toast.error('No attendance records to export.');
@@ -357,8 +427,9 @@ const AttendanceReport = () => {
       return row;
     });
 
+    const majorPart = selectedMajor ? `_${selectedMajor}` : '';
     downloadCSV(
-      `${selectedDept?.name}_${selectedYear}Year_Block${selectedBlock}.csv`,
+      `${selectedDept?.name}${majorPart}_${selectedYear}Year_Block${selectedBlock}.csv`,
       headers,
       rows
     );
@@ -392,8 +463,9 @@ const AttendanceReport = () => {
       return row;
     });
 
+    const majorPart = selectedMajor ? `_${selectedMajor}` : '';
     downloadCSV(
-      `${ev.event_name}_${selectedDept?.name}_${selectedYear}Year_Block${selectedBlock}.csv`,
+      `${ev.event_name}_${selectedDept?.name}${majorPart}_${selectedYear}Year_Block${selectedBlock}.csv`,
       headers,
       rows
     );
@@ -441,24 +513,44 @@ const AttendanceReport = () => {
     });
   };
 
+  const hasMajors = majorBreakdown.length > 0;
+
   const renderBreadcrumb = () => {
     if (view === 'departments') return null;
 
     return (
       <div className="breadcrumb">
         {!isDeptHead && (
-          <button className="breadcrumb-link" onClick={() => { dismissedDeptRef.current = linkedDeptCode; setView('departments'); setSelectedDept(null); setSearchParams({}); }}>
+          <button className="breadcrumb-link" onClick={goToDepartments}>
             ← All Departments
           </button>
         )}
         {selectedDept && (
           <>
             {!isDeptHead && <span className="breadcrumb-separator">/</span>}
-            {view === 'year-blocks' ? (
+            {view === 'majors' ? (
+              <span className="breadcrumb-current">{selectedDept.name}</span>
+            ) : hasMajors ? (
+              <button className="breadcrumb-link" onClick={goToMajors}>
+                {selectedDept.name}
+              </button>
+            ) : view === 'year-blocks' ? (
               <span className="breadcrumb-current">{selectedDept.name}</span>
             ) : (
-              <button className="breadcrumb-link" onClick={handleBack}>
+              <button className="breadcrumb-link" onClick={goToYearBlocks}>
                 {selectedDept.name}
+              </button>
+            )}
+          </>
+        )}
+        {hasMajors && selectedMajor && (
+          <>
+            <span className="breadcrumb-separator">/</span>
+            {view === 'year-blocks' ? (
+              <span className="breadcrumb-current">{selectedMajor}</span>
+            ) : (
+              <button className="breadcrumb-link" onClick={goToYearBlocks}>
+                {selectedMajor}
               </button>
             )}
           </>
@@ -507,6 +599,33 @@ const AttendanceReport = () => {
             <div className="dept-icon">{dept.icon}</div>
             <h3 className="dept-name">{dept.name}</h3>
             <p className="dept-count">{getDeptStats(dept.id)}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  // Shown between the department picker and the year/block grid whenever a
+  // department has students with a major set (currently only BSED). Each
+  // card is a distinct major — clicking one scopes everything downstream
+  // (year/block stats, the block report, and its CSV exports) to just that
+  // major's students.
+  const renderMajorsView = () => (
+    <div className="dashboard-container">
+      {renderBreadcrumb()}
+
+      <h3 className="section-title">{selectedDept?.name} — Select Major</h3>
+
+      <div className="departments-grid">
+        {majorBreakdown.map((m) => (
+          <div
+            key={m.major}
+            className="dept-card"
+            onClick={() => handleSelectMajor(m.major)}
+          >
+            <div className="dept-icon">🎓</div>
+            <h3 className="dept-name">{m.major}</h3>
+            <p className="dept-count">{m.total} student{m.total !== 1 ? 's' : ''}</p>
           </div>
         ))}
       </div>
@@ -598,9 +717,12 @@ const AttendanceReport = () => {
           </div>
         )}
 
-        {selectedDept?.name === 'BSED' && majorBreakdown.length > 0 && (
+        {/* Aggregate major breakdown card — only shown before a specific
+            major has been picked, since it would otherwise repeat what's
+            already implied by "you're viewing X major" once drilled in. */}
+        {!selectedMajor && hasMajors && (
           <div className="summary-card" style={{ marginTop: 20 }}>
-            <h3 className="summary-title">BSED Students by Major</h3>
+            <h3 className="summary-title">{selectedDept?.name} Students by Major</h3>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
               {majorBreakdown.map((m) => (
                 <div
@@ -626,7 +748,9 @@ const AttendanceReport = () => {
         )}
       </div>
 
-      <h3 className="section-title">{selectedDept?.name} — Select Year Level & Block</h3>
+      <h3 className="section-title">
+        {selectedDept?.name}{selectedMajor ? ` — ${selectedMajor}` : ''} — Select Year Level & Block
+      </h3>
       
       <div className="years-grid">
         {YEAR_LEVELS.map((year) => (
@@ -680,7 +804,7 @@ const AttendanceReport = () => {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
         <h2 style={{ margin: 0 }}>
-          {selectedDept?.name} {selectedYear}{getOrdinal(selectedYear)} Year Block {selectedBlock}
+          {selectedDept?.name}{selectedMajor ? ` (${selectedMajor})` : ''} {selectedYear}{getOrdinal(selectedYear)} Year Block {selectedBlock}
         </h2>
         <div style={{ display: 'flex', gap: 10 }}>
           <button className="export-btn" onClick={handleExportBlock}>
@@ -867,6 +991,7 @@ const AttendanceReport = () => {
   return (
     <div className="attendance-dashboard">
       {view === 'departments' && renderDepartmentsView()}
+      {view === 'majors' && renderMajorsView()}
       {view === 'year-blocks' && renderYearBlocksView()}
       {view === 'report' && renderReportView()}
 
