@@ -12,14 +12,14 @@ const ManageUsers = () => {
 
   const [editingUser, setEditingUser] = useState(null);
   const [editForm, setEditForm] = useState({
-    first_name: '', last_name: '', email: '', role: '', department_id: '', year_level: '', block: '',
+    first_name: '', last_name: '', email: '', role: '', department_id: '', year_level: '', block: '', major: '',
   });
 
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating]     = useState(false);
   const [createForm, setCreateForm] = useState({
     first_name: '', last_name: '', email: '', password: '',
-    role: 'department_head', department_id: '', year_level: '', block: '',
+    role: 'department_head', department_id: '', year_level: '', block: '', major: '',
   });
 
   useEffect(() => {
@@ -85,6 +85,7 @@ const ManageUsers = () => {
       department_id: user.department_id || '',
       year_level:    user.year_level    || '',
       block:         user.block         || '',
+      major:         user.major         || '',
     });
   };
 
@@ -92,10 +93,18 @@ const ManageUsers = () => {
 
   const handleEditChange = (e) => setEditForm({ ...editForm, [e.target.name]: e.target.value });
 
+  // Detect BSED for the department currently selected in each modal
+  const isCreateBSED = departments.find(d => String(d.department_id) === String(createForm.department_id))?.department_code === 'BSED';
+  const isEditBSED = departments.find(d => String(d.department_id) === String(editForm.department_id))?.department_code === 'BSED';
+
   const handleSaveEdit = async (e) => {
     e.preventDefault();
     try {
-      await api.put(`/users/${editingUser}`, editForm);
+      const payload = { ...editForm };
+      if (!isEditBSED) {
+        payload.major = null;
+      }
+      await api.put(`/users/${editingUser}`, payload);
       toast.success('User updated.');
       fetchUsers();
       closeEdit();
@@ -109,7 +118,7 @@ const ManageUsers = () => {
   const openCreate = () => {
     setCreateForm({
       first_name: '', last_name: '', email: '', password: '',
-      role: 'department_head', department_id: '', year_level: '', block: '',
+      role: 'department_head', department_id: '', year_level: '', block: '', major: '',
     });
     setShowCreate(true);
   };
@@ -128,6 +137,9 @@ const ManageUsers = () => {
       } else if (createForm.role === 'department_head') {
         const dept = departments.find(d => String(d.department_id) === String(createForm.department_id));
         payload = { ...payload, first_name: dept?.department_code || 'Dept', last_name: 'Head' };
+      }
+      if (!isCreateBSED) {
+        payload.major = null;
       }
 
       await api.post('/users', payload);
@@ -192,6 +204,7 @@ const ManageUsers = () => {
                 <th>Email</th>
                 <th>Role</th>
                 <th>Department</th>
+                <th>Major</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -203,6 +216,7 @@ const ManageUsers = () => {
                   <td>{u.email}</td>
                   <td><span className="role-badge">{u.role.replace('_', ' ')}</span></td>
                   <td>{u.department_name || '—'}</td>
+                  <td>{u.major || '—'}</td>
                   <td>
                     <span className={`status-dot ${u.is_active ? 'active' : 'inactive'}`}>
                       {u.is_active ? 'Active' : 'Inactive'}
@@ -279,6 +293,17 @@ const ManageUsers = () => {
                   </select>
                 </div>
               )}
+              {createForm.role === 'student' && isCreateBSED && (
+                <div className="form-group">
+                  <label>Major</label>
+                  <select name="major" value={createForm.major} onChange={handleCreateChange} required>
+                    <option value="">Select major</option>
+                    <option value="English">English</option>
+                    <option value="Filipino">Filipino</option>
+                    <option value="Math">Math</option>
+                  </select>
+                </div>
+              )}
               {createForm.role === 'student' && (
                 <>
                   <div className="form-group">
@@ -349,6 +374,17 @@ const ManageUsers = () => {
                         {d.department_name} ({d.department_code})
                       </option>
                     ))}
+                  </select>
+                </div>
+              )}
+              {editForm.role === 'student' && isEditBSED && (
+                <div className="form-group">
+                  <label>Major</label>
+                  <select name="major" value={editForm.major} onChange={handleEditChange} required>
+                    <option value="">Select major</option>
+                    <option value="English">English</option>
+                    <option value="Filipino">Filipino</option>
+                    <option value="Math">Math</option>
                   </select>
                 </div>
               )}

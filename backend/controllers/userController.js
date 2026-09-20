@@ -6,7 +6,7 @@ const { pool } = require('../config/db');
 // bypassing the public student-only /auth/register endpoint.
 const createUser = async (req, res) => {
   try {
-    const { first_name, last_name, email, password, role, department_id, year_level, block } = req.body;
+    const { first_name, last_name, email, password, role, department_id, year_level, block, major } = req.body;
 
     if (!first_name || !last_name || !email || !password || !role) {
       return res.status(400).json({ success: false, message: 'First name, last name, email, password, and role are required.' });
@@ -26,9 +26,9 @@ const createUser = async (req, res) => {
 
     const [result] = await pool.query(
       `INSERT INTO users
-        (first_name, last_name, email, password_hash, role, department_id, year_level, block, is_active)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)`,
-      [first_name, last_name, email, password_hash, role, department_id || null, year_level || null, block || null]
+        (first_name, last_name, email, password_hash, role, department_id, major, year_level, block, is_active)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
+      [first_name, last_name, email, password_hash, role, department_id || null, major || null, year_level || null, block || null]
     );
 
     return res.status(201).json({
@@ -49,7 +49,7 @@ const getAllUsers = async (req, res) => {
 
     let query = `
       SELECT u.user_id, u.first_name, u.last_name, u.email, u.role,
-             u.department_id, u.year_level, u.block, u.is_active, u.created_at,
+             u.department_id, u.major, u.year_level, u.block, u.is_active, u.created_at,
              d.department_name
       FROM users u
       LEFT JOIN departments d ON u.department_id = d.department_id
@@ -77,7 +77,7 @@ const getUserById = async (req, res) => {
     const { id } = req.params;
 
     const [rows] = await pool.query(
-      `SELECT user_id, first_name, last_name, email, role, department_id,
+      `SELECT user_id, first_name, last_name, email, role, department_id, major,
               year_level, block, is_active, created_at
        FROM users WHERE user_id = ?`,
       [id]
@@ -98,7 +98,7 @@ const getUserById = async (req, res) => {
 const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const { first_name, last_name, email, role, department_id, year_level, block } = req.body;
+    const { first_name, last_name, email, role, department_id, year_level, block, major } = req.body;
 
     const [existing] = await pool.query('SELECT user_id FROM users WHERE user_id = ?', [id]);
     if (existing.length === 0) {
@@ -108,9 +108,9 @@ const updateUser = async (req, res) => {
     await pool.query(
       `UPDATE users SET
         first_name = ?, last_name = ?, email = ?, role = ?,
-        department_id = ?, year_level = ?, block = ?
+        department_id = ?, major = ?, year_level = ?, block = ?
        WHERE user_id = ?`,
-      [first_name, last_name, email, role, department_id || null, year_level || null, block || null, id]
+      [first_name, last_name, email, role, department_id || null, major || null, year_level || null, block || null, id]
     );
 
     return res.status(200).json({ success: true, message: 'User updated successfully.' });

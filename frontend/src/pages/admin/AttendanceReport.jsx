@@ -271,6 +271,8 @@ const AttendanceReport = () => {
         return;
       }
 
+      const isBSED = selectedDept?.name === 'BSED';
+
       // Build a structured, multi-section CSV: one header block per event,
       // and inside each event a separate mini-table per Year/Block group —
       // so opening the file shows clean, clearly separated sections instead
@@ -291,20 +293,20 @@ const AttendanceReport = () => {
         Object.keys(byEvent[eventName]).sort().forEach((blockKey) => {
           const blockLabel = blockKey === 'Unassigned' ? 'Unassigned Year/Block' : `Year ${blockKey.split('-')[0]} — Block ${blockKey.split('-')[1]}`;
           lines.push([blockLabel].map(escapeCSVCell).join(','));
-          lines.push(['#', 'Student Name', 'Role', 'Time In', 'Time Out', 'Date'].map(escapeCSVCell).join(','));
+
+          const header = ['#', 'Student Name', 'Role'];
+          if (isBSED) header.push('Major');
+          header.push('Time In', 'Time Out', 'Date');
+          lines.push(header.map(escapeCSVCell).join(','));
 
           const sorted = [...byEvent[eventName][blockKey]].sort((a, b) =>
             `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`)
           );
           sorted.forEach((r, i) => {
-            lines.push([
-              i + 1,
-              `${r.first_name} ${r.last_name}`,
-              roleLabel(r.role, r.position),
-              formatTimeOnly(r.checked_in_at),
-              formatTimeOnly(r.checkout_at),
-              formatDateOnly(r.checked_in_at),
-            ].map(escapeCSVCell).join(','));
+            const row = [i + 1, `${r.first_name} ${r.last_name}`, roleLabel(r.role, r.position)];
+            if (isBSED) row.push(r.major || '—');
+            row.push(formatTimeOnly(r.checked_in_at), formatTimeOnly(r.checkout_at), formatDateOnly(r.checked_in_at));
+            lines.push(row.map(escapeCSVCell).join(','));
           });
           lines.push('');
         });
@@ -331,6 +333,8 @@ const AttendanceReport = () => {
     const eventNameById = {};
     blockEvents.forEach((ev) => { eventNameById[ev.event_id] = ev.event_name; });
 
+    const isBSED = selectedDept?.name === 'BSED';
+
     // Group by event so each event's attendees stay together in the sheet.
     const sortedAttendance = [...blockAttendance].sort((a, b) => {
       const nameA = eventNameById[a.event_id] || '';
@@ -339,20 +343,20 @@ const AttendanceReport = () => {
       return `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`);
     });
 
-    const rows = sortedAttendance.map((a, i) => [
-      i + 1,
-      `${a.first_name} ${a.last_name}`,
-      eventNameById[a.event_id] || '—',
-      `${a.year_level}-${a.block}`,
-      roleLabel(a.role, a.position),
-      formatTimeOnly(a.scanned_at),
-      formatTimeOnly(a.checkout_at),
-      formatDateOnly(a.scanned_at),
-    ]);
+    const headers = ['#', 'Student Name', 'Event', 'Year/Block'];
+    if (isBSED) headers.push('Major');
+    headers.push('Role', 'Time In', 'Time Out', 'Date');
+
+    const rows = sortedAttendance.map((a, i) => {
+      const row = [i + 1, `${a.first_name} ${a.last_name}`, eventNameById[a.event_id] || '—', `${a.year_level}-${a.block}`];
+      if (isBSED) row.push(a.major || '—');
+      row.push(roleLabel(a.role, a.position), formatTimeOnly(a.scanned_at), formatTimeOnly(a.checkout_at), formatDateOnly(a.scanned_at));
+      return row;
+    });
 
     downloadCSV(
       `${selectedDept?.name}_${selectedYear}Year_Block${selectedBlock}.csv`,
-      ['#', 'Student Name', 'Event', 'Year/Block', 'Role', 'Time In', 'Time Out', 'Date'],
+      headers,
       rows
     );
     toast.success('CSV exported!');
@@ -368,23 +372,26 @@ const AttendanceReport = () => {
       return;
     }
 
+    const isBSED = selectedDept?.name === 'BSED';
+
     const sorted = [...attendees].sort((a, b) =>
       `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`)
     );
 
-    const rows = sorted.map((a, i) => [
-      i + 1,
-      `${a.first_name} ${a.last_name}`,
-      `${a.year_level}-${a.block}`,
-      roleLabel(a.role, a.position),
-      formatTimeOnly(a.scanned_at),
-      formatTimeOnly(a.checkout_at),
-      formatDateOnly(a.scanned_at),
-    ]);
+    const headers = ['#', 'Student Name', 'Year/Block'];
+    if (isBSED) headers.push('Major');
+    headers.push('Role', 'Time In', 'Time Out', 'Date');
+
+    const rows = sorted.map((a, i) => {
+      const row = [i + 1, `${a.first_name} ${a.last_name}`, `${a.year_level}-${a.block}`];
+      if (isBSED) row.push(a.major || '—');
+      row.push(roleLabel(a.role, a.position), formatTimeOnly(a.scanned_at), formatTimeOnly(a.checkout_at), formatDateOnly(a.scanned_at));
+      return row;
+    });
 
     downloadCSV(
       `${ev.event_name}_${selectedDept?.name}_${selectedYear}Year_Block${selectedBlock}.csv`,
-      ['#', 'Student Name', 'Year/Block', 'Role', 'Time In', 'Time Out', 'Date'],
+      headers,
       rows
     );
     toast.success('CSV exported!');
@@ -634,7 +641,10 @@ const AttendanceReport = () => {
   };
 
   // ── Block-level report: one card per event, matching the reference design ──
-  const renderReportView = () => (
+  const renderReportView = () => {
+    const isBSED = selectedDept?.name === 'BSED';
+
+    return (
     <div className="dashboard-container">
       {renderBreadcrumb()}
 
@@ -716,6 +726,7 @@ const AttendanceReport = () => {
                         <th>#</th>
                         <th>Student Name</th>
                         <th>Year/Block</th>
+                        {isBSED && <th>Major</th>}
                         <th>Role</th>
                         <th>Time In</th>
                         <th>Time Out</th>
@@ -731,6 +742,7 @@ const AttendanceReport = () => {
                             <td>{idx + 1}</td>
                             <td>{a.first_name} {a.last_name}</td>
                             <td>{a.year_level}-{a.block}</td>
+                            {isBSED && <td>{a.major || '—'}</td>}
                             <td>
                               {isLeader ? (
                                 <span
@@ -789,7 +801,8 @@ const AttendanceReport = () => {
         })
       )}
     </div>
-  );
+    );
+  };
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '—';
