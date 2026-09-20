@@ -28,6 +28,15 @@ const DEPARTMENTS = [
 const YEAR_LEVELS = [1, 2, 3, 4];
 const BLOCKS = ['A', 'B', 'C', 'D', 'E'];
 
+// Fixed major list per department — keeps every known major visible on the
+// picker (even ones with 0 registered students yet) instead of only
+// showing whichever majors happen to already have at least one student in
+// the database. Add more department codes here if other departments ever
+// get majors of their own.
+const DEPARTMENT_MAJORS = {
+  BSED: ['English', 'Filipino', 'Math'],
+};
+
 // Human-readable label for a role/position pair — used in both the table
 // badge and the CSV exports.
 const roleLabel = (role, position) => {
@@ -139,9 +148,9 @@ const AttendanceReport = () => {
         department_id: user.department_id,
       };
       setSelectedDept(deptObj);
-      fetchDepartmentSummary(deptObj.department_id).then((majors) => {
-        setView(majors.length > 0 ? 'majors' : 'year-blocks');
-      });
+      const majorsForThisDept = DEPARTMENT_MAJORS[code] || [];
+      setView(majorsForThisDept.length > 0 ? 'majors' : 'year-blocks');
+      fetchDepartmentSummary(deptObj.department_id);
     }
   }, [isDeptHead, user, selectedDept]);
 
@@ -252,7 +261,7 @@ const AttendanceReport = () => {
     }
   };
 
-  const handleSelectDepartment = async (dept) => {
+  const handleSelectDepartment = (dept) => {
     // departmentsData was already loaded via departments-overview; look up
     // the numeric department_id that matches this department's code, since
     // the report endpoints filter on the numeric ID.
@@ -260,8 +269,12 @@ const AttendanceReport = () => {
     const enrichedDept = { ...dept, department_id: matched?.department_id ?? null };
     setSelectedDept(enrichedDept);
     setSelectedMajor(null);
-    const majors = await fetchDepartmentSummary(enrichedDept.department_id);
-    setView(majors.length > 0 ? 'majors' : 'year-blocks');
+    // Which view comes next is known synchronously from the fixed major
+    // list — no need to wait on the department-summary fetch below (which
+    // only supplies real student counts to merge into the major cards).
+    const majorsForThisDept = DEPARTMENT_MAJORS[dept.id] || [];
+    setView(majorsForThisDept.length > 0 ? 'majors' : 'year-blocks');
+    fetchDepartmentSummary(enrichedDept.department_id);
   };
 
   const handleSelectMajor = (majorName) => {
@@ -310,7 +323,7 @@ const AttendanceReport = () => {
     if (view === 'report') {
       goToYearBlocks();
     } else if (view === 'year-blocks') {
-      if (majorBreakdown.length > 0) {
+      if (selectedDept && (DEPARTMENT_MAJORS[selectedDept.id] || []).length > 0) {
         goToMajors();
       } else if (!isDeptHead) {
         // Department heads have nowhere to go "back" to here — they only
@@ -513,7 +526,18 @@ const AttendanceReport = () => {
     });
   };
 
-  const hasMajors = majorBreakdown.length > 0;
+  // The department code (dept.id, e.g. "BSED") drives which fixed majors
+  // apply — not majorBreakdown, which only reports majors that already have
+  // at least one student and would otherwise hide majors with 0 students.
+  const majorsForSelectedDept = selectedDept ? (DEPARTMENT_MAJORS[selectedDept.id] || []) : [];
+  const hasMajors = majorsForSelectedDept.length > 0;
+
+  // Real count for a given major name, from whatever the backend actually
+  // returned — 0 when that major has no students yet.
+  const getMajorCount = (majorName) => {
+    const found = majorBreakdown.find((m) => m.major === majorName);
+    return found ? Number(found.total) : 0;
+  };
 
   const renderBreadcrumb = () => {
     if (view === 'departments') return null;
@@ -617,17 +641,20 @@ const AttendanceReport = () => {
       <h3 className="section-title">{selectedDept?.name} — Select Major</h3>
 
       <div className="departments-grid">
-        {majorBreakdown.map((m) => (
-          <div
-            key={m.major}
-            className="dept-card"
-            onClick={() => handleSelectMajor(m.major)}
-          >
-            <div className="dept-icon">🎓</div>
-            <h3 className="dept-name">{m.major}</h3>
-            <p className="dept-count">{m.total} student{m.total !== 1 ? 's' : ''}</p>
-          </div>
-        ))}
+        {majorsForSelectedDept.map((majorName) => {
+          const total = getMajorCount(majorName);
+          return (
+            <div
+              key={majorName}
+              className="dept-card"
+              onClick={() => handleSelectMajor(majorName)}
+            >
+              <div className="dept-icon">🎓</div>
+              <h3 className="dept-name">{majorName}</h3>
+              <p className="dept-count">{total} student{total !== 1 ? 's' : ''}</p>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -724,25 +751,28 @@ const AttendanceReport = () => {
           <div className="summary-card" style={{ marginTop: 20 }}>
             <h3 className="summary-title">{selectedDept?.name} Students by Major</h3>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-              {majorBreakdown.map((m) => (
-                <div
-                  key={m.major}
-                  style={{
-                    background: '#f8f9fb', border: '1px solid #eee', borderRadius: 12,
-                    padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 8,
-                  }}
-                >
-                  <span style={{ fontSize: 13, fontWeight: 600, color: '#1B0833' }}>{m.major}</span>
-                  <span
+              {majorsForSelectedDept.map((majorName) => {
+                const total = getMajorCount(majorName);
+                return (
+                  <div
+                    key={majorName}
                     style={{
-                      background: 'rgba(114, 201, 45, 0.15)', color: '#3a8f1f',
-                      padding: '2px 9px', borderRadius: 999, fontSize: 12, fontWeight: 700,
+                      background: '#f8f9fb', border: '1px solid #eee', borderRadius: 12,
+                      padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 8,
                     }}
                   >
-                    {m.total} student{m.total !== 1 ? 's' : ''}
-                  </span>
-                </div>
-              ))}
+                    <span style={{ fontSize: 13, fontWeight: 600, color: '#1B0833' }}>{majorName}</span>
+                    <span
+                      style={{
+                        background: 'rgba(114, 201, 45, 0.15)', color: '#3a8f1f',
+                        padding: '2px 9px', borderRadius: 999, fontSize: 12, fontWeight: 700,
+                      }}
+                    >
+                      {total} student{total !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
