@@ -4,11 +4,13 @@ const attendanceController = require('../controllers/attendanceController');
 const authMiddleware = require('../middleware/authMiddleware');
 const roleMiddleware = require('../middleware/roleMiddleware');
 
+
 const upload = attendanceController.upload;
 
 router.post('/scan', authMiddleware, roleMiddleware('admin'), attendanceController.scanAttendance);
 router.post('/register', authMiddleware, upload.single('photo'), attendanceController.registerAttendance);
 router.post('/checkout', authMiddleware, upload.single('photo'), attendanceController.registerCheckout);
+router.get('/major-breakdown/:deptId', authMiddleware, roleMiddleware('admin', 'department_head'), attendanceController.getMajorBreakdown);
 router.get('/my', authMiddleware, attendanceController.getMyAttendance);
 router.get('/event/:id', authMiddleware, roleMiddleware('admin', 'department_head'), attendanceController.getAttendanceByEvent);
 router.get('/report', authMiddleware, roleMiddleware('admin', 'department_head'), attendanceController.getAttendanceReport);

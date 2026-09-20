@@ -253,7 +253,7 @@ const getAttendanceReport = async (req, res) => {
   try {
     const { event_id, department_id } = req.query;
     let query = `
-      SELECT a.*, e.event_name, u.first_name, u.last_name, u.year_level, u.block, d.department_name
+      SELECT a.*, e.event_name, u.first_name, u.last_name, u.year_level, u.block, u.major, d.department_name
       FROM attendance a
       JOIN events e ON a.event_id = e.event_id
       LEFT JOIN users u ON a.user_id = u.user_id
@@ -409,6 +409,30 @@ const getOrgBreakdown = async (req, res) => {
   }
 };
 
+// ── NEW ──────────────────────────────────────────────────────────────────
+// Returns student counts per major (English / Filipino / Math) for a
+// department — only BSED students will have a non-null major, so this
+// naturally returns an empty array for every other department.
+const getMajorBreakdown = async (req, res) => {
+  try {
+    const { deptId } = req.params;
+    const [rows] = await pool.query(`
+      SELECT u.major,
+             COUNT(DISTINCT u.user_id) AS total,
+             COUNT(DISTINCT a.user_id) AS attended
+      FROM users u
+      LEFT JOIN attendance a ON u.user_id = a.user_id
+      WHERE u.department_id = ? AND u.role IN ('student', 'student_leader') AND u.major IS NOT NULL
+      GROUP BY u.major
+      ORDER BY u.major
+    `, [deptId]);
+    return res.status(200).json({ success: true, breakdown: rows });
+  } catch (error) {
+    console.error('GetMajorBreakdown error:', error);
+    return res.status(500).json({ success: false, message: 'Server error.' });
+  }
+};
+
 // ── FIXED (role count) ─────────────────────────────────────────────────
 // total_students now counts student_leader alongside student, matching the
 // role set used everywhere else (departments-overview, department-summary,
@@ -454,14 +478,15 @@ const getBlockReport = async (req, res) => {
     // checkin_photo so the "View Photo" button has something to show, and
     // aliases checked_in_at as scanned_at to match what the frontend reads.
     // checkout_at is selected as-is (real column name) for the Time Out
-    // column on the frontend.
+    // column on the frontend. u.major is included so BSED records can show
+    // which major (English / Filipino / Math) the student belongs to.
     let attQuery = `
       SELECT
         a.attendance_id, a.event_id, a.checkin_photo,
         a.checkout_photo,
         a.checked_in_at AS scanned_at,
         a.checkout_at,
-        u.first_name, u.last_name, u.year_level, u.block, u.role, u.position
+        u.first_name, u.last_name, u.year_level, u.block, u.role, u.position, u.major
       FROM attendance a
       JOIN users u ON a.user_id = u.user_id
       WHERE u.department_id = ? AND u.year_level = ? AND u.block = ?
@@ -495,5 +520,6 @@ module.exports = {
   getDepartmentSummary,
   getYearBlockStats,
   getOrgBreakdown,
+  getMajorBreakdown,
   getBlockReport,
 };

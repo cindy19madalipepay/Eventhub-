@@ -103,6 +103,7 @@ const AttendanceReport = () => {
   const [deptSummary, setDeptSummary] = useState([]);
   const [yearBlockStats, setYearBlockStats] = useState({});
   const [orgBreakdown, setOrgBreakdown] = useState([]);
+  const [majorBreakdown, setMajorBreakdown] = useState([]);
 
   // Block-level report: one row per event (with totals) + the raw attendee list
   const [blockEvents, setBlockEvents] = useState([]);
@@ -183,14 +184,16 @@ const AttendanceReport = () => {
     setLoading(true);
     setShowAllSummary(false);
     try {
-      const [summaryRes, statsRes, orgRes] = await Promise.all([
+      const [summaryRes, statsRes, orgRes, majorRes] = await Promise.all([
         api.get(`/attendance/department-summary/${deptId}`),
         api.get(`/attendance/year-block-stats/${deptId}`),
         api.get(`/attendance/org-breakdown/${deptId}`),
+        api.get(`/attendance/major-breakdown/${deptId}`),
       ]);
       setDeptSummary(summaryRes.data.summary || []);
       setYearBlockStats(statsRes.data.stats || {});
       setOrgBreakdown(orgRes.data.organizations || []);
+      setMajorBreakdown(majorRes.data.breakdown || []);
     } catch (err) {
       toast.error('Failed to load department data.');
     } finally {
@@ -588,6 +591,33 @@ const AttendanceReport = () => {
                     }}
                   >
                     {org.count}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {selectedDept?.name === 'BSED' && majorBreakdown.length > 0 && (
+          <div className="summary-card" style={{ marginTop: 20 }}>
+            <h3 className="summary-title">BSED Students by Major</h3>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+              {majorBreakdown.map((m) => (
+                <div
+                  key={m.major}
+                  style={{
+                    background: '#f8f9fb', border: '1px solid #eee', borderRadius: 12,
+                    padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 8,
+                  }}
+                >
+                  <span style={{ fontSize: 13, fontWeight: 600, color: '#1B0833' }}>{m.major}</span>
+                  <span
+                    style={{
+                      background: 'rgba(114, 201, 45, 0.15)', color: '#3a8f1f',
+                      padding: '2px 9px', borderRadius: 999, fontSize: 12, fontWeight: 700,
+                    }}
+                  >
+                    {m.total} student{m.total !== 1 ? 's' : ''}
                   </span>
                 </div>
               ))}
